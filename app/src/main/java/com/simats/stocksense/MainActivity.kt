@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
             StockSenseTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "Android",
+                        name = "Daksh",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
