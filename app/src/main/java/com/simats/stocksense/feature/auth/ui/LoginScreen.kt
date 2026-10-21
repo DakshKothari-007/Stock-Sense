@@ -36,6 +36,7 @@ import com.simats.stocksense.feature.auth.viewmodel.AuthViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
+    onBackClick: () -> Unit = {},
     onLoginClick: () -> Unit = {},
     onForgotPasswordClick: () -> Unit = {},
     onGoogleSignInClick: () -> Unit = {},

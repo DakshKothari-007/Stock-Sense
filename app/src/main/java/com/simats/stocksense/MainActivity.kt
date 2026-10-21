@@ -17,14 +17,24 @@ import com.simats.stocksense.feature.auth.ui.OnboardingScreen1
 import com.simats.stocksense.feature.auth.ui.OnboardingScreen2
 import com.simats.stocksense.feature.auth.ui.OnboardingScreen3
 import com.simats.stocksense.feature.auth.ui.SignUpScreen
+import com.simats.stocksense.feature.auth.ui.SignOutScreen
 import com.simats.stocksense.feature.auth.ui.SplashScreen
 import com.simats.stocksense.feature.dashboard.ui.MainScreen
 import com.simats.stocksense.feature.dashboard.ui.NotificationsScreen
+import com.simats.stocksense.feature.dashboard.ui.SettingsScreen
+import com.simats.stocksense.feature.inventory.ui.ImportInventoryPreviewScreen
+import com.simats.stocksense.feature.inventory.ui.ImportInventoryReadyScreen
+import com.simats.stocksense.feature.inventory.ui.ImportInventoryUploadScreen
+import com.simats.stocksense.feature.inventory.ui.ImportInventoryValidationScreen
 import com.simats.stocksense.feature.inventory.ui.InventoryImportedScreen
 import com.simats.stocksense.feature.inventory.ui.ProductBiscuitsScreen
 import com.simats.stocksense.feature.inventory.ui.ProductDetailScreen
+import com.simats.stocksense.feature.reorder.ui.AcceptedOverlayScreen
+import com.simats.stocksense.feature.reorder.ui.DismissedOverlayScreen
+import com.simats.stocksense.feature.reorder.ui.RecommendationPairsScreen
 import com.simats.stocksense.feature.reorder.ui.ReorderPlacedScreen
 import com.simats.stocksense.feature.reorder.ui.ReorderRecommendationScreen
+import com.simats.stocksense.feature.reorder.ui.SlowMovingRecommendationScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,9 +103,13 @@ fun StockSenseAppNavigation() {
         }
         composable("login") {
             LoginScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
                 onLoginClick = {
                     navController.navigate("main") {
                         popUpTo("splash") { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
                 onForgotPasswordClick = {
@@ -117,6 +131,7 @@ fun StockSenseAppNavigation() {
                 onCreateAccountClick = {
                     navController.navigate("main") {
                         popUpTo("splash") { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
                 onGoogleSignInClick = {
@@ -144,6 +159,7 @@ fun StockSenseAppNavigation() {
                 onAccountSelected = { _ ->
                     navController.navigate("main") {
                         popUpTo("splash") { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
                 onCancelClick = {
@@ -157,22 +173,65 @@ fun StockSenseAppNavigation() {
                     navController.popBackStack()
                 },
                 onNotificationsClick = {
-                    navController.navigate("notifications")
+                    navController.navigate("notifications") {
+                        launchSingleTop = true
+                    }
                 },
                 onProductMilkClick = {
-                    navController.navigate("product_detail")
+                    navController.navigate("product_detail") {
+                        launchSingleTop = true
+                    }
                 },
                 onProductBiscuitsClick = {
-                    navController.navigate("product_biscuits")
+                    navController.navigate("product_biscuits") {
+                        launchSingleTop = true
+                    }
                 },
                 onSalesAnalyticsClick = {
-                    navController.navigate("sales_analytics")
+                    navController.navigate("sales_analytics") {
+                        launchSingleTop = true
+                    }
                 },
                 onReorderRecommendationClick = {
-                    navController.navigate("reorder_recommendation")
+                    navController.navigate("reorder_recommendation") {
+                        launchSingleTop = true
+                    }
+                },
+                onRecommendationPairsClick = {
+                    navController.navigate("recommendation_pairs") {
+                        launchSingleTop = true
+                    }
                 },
                 onInventoryImportedClick = {
-                    navController.navigate("inventory_imported")
+                    navController.navigate("inventory_imported") {
+                        launchSingleTop = true
+                    }
+                },
+                onSettingsClick = {
+                    navController.navigate("settings") {
+                        launchSingleTop = true
+                    }
+                },
+                onSignOutClick = {
+                    navController.navigate("signout") {
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+        composable("settings") {
+            SettingsScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable("signout") {
+            SignOutScreen(
+                onBackToLoginClick = {
+                    navController.navigate("login") {
+                        popUpTo("splash") { inclusive = true }
+                    }
                 }
             )
         }
@@ -180,6 +239,15 @@ fun StockSenseAppNavigation() {
             NotificationsScreen(
                 onBackClick = {
                     navController.popBackStack()
+                },
+                onAmulMilkClick = {
+                    navController.navigate("product_detail")
+                },
+                onMarieBiscuitsClick = {
+                    navController.navigate("product_biscuits")
+                },
+                onSalesAnalyticsClick = {
+                    navController.navigate("sales_analytics")
                 }
             )
         }
@@ -205,7 +273,20 @@ fun StockSenseAppNavigation() {
                     navController.navigate("sales_analytics")
                 },
                 onActionClick = {
-                    navController.navigate("reorder_recommendation")
+                    navController.navigate("slow_moving_recommendation")
+                }
+            )
+        }
+        composable("slow_moving_recommendation") {
+            SlowMovingRecommendationScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onAcceptClick = {
+                    navController.navigate("accepted_overlay")
+                },
+                onDismissClick = {
+                    navController.navigate("dismissed_overlay")
                 }
             )
         }
@@ -215,12 +296,37 @@ fun StockSenseAppNavigation() {
                     navController.popBackStack()
                 },
                 onAcceptClick = {
-                    navController.navigate("reorder_placed") {
-                        popUpTo("main") { inclusive = false }
-                    }
+                    navController.navigate("accepted_overlay")
                 },
                 onDismissClick = {
+                    navController.navigate("dismissed_overlay")
+                }
+            )
+        }
+        composable("recommendation_pairs") {
+            RecommendationPairsScreen(
+                onBackClick = {
                     navController.popBackStack()
+                },
+                onAcceptClick = {
+                    navController.navigate("accepted_overlay")
+                },
+                onDismissClick = {
+                    navController.navigate("dismissed_overlay")
+                }
+            )
+        }
+        composable("accepted_overlay") {
+            AcceptedOverlayScreen(
+                onDoneClick = {
+                    navController.popBackStack("main", inclusive = false)
+                }
+            )
+        }
+        composable("dismissed_overlay") {
+            DismissedOverlayScreen(
+                onDoneClick = {
+                    navController.popBackStack("main", inclusive = false)
                 }
             )
         }
@@ -239,9 +345,52 @@ fun StockSenseAppNavigation() {
             )
         }
         composable("inventory_imported") {
+            ImportInventoryUploadScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onPreviewImportClick = {
+                    navController.navigate("inventory_preview")
+                }
+            )
+        }
+        composable("inventory_preview") {
+            ImportInventoryPreviewScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onContinueToValidationClick = {
+                    navController.navigate("inventory_validation")
+                }
+            )
+        }
+        composable("inventory_validation") {
+            ImportInventoryValidationScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onApplyFixClick = {
+                    navController.navigate("inventory_ready")
+                }
+            )
+        }
+        composable("inventory_ready") {
+            ImportInventoryReadyScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onImportProductsClick = {
+                    navController.navigate("inventory_success")
+                }
+            )
+        }
+        composable("inventory_success") {
             InventoryImportedScreen(
                 onBackClick = {
                     navController.popBackStack()
+                },
+                onDoneClick = {
+                    navController.popBackStack("main", inclusive = false)
                 }
             )
         }

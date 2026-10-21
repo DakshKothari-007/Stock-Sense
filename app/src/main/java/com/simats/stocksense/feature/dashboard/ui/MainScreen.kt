@@ -25,7 +25,10 @@ fun MainScreen(
     onProductBiscuitsClick: () -> Unit = {},
     onSalesAnalyticsClick: () -> Unit = {},
     onReorderRecommendationClick: () -> Unit = {},
+    onRecommendationPairsClick: () -> Unit = {},
     onInventoryImportedClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+    onSignOutClick: () -> Unit = {},
     viewModel: MainViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -70,10 +73,15 @@ fun MainScreen(
                         onMilkProductClick = onProductMilkClick,
                         onBiscuitsProductClick = onProductBiscuitsClick
                     )
-                    2 -> InsightsContent(onRecommendationClick = onReorderRecommendationClick)
+                    2 -> InsightsContent(
+                        onReorderMilkClick = onReorderRecommendationClick,
+                        onMoveBiscuitsClick = onProductBiscuitsClick,
+                        onTeaPairClick = onRecommendationPairsClick
+                    )
                     3 -> ProfileContent(
                         storeProfile = uiState.storeProfile,
-                        onLogoutClick = onBackClick
+                        onSettingsClick = onSettingsClick,
+                        onSignOutClick = onSignOutClick
                     )
                 }
             }

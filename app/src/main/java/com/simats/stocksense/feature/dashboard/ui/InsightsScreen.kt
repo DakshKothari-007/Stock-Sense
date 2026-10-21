@@ -27,7 +27,9 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun InsightsContent(
-    onRecommendationClick: () -> Unit = {}
+    onReorderMilkClick: () -> Unit = {},
+    onMoveBiscuitsClick: () -> Unit = {},
+    onTeaPairClick: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
 
@@ -110,7 +112,7 @@ fun InsightsContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .clickable { onRecommendationClick() },
+                    .clickable { onReorderMilkClick() },
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(14.dp)
             ) {
@@ -204,7 +206,7 @@ fun InsightsContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .clickable { onRecommendationClick() },
+                    .clickable { onMoveBiscuitsClick() },
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(14.dp)
             ) {
@@ -289,7 +291,7 @@ fun InsightsContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .clickable { onRecommendationClick() },
+                    .clickable { onTeaPairClick() },
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(14.dp)
             ) {
