@@ -4,19 +4,27 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.*
-import com.simats.stocksense.ui.ForgotPasswordScreen
-import com.simats.stocksense.ui.GoogleSignInScreen
-import com.simats.stocksense.ui.LoginScreen
-import com.simats.stocksense.ui.MainScreen
-import com.simats.stocksense.ui.OnboardingScreen1
-import com.simats.stocksense.ui.OnboardingScreen2
-import com.simats.stocksense.ui.OnboardingScreen3
-import com.simats.stocksense.ui.ReorderRecommendationScreen
-import com.simats.stocksense.ui.SalesAnalyticsScreen
-import com.simats.stocksense.ui.SignUpScreen
-import com.simats.stocksense.ui.SplashScreen
-import com.simats.stocksense.ui.theme.StockSenseTheme
+import androidx.compose.runtime.Composable
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.feature.analytics.ui.SalesAnalyticsScreen
+import com.simats.stocksense.feature.auth.ui.ForgotPasswordScreen
+import com.simats.stocksense.feature.auth.ui.GoogleSignInScreen
+import com.simats.stocksense.feature.auth.ui.LoginScreen
+import com.simats.stocksense.feature.auth.ui.OnboardingScreen1
+import com.simats.stocksense.feature.auth.ui.OnboardingScreen2
+import com.simats.stocksense.feature.auth.ui.OnboardingScreen3
+import com.simats.stocksense.feature.auth.ui.SignUpScreen
+import com.simats.stocksense.feature.auth.ui.SplashScreen
+import com.simats.stocksense.feature.dashboard.ui.MainScreen
+import com.simats.stocksense.feature.dashboard.ui.NotificationsScreen
+import com.simats.stocksense.feature.inventory.ui.InventoryImportedScreen
+import com.simats.stocksense.feature.inventory.ui.ProductBiscuitsScreen
+import com.simats.stocksense.feature.inventory.ui.ProductDetailScreen
+import com.simats.stocksense.feature.reorder.ui.ReorderPlacedScreen
+import com.simats.stocksense.feature.reorder.ui.ReorderRecommendationScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,111 +32,218 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             StockSenseTheme {
-                var currentScreen by remember { mutableStateOf("splash") }
-
-                when (currentScreen) {
-                    "splash" -> SplashScreen(
-                        onGetStartedClick = {
-                            currentScreen = "onboarding1"
-                        }
-                    )
-                    "onboarding1" -> OnboardingScreen1(
-                        onNextClick = {
-                            currentScreen = "onboarding2"
-                        },
-                        onSkipClick = {
-                            currentScreen = "login"
-                        }
-                    )
-                    "onboarding2" -> OnboardingScreen2(
-                        onNextClick = {
-                            currentScreen = "onboarding3"
-                        },
-                        onSkipClick = {
-                            currentScreen = "login"
-                        }
-                    )
-                    "onboarding3" -> OnboardingScreen3(
-                        onGetStartedClick = {
-                            currentScreen = "login"
-                        },
-                        onSkipClick = {
-                            currentScreen = "login"
-                        }
-                    )
-                    "login" -> LoginScreen(
-                        onLoginClick = {
-                            currentScreen = "main"
-                        },
-                        onForgotPasswordClick = {
-                            currentScreen = "forgot_password"
-                        },
-                        onGoogleSignInClick = {
-                            currentScreen = "google_signin"
-                        },
-                        onSignUpClick = {
-                            currentScreen = "signup"
-                        }
-                    )
-                    "signup" -> SignUpScreen(
-                        onBackClick = {
-                            currentScreen = "login"
-                        },
-                        onCreateAccountClick = {
-                            currentScreen = "main"
-                        },
-                        onGoogleSignInClick = {
-                            currentScreen = "google_signin"
-                        },
-                        onLoginClick = {
-                            currentScreen = "login"
-                        }
-                    )
-                    "forgot_password" -> ForgotPasswordScreen(
-                        onBackToLoginClick = {
-                            currentScreen = "login"
-                        },
-                        onSendResetLinkClick = { _ ->
-                            // Password reset link sent action
-                        }
-                    )
-                    "google_signin" -> GoogleSignInScreen(
-                        onAccountSelected = { _ ->
-                            currentScreen = "main"
-                        },
-                        onCancelClick = {
-                            currentScreen = "login"
-                        }
-                    )
-                    "main" -> MainScreen(
-                        onBackClick = {
-                            currentScreen = "splash"
-                        },
-                        onReorderRecommendationClick = {
-                            currentScreen = "reorder_recommendation"
-                        },
-                        onSalesAnalyticsClick = {
-                            currentScreen = "sales_analytics"
-                        }
-                    )
-                    "reorder_recommendation" -> ReorderRecommendationScreen(
-                        onBackClick = {
-                            currentScreen = "main"
-                        },
-                        onAcceptClick = {
-                            currentScreen = "main"
-                        },
-                        onDismissClick = {
-                            currentScreen = "main"
-                        }
-                    )
-                    "sales_analytics" -> SalesAnalyticsScreen(
-                        onBackClick = {
-                            currentScreen = "main"
-                        }
-                    )
-                }
+                StockSenseAppNavigation()
             }
+        }
+    }
+}
+
+@Composable
+fun StockSenseAppNavigation() {
+    val navController = rememberNavController()
+
+    NavHost(
+        navController = navController,
+        startDestination = "splash"
+    ) {
+        composable("splash") {
+            SplashScreen(
+                onGetStartedClick = {
+                    navController.navigate("onboarding1")
+                }
+            )
+        }
+        composable("onboarding1") {
+            OnboardingScreen1(
+                onNextClick = {
+                    navController.navigate("onboarding2")
+                },
+                onSkipClick = {
+                    navController.navigate("login") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable("onboarding2") {
+            OnboardingScreen2(
+                onNextClick = {
+                    navController.navigate("onboarding3")
+                },
+                onSkipClick = {
+                    navController.navigate("login") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable("onboarding3") {
+            OnboardingScreen3(
+                onGetStartedClick = {
+                    navController.navigate("login") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                },
+                onSkipClick = {
+                    navController.navigate("login") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable("login") {
+            LoginScreen(
+                onLoginClick = {
+                    navController.navigate("main") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                },
+                onForgotPasswordClick = {
+                    navController.navigate("forgot_password")
+                },
+                onGoogleSignInClick = {
+                    navController.navigate("google_signin")
+                },
+                onSignUpClick = {
+                    navController.navigate("signup")
+                }
+            )
+        }
+        composable("signup") {
+            SignUpScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onCreateAccountClick = {
+                    navController.navigate("main") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                },
+                onGoogleSignInClick = {
+                    navController.navigate("google_signin")
+                },
+                onLoginClick = {
+                    navController.navigate("login") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable("forgot_password") {
+            ForgotPasswordScreen(
+                onBackToLoginClick = {
+                    navController.popBackStack()
+                },
+                onSendResetLinkClick = { _ ->
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable("google_signin") {
+            GoogleSignInScreen(
+                onAccountSelected = { _ ->
+                    navController.navigate("main") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                },
+                onCancelClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable("main") {
+            MainScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onNotificationsClick = {
+                    navController.navigate("notifications")
+                },
+                onProductMilkClick = {
+                    navController.navigate("product_detail")
+                },
+                onProductBiscuitsClick = {
+                    navController.navigate("product_biscuits")
+                },
+                onSalesAnalyticsClick = {
+                    navController.navigate("sales_analytics")
+                },
+                onReorderRecommendationClick = {
+                    navController.navigate("reorder_recommendation")
+                },
+                onInventoryImportedClick = {
+                    navController.navigate("inventory_imported")
+                }
+            )
+        }
+        composable("notifications") {
+            NotificationsScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable("product_detail") {
+            ProductDetailScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onReorderClick = {
+                    navController.navigate("reorder_placed")
+                },
+                onSalesAnalyticsClick = {
+                    navController.navigate("sales_analytics")
+                }
+            )
+        }
+        composable("product_biscuits") {
+            ProductBiscuitsScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onSalesAnalyticsClick = {
+                    navController.navigate("sales_analytics")
+                },
+                onActionClick = {
+                    navController.navigate("reorder_recommendation")
+                }
+            )
+        }
+        composable("reorder_recommendation") {
+            ReorderRecommendationScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onAcceptClick = {
+                    navController.navigate("reorder_placed") {
+                        popUpTo("main") { inclusive = false }
+                    }
+                },
+                onDismissClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable("reorder_placed") {
+            ReorderPlacedScreen(
+                onDoneClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable("sales_analytics") {
+            SalesAnalyticsScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable("inventory_imported") {
+            InventoryImportedScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
