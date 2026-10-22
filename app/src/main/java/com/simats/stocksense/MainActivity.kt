@@ -27,8 +27,11 @@ import com.simats.stocksense.feature.inventory.ui.ImportInventoryReadyScreen
 import com.simats.stocksense.feature.inventory.ui.ImportInventoryUploadScreen
 import com.simats.stocksense.feature.inventory.ui.ImportInventoryValidationScreen
 import com.simats.stocksense.feature.inventory.ui.InventoryImportedScreen
+import com.simats.stocksense.feature.inventory.ui.ProductAttaScreen
 import com.simats.stocksense.feature.inventory.ui.ProductBiscuitsScreen
 import com.simats.stocksense.feature.inventory.ui.ProductDetailScreen
+import com.simats.stocksense.feature.inventory.ui.ProductParleGScreen
+import com.simats.stocksense.feature.inventory.ui.ProductTeaScreen
 import com.simats.stocksense.feature.reorder.ui.AcceptedOverlayScreen
 import com.simats.stocksense.feature.reorder.ui.DismissedOverlayScreen
 import com.simats.stocksense.feature.reorder.ui.RecommendationPairsScreen
@@ -187,6 +190,21 @@ fun StockSenseAppNavigation() {
                         launchSingleTop = true
                     }
                 },
+                onProductAttaClick = {
+                    navController.navigate("product_atta") {
+                        launchSingleTop = true
+                    }
+                },
+                onProductTeaClick = {
+                    navController.navigate("product_tea") {
+                        launchSingleTop = true
+                    }
+                },
+                onProductParleGClick = {
+                    navController.navigate("product_parleg") {
+                        launchSingleTop = true
+                    }
+                },
                 onSalesAnalyticsClick = {
                     navController.navigate("sales_analytics") {
                         launchSingleTop = true
@@ -274,6 +292,45 @@ fun StockSenseAppNavigation() {
                 },
                 onActionClick = {
                     navController.navigate("slow_moving_recommendation")
+                }
+            )
+        }
+        composable("product_atta") {
+            ProductAttaScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onReorderClick = {
+                    navController.navigate("reorder_placed")
+                },
+                onSalesAnalyticsClick = {
+                    navController.navigate("sales_analytics")
+                }
+            )
+        }
+        composable("product_tea") {
+            ProductTeaScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onReorderClick = {
+                    navController.navigate("reorder_placed")
+                },
+                onSalesAnalyticsClick = {
+                    navController.navigate("sales_analytics")
+                }
+            )
+        }
+        composable("product_parleg") {
+            ProductParleGScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onReorderClick = {
+                    navController.navigate("reorder_placed")
+                },
+                onSalesAnalyticsClick = {
+                    navController.navigate("sales_analytics")
                 }
             )
         }

@@ -36,7 +36,10 @@ fun InventoryContent(
     onFilterSelected: (Int) -> Unit = {},
     onImportDataClick: () -> Unit = {},
     onMilkProductClick: () -> Unit = {},
-    onBiscuitsProductClick: () -> Unit = {}
+    onBiscuitsProductClick: () -> Unit = {},
+    onAttaProductClick: () -> Unit = {},
+    onTeaProductClick: () -> Unit = {},
+    onParleGProductClick: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
 
@@ -228,16 +231,21 @@ fun InventoryContent(
             )
 
             filteredProducts.forEach { item ->
-                val isMarieBiscuits = item.name.contains("Marie", ignoreCase = true)
+                val isMarie = item.name.contains("Marie", ignoreCase = true)
+                val isAtta = item.name.contains("Atta", ignoreCase = true)
+                val isTea = item.name.contains("Tea", ignoreCase = true)
+                val isParleG = item.name.contains("Parle", ignoreCase = true)
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(14.dp))
                         .clickable {
-                            if (isMarieBiscuits) {
-                                onBiscuitsProductClick()
-                            } else {
-                                onMilkProductClick()
+                            when {
+                                isMarie -> onBiscuitsProductClick()
+                                isAtta -> onAttaProductClick()
+                                isTea -> onTeaProductClick()
+                                isParleG -> onParleGProductClick()
+                                else -> onMilkProductClick()
                             }
                         },
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

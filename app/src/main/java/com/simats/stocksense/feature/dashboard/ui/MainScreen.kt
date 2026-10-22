@@ -23,6 +23,9 @@ fun MainScreen(
     onNotificationsClick: () -> Unit = {},
     onProductMilkClick: () -> Unit = {},
     onProductBiscuitsClick: () -> Unit = {},
+    onProductAttaClick: () -> Unit = {},
+    onProductTeaClick: () -> Unit = {},
+    onProductParleGClick: () -> Unit = {},
     onSalesAnalyticsClick: () -> Unit = {},
     onReorderRecommendationClick: () -> Unit = {},
     onRecommendationPairsClick: () -> Unit = {},
@@ -71,7 +74,10 @@ fun MainScreen(
                         onFilterSelected = { viewModel.selectFilter(it) },
                         onImportDataClick = onInventoryImportedClick,
                         onMilkProductClick = onProductMilkClick,
-                        onBiscuitsProductClick = onProductBiscuitsClick
+                        onBiscuitsProductClick = onProductBiscuitsClick,
+                        onAttaProductClick = onProductAttaClick,
+                        onTeaProductClick = onProductTeaClick,
+                        onParleGProductClick = onProductParleGClick
                     )
                     2 -> InsightsContent(
                         onReorderMilkClick = onReorderRecommendationClick,
