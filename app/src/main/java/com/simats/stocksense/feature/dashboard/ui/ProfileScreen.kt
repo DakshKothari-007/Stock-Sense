@@ -3,7 +3,6 @@ package com.simats.stocksense.feature.dashboard.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,13 +10,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -32,10 +30,70 @@ import com.simats.stocksense.data.model.StoreProfile
 @Composable
 fun ProfileContent(
     storeProfile: StoreProfile = StoreProfile(),
+    onShopNameChange: (String) -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
+    var showEditDialog by remember { mutableStateOf(false) }
+    var shopNameInput by remember(storeProfile.name) { mutableStateOf(storeProfile.name) }
+
+    LaunchedEffect(storeProfile.name) {
+        shopNameInput = storeProfile.name
+    }
+
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = {
+                Text(
+                    text = "Edit Shop Name",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Enter the name for your shop workspace:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = shopNameInput,
+                        onValueChange = { shopNameInput = it },
+                        label = { Text("Shop name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = primaryColor,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onShopNameChange(shopNameInput.trim())
+                        showEditDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditDialog = false }) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -46,15 +104,55 @@ fun ProfileContent(
     ) {
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 1. Header
-        Column {
-            Text(
-                text = "Your shop",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp
-            )
+        // 1. Header with Edit Icon
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = storeProfile.name.ifEmpty { "Your shop" },
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                IconButton(
+                    onClick = {
+                        shopNameInput = storeProfile.name
+                        showEditDialog = true
+                    },
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                ) {
+                    Canvas(modifier = Modifier.size(14.dp)) {
+                        // Pencil / Edit icon
+                        val path = Path().apply {
+                            moveTo(size.width * 0.7f, size.height * 0.1f)
+                            lineTo(size.width * 0.9f, size.height * 0.3f)
+                            lineTo(size.width * 0.3f, size.height * 0.9f)
+                            lineTo(size.width * 0.1f, size.height * 0.9f)
+                            lineTo(size.width * 0.1f, size.height * 0.7f)
+                            close()
+                        }
+                        drawPath(
+                            path = path,
+                            color = primaryColor,
+                            style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(2.dp))
+
             Text(
                 text = "STOCKSENSE WORKSPACE",
                 style = MaterialTheme.typography.labelSmall,
@@ -110,7 +208,7 @@ fun ProfileContent(
                         Spacer(modifier = Modifier.height(2.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Owner · Green Basket",
+                                text = "Owner · ${storeProfile.name.ifEmpty { "Your shop" }}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 12.sp
@@ -135,7 +233,7 @@ fun ProfileContent(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.8.dp)
 
                 Text(
-                    text = "ananya@greenbasket.in",
+                    text = storeProfile.email,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp
@@ -156,42 +254,68 @@ fun ProfileContent(
                     .padding(18.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Canvas(modifier = Modifier.size(20.dp)) {
-                            // Storefront Icon
-                            val path = Path().apply {
-                                moveTo(size.width * 0.15f, size.height * 0.4f)
-                                lineTo(size.width * 0.5f, size.height * 0.15f)
-                                lineTo(size.width * 0.85f, size.height * 0.4f)
-                                lineTo(size.width * 0.85f, size.height * 0.85f)
-                                lineTo(size.width * 0.15f, size.height * 0.85f)
-                                close()
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Canvas(modifier = Modifier.size(20.dp)) {
+                                // Storefront Icon
+                                val path = Path().apply {
+                                    moveTo(size.width * 0.15f, size.height * 0.4f)
+                                    lineTo(size.width * 0.5f, size.height * 0.15f)
+                                    lineTo(size.width * 0.85f, size.height * 0.4f)
+                                    lineTo(size.width * 0.85f, size.height * 0.85f)
+                                    lineTo(size.width * 0.15f, size.height * 0.85f)
+                                    close()
+                                }
+                                drawPath(path = path, color = primaryColor, style = Stroke(width = 1.8.dp.toPx()))
                             }
-                            drawPath(path = path, color = primaryColor, style = Stroke(width = 1.8.dp.toPx()))
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column {
+                            Text(
+                                text = storeProfile.name.ifEmpty { "Your shop" },
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = storeProfile.location,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 12.sp
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
-                    Column {
+                    TextButton(
+                        onClick = {
+                            shopNameInput = storeProfile.name
+                            showEditDialog = true
+                        }
+                    ) {
                         Text(
-                            text = storeProfile.name,
-                            style = MaterialTheme.typography.titleMedium,
+                            text = "Edit",
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 16.sp
-                        )
-                        Text(
-                            text = storeProfile.location,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = primaryColor,
                             fontSize = 12.sp
                         )
                     }

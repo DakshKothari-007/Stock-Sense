@@ -80,6 +80,7 @@ fun MainScreen(
                     )
                     3 -> ProfileContent(
                         storeProfile = uiState.storeProfile,
+                        onShopNameChange = { viewModel.updateShopName(it) },
                         onSettingsClick = onSettingsClick,
                         onSignOutClick = onSignOutClick
                     )

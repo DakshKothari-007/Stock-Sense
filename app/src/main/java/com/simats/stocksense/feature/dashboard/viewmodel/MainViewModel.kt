@@ -52,6 +52,13 @@ class MainViewModel(
         }
     }
 
+    fun updateShopName(newName: String) {
+        _uiState.update { currentState ->
+            val updatedProfile = currentState.storeProfile.copy(name = newName)
+            currentState.copy(storeProfile = updatedProfile)
+        }
+    }
+
     private fun filterProducts(
         allProducts: List<InventoryProduct>,
         query: String,

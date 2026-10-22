@@ -88,7 +88,7 @@ fun SalesAnalyticsScreen(
                         fontSize = 20.sp
                     )
                     Text(
-                        text = "Green Basket · 9–15 Oct 2026",
+                        text = uiState.periodHeaderSubtitle,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp
@@ -122,46 +122,32 @@ fun SalesAnalyticsScreen(
                 }
             }
 
-            // 3. Metric Summary Cards (Sales 7 days & Today's sales)
+            // 3. Metric Summary Cards (Today's sales & Sales 7 days connected)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Today's Sales Card -> Connected to Today button (index 0)
+                val isTodaySelected = uiState.selectedPeriodIndex == 0
                 Card(
-                    modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { viewModel.selectPeriod(0) },
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isTodaySelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+                    ),
                     shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            text = "Sales · 7 days",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = uiState.sales7DaysTotal,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                    }
-                }
-
-                Card(
-                    modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    border = BorderStroke(
+                        if (isTodaySelected) 2.dp else 1.dp,
+                        if (isTodaySelected) primaryColor else MaterialTheme.colorScheme.outlineVariant
+                    )
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text(
                             text = "Today's sales",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (isTodaySelected) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = if (isTodaySelected) FontWeight.Bold else FontWeight.Normal,
                             fontSize = 12.sp
                         )
                         Spacer(modifier = Modifier.height(6.dp))
@@ -181,9 +167,98 @@ fun SalesAnalyticsScreen(
                         )
                     }
                 }
+
+                // Sales · 7 days Card -> Connected to 7 days button (index 1)
+                val is7DaysSelected = uiState.selectedPeriodIndex == 1
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { viewModel.selectPeriod(1) },
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (is7DaysSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(
+                        if (is7DaysSelected) 2.dp else 1.dp,
+                        if (is7DaysSelected) primaryColor else MaterialTheme.colorScheme.outlineVariant
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text(
+                            text = "Sales · 7 days",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (is7DaysSelected) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = if (is7DaysSelected) FontWeight.Bold else FontWeight.Normal,
+                            fontSize = 12.sp
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = uiState.sales7DaysTotal,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "7-day total",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
             }
 
-            // 4. Daily Sales Chart Card
+            // 30 Days Full Screen Overview Banner -> Connected to 30 days button (index 2)
+            val is30DaysSelected = uiState.selectedPeriodIndex == 2
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { viewModel.selectPeriod(2) },
+                colors = CardDefaults.cardColors(
+                    containerColor = if (is30DaysSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+                ),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(
+                    if (is30DaysSelected) 2.dp else 1.dp,
+                    if (is30DaysSelected) primaryColor else MaterialTheme.colorScheme.outlineVariant
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Sales · 30 days (Full overview)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (is30DaysSelected) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = if (is30DaysSelected) FontWeight.Bold else FontWeight.Normal,
+                            fontSize = 12.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = uiState.sales30DaysTotal,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
+                    }
+                    Text(
+                        text = uiState.sales30DaysBillsText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 11.sp
+                    )
+                }
+            }
+
+            // 4. Sales Chart Card (Updates dynamically per period)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -196,7 +271,7 @@ fun SalesAnalyticsScreen(
                         .padding(16.dp)
                 ) {
                     Text(
-                        text = "Daily sales",
+                        text = uiState.chartTitle,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -239,7 +314,7 @@ fun SalesAnalyticsScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "9–15 Oct 2026 · Daily sales in ₹",
+                        text = uiState.chartSubtitle,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 10.sp
@@ -271,7 +346,7 @@ fun SalesAnalyticsScreen(
                 }
             }
 
-            // 5. Category Breakdown Card
+            // 5. Category Breakdown Card (Updates dynamically per period)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -348,7 +423,7 @@ fun SalesAnalyticsScreen(
                 }
             }
 
-            // 6. Best Sellers · By Revenue Card
+            // 6. Best Sellers · By Revenue Card (Updates dynamically per period)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
