@@ -380,26 +380,28 @@ fun InventoryContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        // Import Data Button (Hidden while using search bar)
+        if (searchQuery.isEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
 
-        // Import Data Button
-        Button(
-            onClick = onImportDataClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = primaryColor,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        ) {
-            Text(
-                text = "Import Data",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
+            Button(
+                onClick = onImportDataClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = primaryColor,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Text(
+                    text = "Import Data",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
