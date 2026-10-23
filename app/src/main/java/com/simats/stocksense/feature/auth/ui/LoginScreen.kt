@@ -85,15 +85,14 @@ fun LoginScreen(
                 // 2. Logo Icon
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(primaryColor),
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(16.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.logo),
                         contentDescription = "StockSense Logo",
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
 

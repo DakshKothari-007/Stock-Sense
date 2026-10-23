@@ -74,15 +74,14 @@ fun SplashScreen(
                 // Logo Card
                 Box(
                     modifier = Modifier
-                        .size(88.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(MaterialTheme.colorScheme.primary),
+                        .size(96.dp)
+                        .clip(RoundedCornerShape(22.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.logo),
                         contentDescription = "StockSense Logo",
-                        modifier = Modifier.size(56.dp)
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
 
