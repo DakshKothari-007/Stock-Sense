@@ -1,14 +1,33 @@
 package com.simats.stocksense.core.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
-private val StockSenseColors = lightColorScheme(
+enum class ThemeMode {
+    LIGHT, DARK, SYSTEM
+}
+
+object ThemeState {
+    private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
+    val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
+
+    fun setThemeMode(mode: ThemeMode) {
+        _themeMode.value = mode
+    }
+}
+
+private val LightColorScheme = lightColorScheme(
     primary = Green700,
     onPrimary = Color.White,
     primaryContainer = Green50,
@@ -23,6 +42,21 @@ private val StockSenseColors = lightColorScheme(
     outlineVariant = Green100,
 )
 
+private val DarkColorScheme = darkColorScheme(
+    primary = DarkPrimary,
+    onPrimary = DarkOnPrimary,
+    primaryContainer = DarkPrimaryContainer,
+    onPrimaryContainer = DarkOnPrimaryContainer,
+    secondary = DarkSecondary,
+    background = DarkBackground,
+    onBackground = DarkOnBackground,
+    surface = DarkSurface,
+    onSurface = DarkOnSurface,
+    onSurfaceVariant = DarkOnSurfaceVariant,
+    outline = DarkOutline,
+    outlineVariant = DarkOutlineVariant,
+)
+
 private val StockSenseShapes = Shapes(
     small = RoundedCornerShape(8.dp),
     medium = RoundedCornerShape(12.dp),
@@ -30,9 +64,20 @@ private val StockSenseShapes = Shapes(
 )
 
 @Composable
-fun StockSenseTheme(content: @Composable () -> Unit) {
+fun StockSenseTheme(
+    themeMode: ThemeMode = ThemeState.themeMode.collectAsState().value,
+    content: @Composable () -> Unit
+) {
+    val darkTheme = when (themeMode) {
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    }
+
+    val colors = if (darkTheme) DarkColorScheme else LightColorScheme
+
     MaterialTheme(
-        colorScheme = StockSenseColors,
+        colorScheme = colors,
         typography = Typography,
         shapes = StockSenseShapes,
         content = content

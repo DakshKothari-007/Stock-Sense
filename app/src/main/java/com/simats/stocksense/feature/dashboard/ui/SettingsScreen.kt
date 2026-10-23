@@ -24,6 +24,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.theme.ThemeMode
+import com.simats.stocksense.core.theme.ThemeState
 
 @Composable
 fun SettingsScreen(
@@ -88,7 +90,7 @@ fun SettingsScreen(
                         fontSize = 20.sp
                     )
                     Text(
-                        text = "Green Basket · Sample preferences",
+                        text = "Green Basket · Preferences",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp
@@ -96,7 +98,77 @@ fun SettingsScreen(
                 }
             }
 
-            // 2. Account & Store Section
+            // 2. App Theme & Appearance Section
+            Text(
+                text = "App Theme & Appearance",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = 14.sp
+            )
+
+            val currentThemeMode by ThemeState.themeMode.collectAsState()
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Select display theme mode:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val modes = listOf(
+                            ThemeMode.LIGHT to "Light",
+                            ThemeMode.DARK to "Dark",
+                            ThemeMode.SYSTEM to "System"
+                        )
+
+                        modes.forEach { (mode, label) ->
+                            val isSelected = currentThemeMode == mode
+                            Surface(
+                                onClick = { ThemeState.setThemeMode(mode) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isSelected) primaryColor else MaterialTheme.colorScheme.surface,
+                                border = BorderStroke(
+                                    if (isSelected) 0.dp else 1.dp,
+                                    if (isSelected) Color.Transparent else MaterialTheme.colorScheme.outlineVariant
+                                )
+                            ) {
+                                Box(
+                                    modifier = Modifier.padding(vertical = 10.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                        fontSize = 13.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 3. Account & Store Section
             Text(
                 text = "Account & store",
                 style = MaterialTheme.typography.titleMedium,
@@ -157,7 +229,7 @@ fun SettingsScreen(
                 }
             }
 
-            // 3. Notification Preferences Section
+            // 4. Notification Preferences Section
             Text(
                 text = "Notification preferences",
                 style = MaterialTheme.typography.titleMedium,
@@ -222,7 +294,7 @@ fun SettingsScreen(
                 }
             }
 
-            // 4. Inventory Preferences Section
+            // 5. Inventory Preferences Section
             Text(
                 text = "Inventory preferences",
                 style = MaterialTheme.typography.titleMedium,
@@ -268,57 +340,6 @@ fun SettingsScreen(
                     ) {
                         Text("Import mode", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                         Text("Add received quantities", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, fontSize = 12.sp)
-                    }
-                }
-            }
-
-            // 5. Static Preference Preview Banner
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Canvas(modifier = Modifier.size(20.dp)) {
-                        drawCircle(
-                            color = primaryColor,
-                            radius = size.width / 2f,
-                            style = Stroke(width = 1.5.dp.toPx())
-                        )
-                        val path = Path().apply {
-                            moveTo(size.width * 0.25f, size.height * 0.5f)
-                            lineTo(size.width * 0.45f, size.height * 0.7f)
-                            lineTo(size.width * 0.75f, size.height * 0.35f)
-                        }
-                        drawPath(
-                            path = path,
-                            color = primaryColor,
-                            style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column {
-                        Text(
-                            text = "Static preference preview",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 13.sp
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Toggles show sample states only. Changes are not saved.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 11.sp
-                        )
                     }
                 }
             }
@@ -377,6 +398,14 @@ private fun TogglePreferenceRow(
 @Composable
 fun SettingsScreenPreview() {
     StockSenseTheme {
+        SettingsScreen()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SettingsScreenDarkPreview() {
+    StockSenseTheme(themeMode = ThemeMode.DARK) {
         SettingsScreen()
     }
 }

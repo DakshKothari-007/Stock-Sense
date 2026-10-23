@@ -1,5 +1,9 @@
 package com.simats.stocksense.feature.inventory.ui
 
+import android.net.Uri
+import android.provider.OpenableColumns
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -10,16 +14,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,6 +36,56 @@ fun ImportInventoryUploadScreen(
     onPreviewImportClick: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
+    val context = LocalContext.current
+
+    var selectedFileName by remember { mutableStateOf<String?>(null) }
+    var selectedFileSize by remember { mutableStateOf<String?>(null) }
+    var isFileChosen by remember { mutableStateOf(false) }
+
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { selectedUri ->
+            var fileName = "selected_sheet.csv"
+            var fileSize = "File selected · Ready for import"
+            try {
+                val cursor = context.contentResolver.query(selectedUri, null, null, null, null)
+                cursor?.use { c ->
+                    if (c.moveToFirst()) {
+                        val nameIndex = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                        val sizeIndex = c.getColumnIndex(OpenableColumns.SIZE)
+                        if (nameIndex != -1) {
+                            val displayName = c.getString(nameIndex)
+                            if (!displayName.isNullOrEmpty()) {
+                                fileName = displayName
+                            }
+                        }
+                        if (sizeIndex != -1) {
+                            val bytes = c.getLong(sizeIndex)
+                            if (bytes > 0) {
+                                fileSize = "${bytes / 1024} KB · Ready for import"
+                            }
+                        }
+                    }
+                }
+            } catch (_: Exception) {
+            }
+            selectedFileName = fileName
+            selectedFileSize = fileSize
+            isFileChosen = true
+        }
+    }
+
+    val allowedMimeTypes = remember {
+        arrayOf(
+            "text/csv",
+            "text/comma-separated-values",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/csv",
+            "*/*"
+        )
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -128,9 +181,14 @@ fun ImportInventoryUploadScreen(
                 }
             }
 
-            // 3. Stock Sheet Drop/Upload Area Card
+            // 3. Stock Sheet Drop/Upload Area Card (Tappable)
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable {
+                        filePickerLauncher.launch(allowedMimeTypes)
+                    },
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(16.dp),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
@@ -142,35 +200,6 @@ fun ImportInventoryUploadScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Canvas(modifier = Modifier.size(24.dp)) {
-                            drawRect(
-                                color = primaryColor,
-                                topLeft = Offset(size.width * 0.15f, size.height * 0.1f),
-                                size = Size(size.width * 0.7f, size.height * 0.8f),
-                                style = Stroke(width = 1.8.dp.toPx())
-                            )
-                            drawLine(
-                                color = primaryColor,
-                                start = Offset(size.width * 0.3f, size.height * 0.35f),
-                                end = Offset(size.width * 0.7f, size.height * 0.35f),
-                                strokeWidth = 1.8.dp.toPx()
-                            )
-                            drawLine(
-                                color = primaryColor,
-                                start = Offset(size.width * 0.3f, size.height * 0.55f),
-                                end = Offset(size.width * 0.7f, size.height * 0.55f),
-                                strokeWidth = 1.8.dp.toPx()
-                            )
-                        }
-                    }
-
                     Text(
                         text = "Start with your stock sheet",
                         style = MaterialTheme.typography.titleMedium,
@@ -192,7 +221,7 @@ fun ImportInventoryUploadScreen(
                         color = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         Text(
-                            text = "Sample file already selected",
+                            text = if (isFileChosen) "File selected · Tap to change" else "Tap here to select file",
                             style = MaterialTheme.typography.labelSmall,
                             color = primaryColor,
                             fontWeight = FontWeight.Bold,
@@ -213,39 +242,20 @@ fun ImportInventoryUploadScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(14.dp),
+                        .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Canvas(modifier = Modifier.size(20.dp)) {
-                            drawRect(
-                                color = primaryColor,
-                                topLeft = Offset(size.width * 0.15f, size.height * 0.1f),
-                                size = Size(size.width * 0.7f, size.height * 0.8f),
-                                style = Stroke(width = 1.8.dp.toPx())
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(14.dp))
-
                     Column {
                         Text(
-                            text = "stock_oct15.xlsx",
+                            text = selectedFileName ?: "No file selected",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = if (isFileChosen) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 14.sp
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "12 KB · 5 stock receipt rows",
+                            text = selectedFileSize ?: "Select a .csv, .xls, or .xlsx file",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp
@@ -325,7 +335,7 @@ fun ImportInventoryUploadScreen(
 
                     Column {
                         Text(
-                            text = "Sample-file demo",
+                            text = "Spreadsheet File Upload",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -333,7 +343,7 @@ fun ImportInventoryUploadScreen(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "This screen does not open a working file picker.",
+                            text = "Tap the upload area to pick your CSV or Excel file.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 11.sp
@@ -347,13 +357,16 @@ fun ImportInventoryUploadScreen(
             // 7. Preview Import Button
             Button(
                 onClick = onPreviewImportClick,
+                enabled = isFileChosen,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = primaryColor,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
                 Text(

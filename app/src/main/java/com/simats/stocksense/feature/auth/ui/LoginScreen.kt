@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -42,11 +41,12 @@ fun LoginScreen(
     viewModel: AuthViewModel = viewModel()
 ) {
     val loginState by viewModel.loginState.collectAsState()
-    val primaryColor = Color(0xFF156943)
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val iconStrokeColor = MaterialTheme.colorScheme.onSurfaceVariant
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color(0xFFF7F9F8)
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier
@@ -66,7 +66,7 @@ fun LoginScreen(
                 Text(
                     text = "Welcome back",
                     style = MaterialTheme.typography.titleLarge,
-                    color = Color(0xFF111827),
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Bold,
                     fontSize = 22.sp
                 )
@@ -74,7 +74,7 @@ fun LoginScreen(
                 Text(
                     text = "YOUR SHOP, IN FOCUS",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF6B7280),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     letterSpacing = 1.2.sp,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium
@@ -103,7 +103,7 @@ fun LoginScreen(
                 Text(
                     text = "A smarter day starts\nhere.",
                     style = MaterialTheme.typography.headlineLarge,
-                    color = Color(0xFF111827),
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Bold,
                     fontSize = 28.sp,
                     lineHeight = 34.sp
@@ -114,7 +114,7 @@ fun LoginScreen(
                 Text(
                     text = "Log in to your StockSense workspace.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF6B7280),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 14.sp
                 )
 
@@ -125,7 +125,7 @@ fun LoginScreen(
                     text = "Email address",
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF111827),
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 12.sp
                 )
                 Spacer(modifier = Modifier.height(6.dp))
@@ -135,10 +135,10 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                         focusedBorderColor = primaryColor,
-                        unfocusedBorderColor = Color(0xFFE5E7EB)
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
                     ),
                     leadingIcon = {
                         Canvas(modifier = Modifier.size(20.dp)) {
@@ -151,7 +151,7 @@ fun LoginScreen(
                             }
                             drawPath(
                                 path = path,
-                                color = Color(0xFF6B7280),
+                                color = iconStrokeColor,
                                 style = Stroke(width = 1.5.dp.toPx())
                             )
                             val linePath = Path().apply {
@@ -161,7 +161,7 @@ fun LoginScreen(
                             }
                             drawPath(
                                 path = linePath,
-                                color = Color(0xFF6B7280),
+                                color = iconStrokeColor,
                                 style = Stroke(width = 1.5.dp.toPx())
                             )
                         }
@@ -176,7 +176,7 @@ fun LoginScreen(
                     text = "Password",
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF111827),
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 12.sp
                 )
                 Spacer(modifier = Modifier.height(6.dp))
@@ -186,16 +186,16 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                         focusedBorderColor = primaryColor,
-                        unfocusedBorderColor = Color(0xFFE5E7EB)
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
                     ),
                     visualTransformation = PasswordVisualTransformation(),
                     leadingIcon = {
                         Canvas(modifier = Modifier.size(20.dp)) {
                             drawRect(
-                                color = Color(0xFF6B7280),
+                                color = iconStrokeColor,
                                 topLeft = Offset(size.width * 0.15f, size.height * 0.45f),
                                 size = Size(size.width * 0.7f, size.height * 0.5f),
                                 style = Stroke(width = 1.5.dp.toPx())
@@ -208,7 +208,7 @@ fun LoginScreen(
                             }
                             drawPath(
                                 path = archPath,
-                                color = Color(0xFF6B7280),
+                                color = iconStrokeColor,
                                 style = Stroke(width = 1.5.dp.toPx())
                             )
                         }
@@ -240,7 +240,7 @@ fun LoginScreen(
                 // 5. Green Basket Demo Credentials Box
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFFEAF5EF),
+                    color = MaterialTheme.colorScheme.primaryContainer,
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Row(
@@ -272,14 +272,14 @@ fun LoginScreen(
                                 text = "Explore the Green Basket demo",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF111827),
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontSize = 13.sp
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Sample credentials are filled in. No real account or data is used.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF6B7280),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 12.sp,
                                 lineHeight = 16.sp
                             )
@@ -306,7 +306,7 @@ fun LoginScreen(
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = primaryColor,
-                        contentColor = Color.White
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Text(
@@ -337,7 +337,7 @@ fun LoginScreen(
                 Text(
                     text = "Smarter Stock. Better Business.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF9CA3AF),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     textAlign = TextAlign.Center
                 )
@@ -352,6 +352,14 @@ fun LoginScreen(
 @Composable
 fun LoginScreenPreview() {
     StockSenseTheme {
+        LoginScreen()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoginScreenDarkPreview() {
+    StockSenseTheme(themeMode = ThemeMode.DARK) {
         LoginScreen()
     }
 }
