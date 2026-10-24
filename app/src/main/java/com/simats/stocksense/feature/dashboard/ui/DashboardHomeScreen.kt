@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -75,26 +74,78 @@ fun DashboardHomeContent(
             }
 
             // Bell Notification Icon Box
+            val bellIconColor = MaterialTheme.colorScheme.onSurface
+            val bellBadgeColor = primaryColor
+            val bellSurfaceColor = MaterialTheme.colorScheme.surface
+
             Box(
                 modifier = Modifier
                     .size(44.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surface)
+                    .background(bellSurfaceColor)
                     .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
                     .clickable { onNotificationsClick() },
                 contentAlignment = Alignment.Center
             ) {
-                Canvas(modifier = Modifier.size(20.dp)) {
+                Canvas(modifier = Modifier.size(22.dp)) {
+                    val w = size.width
+                    val h = size.height
+
+                    // Top stem
+                    drawLine(
+                        color = bellIconColor,
+                        start = Offset(w * 0.5f, h * 0.10f),
+                        end = Offset(w * 0.5f, h * 0.20f),
+                        strokeWidth = 1.8.dp.toPx(),
+                        cap = StrokeCap.Round
+                    )
+
+                    // Bell body
+                    val bellPath = Path().apply {
+                        moveTo(w * 0.5f, h * 0.20f)
+                        cubicTo(w * 0.32f, h * 0.20f, w * 0.22f, h * 0.40f, w * 0.22f, h * 0.60f)
+                        lineTo(w * 0.12f, h * 0.76f)
+                        lineTo(w * 0.88f, h * 0.76f)
+                        lineTo(w * 0.78f, h * 0.60f)
+                        cubicTo(w * 0.78f, h * 0.40f, w * 0.68f, h * 0.20f, w * 0.5f, h * 0.20f)
+                        close()
+                    }
+                    drawPath(
+                        path = bellPath,
+                        color = bellIconColor,
+                        style = Stroke(
+                            width = 1.8.dp.toPx(),
+                            cap = StrokeCap.Round,
+                            join = StrokeJoin.Round
+                        )
+                    )
+
+                    // Bell clapper
+                    val clapperPath = Path().apply {
+                        moveTo(w * 0.40f, h * 0.82f)
+                        cubicTo(w * 0.40f, h * 0.94f, w * 0.60f, h * 0.94f, w * 0.60f, h * 0.82f)
+                    }
+                    drawPath(
+                        path = clapperPath,
+                        color = bellIconColor,
+                        style = Stroke(
+                            width = 1.8.dp.toPx(),
+                            cap = StrokeCap.Round,
+                            join = StrokeJoin.Round
+                        )
+                    )
+
+                    // Notification badge dot (Top Right)
                     drawCircle(
-                        color = primaryColor,
-                        radius = size.width * 0.35f,
-                        center = Offset(size.width * 0.5f, size.height * 0.45f),
-                        style = Stroke(width = 1.5.dp.toPx())
+                        color = bellBadgeColor,
+                        radius = w * 0.15f,
+                        center = Offset(w * 0.78f, h * 0.20f)
                     )
                     drawCircle(
-                        color = Color(0xFF20A486),
-                        radius = size.width * 0.15f,
-                        center = Offset(size.width * 0.75f, size.height * 0.2f)
+                        color = bellSurfaceColor,
+                        radius = w * 0.15f,
+                        center = Offset(w * 0.78f, h * 0.20f),
+                        style = Stroke(width = 1.dp.toPx())
                     )
                 }
             }

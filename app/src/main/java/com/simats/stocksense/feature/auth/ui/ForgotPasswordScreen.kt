@@ -1,7 +1,6 @@
 package com.simats.stocksense.feature.auth.ui
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -108,19 +107,10 @@ fun ForgotPasswordScreen(
                 Spacer(modifier = Modifier.height(28.dp))
 
                 // 2. Key Icon Box
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.primary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "StockSense Logo",
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
+                AnimatedSplashLogo(
+                    t = 1f,
+                    modifier = Modifier.size(64.dp)
+                )
 
                 Spacer(modifier = Modifier.height(20.dp))
 

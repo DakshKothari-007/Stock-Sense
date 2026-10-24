@@ -1,7 +1,6 @@
 package com.simats.stocksense.feature.auth.ui
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -83,18 +82,10 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // 2. Logo Icon
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(RoundedCornerShape(16.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "StockSense Logo",
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+                AnimatedSplashLogo(
+                    t = 1f,
+                    modifier = Modifier.size(64.dp)
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
