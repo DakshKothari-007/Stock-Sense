@@ -1,5 +1,6 @@
 package com.simats.stocksense.feature.inventory.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -9,11 +10,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -21,6 +25,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -152,11 +158,29 @@ fun InventoryContent(
                 fontSize = 12.sp
             )
 
+            var isFocused by remember { mutableStateOf(false) }
+            val showBack = isFocused || searchQuery.isNotEmpty()
+
+            val focusManager = LocalFocusManager.current
+            val softwareKeyboardController = LocalSoftwareKeyboardController.current
+
+            val handleBack: () -> Unit = {
+                onSearchQueryChange("")
+                focusManager.clearFocus()
+                softwareKeyboardController?.hide()
+            }
+
+            BackHandler(enabled = showBack) {
+                handleBack()
+            }
+
             // Search Box
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchQueryChange,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { isFocused = it.isFocused },
                 placeholder = {
                     Text(
                         text = "Search name or SKU",
@@ -173,19 +197,29 @@ fun InventoryContent(
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline
                 ),
                 leadingIcon = {
-                    Canvas(modifier = Modifier.size(18.dp)) {
-                        drawCircle(
-                            color = Color.Gray,
-                            radius = size.width * 0.35f,
-                            center = Offset(size.width * 0.4f, size.height * 0.4f),
-                            style = Stroke(width = 1.5.dp.toPx())
-                        )
-                        drawLine(
-                            color = Color.Gray,
-                            start = Offset(size.width * 0.65f, size.height * 0.65f),
-                            end = Offset(size.width * 0.95f, size.height * 0.95f),
-                            strokeWidth = 1.8.dp.toPx()
-                        )
+                    if (showBack) {
+                        IconButton(onClick = handleBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    } else {
+                        Canvas(modifier = Modifier.size(18.dp)) {
+                            drawCircle(
+                                color = Color.Gray,
+                                radius = size.width * 0.35f,
+                                center = Offset(size.width * 0.4f, size.height * 0.4f),
+                                style = Stroke(width = 1.5.dp.toPx())
+                            )
+                            drawLine(
+                                color = Color.Gray,
+                                start = Offset(size.width * 0.65f, size.height * 0.65f),
+                                end = Offset(size.width * 0.95f, size.height * 0.95f),
+                                strokeWidth = 1.8.dp.toPx()
+                            )
+                        }
                     }
                 },
                 singleLine = true

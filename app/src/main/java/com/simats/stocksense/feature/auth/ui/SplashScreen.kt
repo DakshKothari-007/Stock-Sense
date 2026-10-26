@@ -261,7 +261,7 @@ fun SplashScreen(
     LaunchedEffect(Unit) {
         animatable.animateTo(
             targetValue = 1f,
-            animationSpec = tween(durationMillis = 2000, easing = LinearEasing)
+            animationSpec = tween(durationMillis = 2800, easing = LinearEasing)
         )
     }
     val t = animatable.value
