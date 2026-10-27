@@ -59,6 +59,20 @@ class MainViewModel(
         }
     }
 
+    fun updateUserName(newUserName: String) {
+        _uiState.update { currentState ->
+            val updatedProfile = currentState.storeProfile.copy(ownerName = newUserName)
+            currentState.copy(storeProfile = updatedProfile)
+        }
+    }
+
+    fun updateEmail(newEmail: String) {
+        _uiState.update { currentState ->
+            val updatedProfile = currentState.storeProfile.copy(email = newEmail)
+            currentState.copy(storeProfile = updatedProfile)
+        }
+    }
+
     private fun filterProducts(
         allProducts: List<InventoryProduct>,
         query: String,

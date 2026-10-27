@@ -3,17 +3,20 @@ package com.simats.stocksense.feature.dashboard.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
@@ -21,6 +24,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,20 +37,60 @@ import com.simats.stocksense.data.model.StoreProfile
 fun ProfileContent(
     storeProfile: StoreProfile = StoreProfile(),
     onShopNameChange: (String) -> Unit = {},
+    onUserNameChange: (String) -> Unit = {},
+    onEmailChange: (String) -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
-    var showEditDialog by remember { mutableStateOf(false) }
+    val iconTint = MaterialTheme.colorScheme.onSurfaceVariant
+
+    var showEditShopDialog by remember { mutableStateOf(false) }
     var shopNameInput by remember(storeProfile.name) { mutableStateOf(storeProfile.name) }
+
+    var showEditUserInfoDialog by remember { mutableStateOf(false) }
+    var userNameInput by remember(storeProfile.ownerName) { mutableStateOf(storeProfile.ownerName) }
+    var emailInput by remember(storeProfile.email) { mutableStateOf(storeProfile.email) }
+
+    var showChangePasswordDialog by remember { mutableStateOf(false) }
+
+    var currentPasswordInput by remember { mutableStateOf("") }
+    var newPasswordInput by remember { mutableStateOf("") }
+    var confirmPasswordInput by remember { mutableStateOf("") }
+
+    var currentPasswordVisible by remember { mutableStateOf(false) }
+    var newPasswordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+
+    var passwordSuccessMessage by remember { mutableStateOf<String?>(null) }
+
+    val initials = remember(storeProfile.ownerName) {
+        storeProfile.ownerName.trim().split(" ")
+            .mapNotNull { it.firstOrNull()?.uppercase() }
+            .take(2)
+            .joinToString("")
+            .ifEmpty { "U" }
+    }
+
+    val isCurrentPasswordValid = currentPasswordInput.isNotEmpty()
+    val isNewPasswordValid = newPasswordInput.length >= 8
+    val isConfirmPasswordValid = newPasswordInput == confirmPasswordInput
+    val isChangePasswordEnabled = isCurrentPasswordValid && isNewPasswordValid && isConfirmPasswordValid
+    val showMismatchError = confirmPasswordInput.isNotEmpty() && !isConfirmPasswordValid
 
     LaunchedEffect(storeProfile.name) {
         shopNameInput = storeProfile.name
     }
 
-    if (showEditDialog) {
+    LaunchedEffect(storeProfile.ownerName, storeProfile.email) {
+        userNameInput = storeProfile.ownerName
+        emailInput = storeProfile.email
+    }
+
+    // Edit Shop Name Dialog
+    if (showEditShopDialog) {
         AlertDialog(
-            onDismissRequest = { showEditDialog = false },
+            onDismissRequest = { showEditShopDialog = false },
             title = {
                 Text(
                     text = "Edit Shop Name",
@@ -78,7 +124,7 @@ fun ProfileContent(
                 Button(
                     onClick = {
                         onShopNameChange(shopNameInput.trim())
-                        showEditDialog = false
+                        showEditShopDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
                 ) {
@@ -86,7 +132,289 @@ fun ProfileContent(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showEditDialog = false }) {
+                TextButton(onClick = { showEditShopDialog = false }) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
+
+    // Edit User Profile Info Dialog (Username & Email)
+    if (showEditUserInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditUserInfoDialog = false },
+            title = {
+                Text(
+                    text = "Edit Profile Details",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "Update your name and email address:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedTextField(
+                        value = userNameInput,
+                        onValueChange = { userNameInput = it },
+                        label = { Text("Full Name / Username") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = primaryColor,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
+                    )
+                    OutlinedTextField(
+                        value = emailInput,
+                        onValueChange = { emailInput = it },
+                        label = { Text("Email Address") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = primaryColor,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onUserNameChange(userNameInput.trim())
+                        onEmailChange(emailInput.trim())
+                        showEditUserInfoDialog = false
+                    },
+                    enabled = userNameInput.isNotBlank() && emailInput.contains("@") && emailInput.contains("."),
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditUserInfoDialog = false }) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
+
+    // Change Password Dialog
+    if (showChangePasswordDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showChangePasswordDialog = false
+                currentPasswordInput = ""
+                newPasswordInput = ""
+                confirmPasswordInput = ""
+            },
+            title = {
+                Text(
+                    text = "Change Password",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "Update your password to keep your account secure.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp
+                    )
+
+                    // Current Password
+                    OutlinedTextField(
+                        value = currentPasswordInput,
+                        onValueChange = { currentPasswordInput = it },
+                        label = { Text("Current password", fontSize = 12.sp) },
+                        singleLine = true,
+                        visualTransformation = if (currentPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = primaryColor,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        ),
+                        trailingIcon = {
+                            IconButton(onClick = { currentPasswordVisible = !currentPasswordVisible }) {
+                                Canvas(modifier = Modifier.size(18.dp)) {
+                                    val w = size.width
+                                    val h = size.height
+                                    val eyePath = Path().apply {
+                                        moveTo(0f, h * 0.5f)
+                                        quadraticTo(w * 0.5f, 0f, w, h * 0.5f)
+                                        quadraticTo(w * 0.5f, h, 0f, h * 0.5f)
+                                    }
+                                    drawPath(
+                                        path = eyePath,
+                                        color = iconTint,
+                                        style = Stroke(width = 1.5.dp.toPx())
+                                    )
+                                    drawCircle(
+                                        color = iconTint,
+                                        radius = w * 0.18f,
+                                        center = Offset(w * 0.5f, h * 0.5f)
+                                    )
+                                    if (!currentPasswordVisible) {
+                                        drawLine(
+                                            color = iconTint,
+                                            start = Offset(w * 0.15f, h * 0.15f),
+                                            end = Offset(w * 0.85f, h * 0.85f),
+                                            strokeWidth = 1.8.dp.toPx()
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    )
+
+                    // New Password
+                    OutlinedTextField(
+                        value = newPasswordInput,
+                        onValueChange = { newPasswordInput = it },
+                        label = { Text("New password (min 8 chars)", fontSize = 12.sp) },
+                        singleLine = true,
+                        visualTransformation = if (newPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = primaryColor,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        ),
+                        trailingIcon = {
+                            IconButton(onClick = { newPasswordVisible = !newPasswordVisible }) {
+                                Canvas(modifier = Modifier.size(18.dp)) {
+                                    val w = size.width
+                                    val h = size.height
+                                    val eyePath = Path().apply {
+                                        moveTo(0f, h * 0.5f)
+                                        quadraticTo(w * 0.5f, 0f, w, h * 0.5f)
+                                        quadraticTo(w * 0.5f, h, 0f, h * 0.5f)
+                                    }
+                                    drawPath(
+                                        path = eyePath,
+                                        color = iconTint,
+                                        style = Stroke(width = 1.5.dp.toPx())
+                                    )
+                                    drawCircle(
+                                        color = iconTint,
+                                        radius = w * 0.18f,
+                                        center = Offset(w * 0.5f, h * 0.5f)
+                                    )
+                                    if (!newPasswordVisible) {
+                                        drawLine(
+                                            color = iconTint,
+                                            start = Offset(w * 0.15f, h * 0.15f),
+                                            end = Offset(w * 0.85f, h * 0.85f),
+                                            strokeWidth = 1.8.dp.toPx()
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    )
+
+                    // Confirm New Password
+                    OutlinedTextField(
+                        value = confirmPasswordInput,
+                        onValueChange = { confirmPasswordInput = it },
+                        label = { Text("Confirm new password", fontSize = 12.sp) },
+                        singleLine = true,
+                        isError = showMismatchError,
+                        visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = primaryColor,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            errorBorderColor = MaterialTheme.colorScheme.error
+                        ),
+                        trailingIcon = {
+                            IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                                Canvas(modifier = Modifier.size(18.dp)) {
+                                    val w = size.width
+                                    val h = size.height
+                                    val eyePath = Path().apply {
+                                        moveTo(0f, h * 0.5f)
+                                        quadraticTo(w * 0.5f, 0f, w, h * 0.5f)
+                                        quadraticTo(w * 0.5f, h, 0f, h * 0.5f)
+                                    }
+                                    drawPath(
+                                        path = eyePath,
+                                        color = iconTint,
+                                        style = Stroke(width = 1.5.dp.toPx())
+                                    )
+                                    drawCircle(
+                                        color = iconTint,
+                                        radius = w * 0.18f,
+                                        center = Offset(w * 0.5f, h * 0.5f)
+                                    )
+                                    if (!confirmPasswordVisible) {
+                                        drawLine(
+                                            color = iconTint,
+                                            start = Offset(w * 0.15f, h * 0.15f),
+                                            end = Offset(w * 0.85f, h * 0.85f),
+                                            strokeWidth = 1.8.dp.toPx()
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    )
+
+                    if (showMismatchError) {
+                        Text(
+                            text = "Passwords do not match",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        passwordSuccessMessage = "Password changed successfully"
+                        showChangePasswordDialog = false
+                        currentPasswordInput = ""
+                        newPasswordInput = ""
+                        confirmPasswordInput = ""
+                    },
+                    enabled = isChangePasswordEnabled,
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                ) {
+                    Text("Update Password")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showChangePasswordDialog = false
+                        currentPasswordInput = ""
+                        newPasswordInput = ""
+                        confirmPasswordInput = ""
+                    }
+                ) {
                     Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
@@ -104,52 +432,15 @@ fun ProfileContent(
     ) {
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 1. Header with Edit Icon
+        // 1. Header
         Column(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = storeProfile.name.ifEmpty { "Your shop" },
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                IconButton(
-                    onClick = {
-                        shopNameInput = storeProfile.name
-                        showEditDialog = true
-                    },
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                ) {
-                    Canvas(modifier = Modifier.size(14.dp)) {
-                        // Pencil / Edit icon
-                        val path = Path().apply {
-                            moveTo(size.width * 0.7f, size.height * 0.1f)
-                            lineTo(size.width * 0.9f, size.height * 0.3f)
-                            lineTo(size.width * 0.3f, size.height * 0.9f)
-                            lineTo(size.width * 0.1f, size.height * 0.9f)
-                            lineTo(size.width * 0.1f, size.height * 0.7f)
-                            close()
-                        }
-                        drawPath(
-                            path = path,
-                            color = primaryColor,
-                            style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                        )
-                    }
-                }
-            }
+            Text(
+                text = storeProfile.name.ifEmpty { "Your shop" },
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp
+            )
 
             Spacer(modifier = Modifier.height(2.dp))
 
@@ -162,7 +453,64 @@ fun ProfileContent(
             )
         }
 
-        // 2. User Info Card
+        if (passwordSuccessMessage != null) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Canvas(modifier = Modifier.size(18.dp)) {
+                            val path = Path().apply {
+                                moveTo(size.width * 0.1f, size.height * 0.55f)
+                                lineTo(size.width * 0.35f, size.height * 0.8f)
+                                lineTo(size.width * 0.75f, size.height * 0.25f)
+                            }
+                            drawPath(
+                                path = path,
+                                color = primaryColor,
+                                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = passwordSuccessMessage ?: "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 12.sp
+                        )
+                    }
+                    IconButton(
+                        onClick = { passwordSuccessMessage = null },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Text(
+                            text = "✕",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+        }
+
+        // 2. User Info Card with Edit Option
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -175,69 +523,74 @@ fun ProfileContent(
                     .padding(18.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Header row: Avatar + Name + Subtitle + Edit Button
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Avatar Circle
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text(
-                            text = "AR",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = primaryColor,
-                            fontSize = 20.sp
-                        )
-                    }
+                        Box(
+                            modifier = Modifier
+                                .size(52.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = initials,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = primaryColor,
+                                fontSize = 18.sp
+                            )
+                        }
 
-                    Spacer(modifier = Modifier.width(14.dp))
+                        Spacer(modifier = Modifier.width(14.dp))
 
-                    Column {
-                        Text(
-                            text = "Ananya Rao",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 18.sp
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column {
+                            Text(
+                                text = storeProfile.ownerName,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 17.sp
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Owner · ${storeProfile.name.ifEmpty { "Your shop" }}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 12.sp
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer
-                            ) {
-                                Text(
-                                    text = "Demo workspace",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = primaryColor,
-                                    fontSize = 10.sp,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                )
-                            }
                         }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    TextButton(
+                        onClick = {
+                            userNameInput = storeProfile.ownerName
+                            emailInput = storeProfile.email
+                            showEditUserInfoDialog = true
+                        }
+                    ) {
+                        Text(
+                            text = "Edit",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = primaryColor,
+                            fontSize = 13.sp
+                        )
                     }
                 }
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.8.dp)
 
-                Text(
-                    text = storeProfile.email,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 12.sp
-                )
+                InfoRow("Email address", storeProfile.email)
             }
         }
 
@@ -271,7 +624,6 @@ fun ProfileContent(
                             contentAlignment = Alignment.Center
                         ) {
                             Canvas(modifier = Modifier.size(20.dp)) {
-                                // Storefront Icon
                                 val path = Path().apply {
                                     moveTo(size.width * 0.15f, size.height * 0.4f)
                                     lineTo(size.width * 0.5f, size.height * 0.15f)
@@ -308,7 +660,7 @@ fun ProfileContent(
                     TextButton(
                         onClick = {
                             shopNameInput = storeProfile.name
-                            showEditDialog = true
+                            showEditShopDialog = true
                         }
                     ) {
                         Text(
@@ -392,7 +744,85 @@ fun ProfileContent(
             }
         }
 
-        // 5. Settings Option Card
+        // 5. Change Password Option Card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .clickable { showChangePasswordDialog = true },
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(14.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Canvas(modifier = Modifier.size(18.dp)) {
+                            drawArc(
+                                color = primaryColor,
+                                startAngle = 180f,
+                                sweepAngle = 180f,
+                                useCenter = false,
+                                topLeft = Offset(size.width * 0.28f, size.height * 0.1f),
+                                size = Size(size.width * 0.44f, size.height * 0.45f),
+                                style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round)
+                            )
+                            drawRoundRect(
+                                color = primaryColor,
+                                topLeft = Offset(size.width * 0.18f, size.height * 0.42f),
+                                size = Size(size.width * 0.64f, size.height * 0.48f),
+                                cornerRadius = CornerRadius(3.dp.toPx(), 3.dp.toPx()),
+                                style = Stroke(width = 1.8.dp.toPx())
+                            )
+                            drawCircle(
+                                color = primaryColor,
+                                radius = size.width * 0.08f,
+                                center = Offset(size.width * 0.5f, size.height * 0.64f)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Change Password",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 15.sp
+                        )
+                        Text(
+                            text = "Security & login credentials",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+
+                Canvas(modifier = Modifier.size(10.dp)) {
+                    val path = Path().apply {
+                        moveTo(size.width * 0.2f, size.height * 0.1f)
+                        lineTo(size.width * 0.8f, size.height * 0.5f)
+                        lineTo(size.width * 0.2f, size.height * 0.9f)
+                    }
+                    drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                }
+            }
+        }
+
+        // 6. Settings Option Card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -418,7 +848,6 @@ fun ProfileContent(
                         contentAlignment = Alignment.Center
                     ) {
                         Canvas(modifier = Modifier.size(18.dp)) {
-                            // Gear / Settings Icon
                             drawCircle(color = primaryColor, radius = size.width * 0.3f, style = Stroke(width = 1.8.dp.toPx()))
                             drawCircle(color = primaryColor, radius = size.width * 0.45f, style = Stroke(width = 1.2.dp.toPx()))
                         }
@@ -444,7 +873,7 @@ fun ProfileContent(
             }
         }
 
-        // 6. Sign Out Option Card
+        // 7. Sign Out Option Card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -470,7 +899,6 @@ fun ProfileContent(
                         contentAlignment = Alignment.Center
                     ) {
                         Canvas(modifier = Modifier.size(18.dp)) {
-                            // Storefront / Sign Out Icon
                             drawRect(
                                 color = primaryColor,
                                 topLeft = Offset(size.width * 0.15f, size.height * 0.2f),

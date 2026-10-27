@@ -166,9 +166,6 @@ fun StockSenseAppNavigation() {
             ForgotPasswordScreen(
                 onBackToLoginClick = {
                     navController.popBackStack()
-                },
-                onSendResetLinkClick = { _ ->
-                    navController.popBackStack()
                 }
             )
         }

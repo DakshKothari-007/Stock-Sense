@@ -87,6 +87,8 @@ fun MainScreen(
                     3 -> ProfileContent(
                         storeProfile = uiState.storeProfile,
                         onShopNameChange = { viewModel.updateShopName(it) },
+                        onUserNameChange = { viewModel.updateUserName(it) },
+                        onEmailChange = { viewModel.updateEmail(it) },
                         onSettingsClick = onSettingsClick,
                         onSignOutClick = onSignOutClick
                     )
