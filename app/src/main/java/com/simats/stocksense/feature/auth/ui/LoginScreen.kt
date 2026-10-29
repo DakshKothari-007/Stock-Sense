@@ -285,6 +285,19 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Error Message Display
+                if (!loginState.errorMessage.isNullOrBlank()) {
+                    Text(
+                        text = loginState.errorMessage ?: "",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp)
+                    )
+                }
+
                 // Log In Button
                 Button(
                     onClick = {
@@ -297,14 +310,23 @@ fun LoginScreen(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = primaryColor,
                         contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                    ),
+                    enabled = !loginState.isLoading
                 ) {
-                    Text(
-                        text = "Log In",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
+                    if (loginState.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Log In",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

@@ -10,10 +10,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.simats.stocksense.core.network.NetworkClient
+import com.simats.stocksense.core.network.TokenStore
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.feature.analytics.ui.SalesAnalyticsScreen
 import com.simats.stocksense.feature.auth.ui.ForgotPasswordScreen
@@ -25,6 +31,7 @@ import com.simats.stocksense.feature.auth.ui.OnboardingScreen3
 import com.simats.stocksense.feature.auth.ui.SignUpScreen
 import com.simats.stocksense.feature.auth.ui.SignOutScreen
 import com.simats.stocksense.feature.auth.ui.SplashScreen
+import com.simats.stocksense.feature.auth.viewmodel.AuthViewModel
 import com.simats.stocksense.feature.dashboard.ui.MainScreen
 import com.simats.stocksense.feature.dashboard.ui.NotificationsScreen
 import com.simats.stocksense.feature.dashboard.ui.SettingsScreen
@@ -65,10 +72,27 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun StockSenseAppNavigation() {
     val navController = rememberNavController()
+    val context = LocalContext.current
+    val tokenStore = remember { TokenStore.getInstance(context) }
+    val authViewModel: AuthViewModel = viewModel()
+
+    DisposableEffect(Unit) {
+        NetworkClient.initialize(context) {
+            navController.navigate("login") {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+        onDispose { }
+    }
+
+    val startDestination = remember {
+        if (tokenStore.hasValidToken()) "main" else "splash"
+    }
 
     NavHost(
         navController = navController,
-        startDestination = "splash",
+        startDestination = startDestination,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
@@ -138,7 +162,8 @@ fun StockSenseAppNavigation() {
                 },
                 onSignUpClick = {
                     navController.navigate("signup")
-                }
+                },
+                viewModel = authViewModel
             )
         }
         composable("signup") {
@@ -159,7 +184,8 @@ fun StockSenseAppNavigation() {
                     navController.navigate("login") {
                         popUpTo("login") { inclusive = true }
                     }
-                }
+                },
+                viewModel = authViewModel
             )
         }
         composable("forgot_password") {
@@ -243,6 +269,7 @@ fun StockSenseAppNavigation() {
                     }
                 },
                 onSignOutClick = {
+                    authViewModel.logout()
                     navController.navigate("signout") {
                         launchSingleTop = true
                     }
@@ -259,8 +286,10 @@ fun StockSenseAppNavigation() {
         composable("signout") {
             SignOutScreen(
                 onBackToLoginClick = {
-                    navController.navigate("login") {
-                        popUpTo("splash") { inclusive = true }
+                    authViewModel.logout {
+                        navController.navigate("login") {
+                            popUpTo(0) { inclusive = true }
+                        }
                     }
                 }
             )

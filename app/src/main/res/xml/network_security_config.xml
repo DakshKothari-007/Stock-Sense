@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext HTTP exclusively for local backend development -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Android Emulator host address -->
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <!-- Localhost loopback addresses -->
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <!-- Current Development PC Local IP (for physical phone testing) -->
+        <domain includeSubdomains="false">172.23.176.97</domain>
+        <!-- Local development subnets commonly used for testing -->
+        <domain includeSubdomains="true">192.168.1.1</domain>
+        <domain includeSubdomains="true">192.168.0.1</domain>
+    </domain-config>
+</network-security-config>
