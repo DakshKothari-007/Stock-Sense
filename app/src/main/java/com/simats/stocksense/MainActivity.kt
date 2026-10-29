@@ -19,6 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.simats.stocksense.core.network.NetworkClient
+import com.simats.stocksense.core.network.SessionManager
 import com.simats.stocksense.core.network.TokenStore
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.feature.analytics.ui.SalesAnalyticsScreen
@@ -73,21 +74,23 @@ class MainActivity : ComponentActivity() {
 fun StockSenseAppNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
-    val tokenStore = remember { TokenStore.getInstance(context) }
+    val sessionManager = remember { SessionManager.getInstance(context) }
     val authViewModel: AuthViewModel = viewModel()
 
     DisposableEffect(Unit) {
         NetworkClient.initialize(context) {
-            navController.navigate("login") {
-                popUpTo(0) { inclusive = true }
-                launchSingleTop = true
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                navController.navigate("login") {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                }
             }
         }
         onDispose { }
     }
 
     val startDestination = remember {
-        if (tokenStore.hasValidToken()) "main" else "splash"
+        if (sessionManager.isLoggedIn()) "main" else "splash"
     }
 
     NavHost(
@@ -269,9 +272,11 @@ fun StockSenseAppNavigation() {
                     }
                 },
                 onSignOutClick = {
-                    authViewModel.logout()
-                    navController.navigate("signout") {
-                        launchSingleTop = true
+                    authViewModel.logout {
+                        navController.navigate("signout") {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                        }
                     }
                 }
             )

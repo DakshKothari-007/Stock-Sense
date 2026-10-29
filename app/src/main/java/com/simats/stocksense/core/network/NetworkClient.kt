@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit
 object NetworkClient {
 
     private var tokenStore: TokenStore? = null
+    private var sessionManager: SessionManager? = null
     private var onUnauthorizedCallback: (() -> Unit)? = null
 
     /**
@@ -24,14 +25,17 @@ object NetworkClient {
      */
     fun initialize(context: Context, onUnauthorized: (() -> Unit)? = null) {
         tokenStore = TokenStore.getInstance(context)
+        sessionManager = SessionManager.getInstance(context)
         onUnauthorizedCallback = onUnauthorized
     }
 
     fun getTokenStore(): TokenStore? = tokenStore
 
+    fun getSessionManager(): SessionManager? = sessionManager
+
     private val authInterceptor = Interceptor { chain ->
         val originalRequest = chain.request()
-        val token = tokenStore?.getToken()
+        val token = sessionManager?.getToken() ?: tokenStore?.getToken()
 
         val requestBuilder = originalRequest.newBuilder()
             .header("Accept", "application/json")
@@ -43,10 +47,16 @@ object NetworkClient {
 
         val response = chain.proceed(requestBuilder.build())
 
-        // If any API returns 401 Unauthorized, automatically clear token and redirect to Login
+        // If any API returns 401 Unauthorized on an authenticated session, clear session and redirect to Login on Main thread
         if (response.code == 401) {
+            val hadSession = sessionManager?.isLoggedIn() == true || !token.isNullOrBlank()
+            sessionManager?.clearSession()
             tokenStore?.clearToken()
-            onUnauthorizedCallback?.invoke()
+            if (hadSession) {
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    onUnauthorizedCallback?.invoke()
+                }
+            }
         }
 
         response

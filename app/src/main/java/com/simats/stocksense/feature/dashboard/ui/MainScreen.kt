@@ -7,6 +7,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -35,6 +36,10 @@ fun MainScreen(
     viewModel: MainViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshProfile()
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -86,9 +91,16 @@ fun MainScreen(
                     )
                     3 -> ProfileContent(
                         storeProfile = uiState.storeProfile,
+                        isProfileLoading = uiState.isProfileLoading,
+                        profileErrorMessage = uiState.profileErrorMessage,
+                        onRetryClick = { viewModel.refreshProfile() },
                         onShopNameChange = { viewModel.updateShopName(it) },
                         onUserNameChange = { viewModel.updateUserName(it) },
                         onEmailChange = { viewModel.updateEmail(it) },
+                        onUpdateProfile = { name, email -> viewModel.updateUserProfile(name, email) },
+                        onChangePassword = { cur, new, conf, cb ->
+                            viewModel.changePassword(cur, new, conf, cb)
+                        },
                         onSettingsClick = onSettingsClick,
                         onSignOutClick = onSignOutClick
                     )

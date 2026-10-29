@@ -12,5 +12,5 @@ object ApiConstants {
      *
      * Note: Must end with a trailing slash ('/') for Retrofit endpoint resolution.
      */
-    const val BASE_URL = "http://172.23.176.97/StockSense_backend/"
+    const val BASE_URL = "https://0nkjz0wl-80.inc1.devtunnels.ms/StockSense_backend/"
 }

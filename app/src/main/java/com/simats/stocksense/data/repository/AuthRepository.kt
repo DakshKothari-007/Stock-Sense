@@ -2,6 +2,7 @@ package com.simats.stocksense.data.repository
 
 import com.simats.stocksense.core.network.AuthApiService
 import com.simats.stocksense.core.network.NetworkClient
+import com.simats.stocksense.core.network.SessionManager
 import com.simats.stocksense.core.network.TokenStore
 import com.simats.stocksense.data.model.AuthUser
 import com.simats.stocksense.data.model.BaseResponse
@@ -21,26 +22,27 @@ import java.net.UnknownHostException
 
 /**
  * Authentication repository executing real backend operations via Retrofit,
- * managing session tokens with TokenStore, and translating network/HTTP errors
+ * managing session tokens with SessionManager/TokenStore, and translating network/HTTP errors
  * into friendly user-facing messages.
  */
 class AuthRepository(
     private val apiService: AuthApiService = NetworkClient.createService(),
+    private val sessionManager: SessionManager? = NetworkClient.getSessionManager(),
     private val tokenStore: TokenStore? = NetworkClient.getTokenStore()
 ) {
 
     private val _currentUser = MutableStateFlow(
         UserProfile(
-            fullName = "Ananya Rao",
-            email = "ananya@greenbasket.in",
-            shopName = "Green Basket"
+            fullName = sessionManager?.getUserFullName() ?: "",
+            email = sessionManager?.getUserEmail() ?: "",
+            shopName = sessionManager?.getShopName() ?: ""
         )
     )
     val currentUser: StateFlow<UserProfile> = _currentUser.asStateFlow()
 
     /**
      * Executes login against auth/login.php.
-     * On 200, persists Bearer token and expiry to TokenStore.
+     * On 200, clears previous session and persists Bearer token, expiration, and user details in SessionManager SharedPreferences.
      */
     suspend fun login(email: String, password: String): Result<LoginResponse> = withContext(Dispatchers.IO) {
         try {
@@ -48,15 +50,19 @@ class AuthRepository(
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && (body.status == true || body.success == true)) {
+                    sessionManager?.clearSession()
+                    tokenStore?.clearToken()
+
                     val token = body.token
                     if (!token.isNullOrBlank()) {
+                        sessionManager?.saveSession(token, body.expiresAt, body.user)
                         tokenStore?.saveToken(token, body.expiresAt)
                     }
                     body.user?.let { u ->
                         _currentUser.value = UserProfile(
-                            fullName = u.fullName ?: "Store Owner",
+                            fullName = u.fullName.orEmpty(),
                             email = u.email ?: email,
-                            shopName = u.shopName ?: "Store"
+                            shopName = u.shopName.orEmpty()
                         )
                     }
                     Result.success(body)
@@ -93,6 +99,27 @@ class AuthRepository(
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && (body.status == true || body.success == true)) {
+                    sessionManager?.clearSession()
+                    tokenStore?.clearToken()
+
+                    val token = body.token
+                    val userObj = body.user ?: AuthUser(
+                        id = body.data?.userId,
+                        fullName = fullName.trim(),
+                        shopName = shopName.trim(),
+                        email = email.trim()
+                    )
+                    if (!token.isNullOrBlank()) {
+                        sessionManager?.saveSession(token, body.expiresAt, userObj)
+                        tokenStore?.saveToken(token, body.expiresAt)
+                    } else {
+                        sessionManager?.saveSession(
+                            token = "",
+                            expiresAt = null,
+                            user = userObj
+                        )
+                    }
+
                     _currentUser.value = UserProfile(
                         fullName = fullName.trim(),
                         email = email.trim(),
@@ -113,12 +140,14 @@ class AuthRepository(
 
     /**
      * Executes logout against auth/logout.php.
-     * Deletes the local token regardless of whether the network call succeeds.
+     * Deletes the local session and token from SharedPreferences regardless of whether the network call succeeds.
      */
     suspend fun logout(): Result<BaseResponse> = withContext(Dispatchers.IO) {
         try {
             val response = apiService.logout()
+            sessionManager?.clearSession()
             tokenStore?.clearToken()
+            _currentUser.value = UserProfile()
             if (response.isSuccessful) {
                 Result.success(
                     response.body() ?: BaseResponse(status = true, message = "Logged out successfully.")
@@ -127,15 +156,18 @@ class AuthRepository(
                 Result.success(BaseResponse(status = true, message = "Logged out locally."))
             }
         } catch (_: Throwable) {
-            // If the call fails, still delete the token locally
+            // If the call fails, still clear the session and token locally
+            sessionManager?.clearSession()
             tokenStore?.clearToken()
+            _currentUser.value = UserProfile()
             Result.success(BaseResponse(status = true, message = "Logged out locally."))
         }
     }
 
-    fun hasValidToken(): Boolean = tokenStore?.hasValidToken() == true
+    fun hasValidToken(): Boolean = sessionManager?.isLoggedIn() ?: (tokenStore?.hasValidToken() == true)
 
     fun clearToken() {
+        sessionManager?.clearSession()
         tokenStore?.clearToken()
     }
 

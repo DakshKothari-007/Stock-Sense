@@ -18,8 +18,11 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -42,6 +45,7 @@ fun LoginScreen(
     val loginState by viewModel.loginState.collectAsState()
     val primaryColor = MaterialTheme.colorScheme.primary
     val iconStrokeColor = MaterialTheme.colorScheme.onSurfaceVariant
+    var passwordVisible by remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -122,6 +126,14 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = loginState.email,
                     onValueChange = { viewModel.updateLoginEmail(it) },
+                    placeholder = {
+                        Text(
+                            text = "Enter your email",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -181,7 +193,8 @@ fun LoginScreen(
                         focusedBorderColor = primaryColor,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline
                     ),
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     leadingIcon = {
                         Canvas(modifier = Modifier.size(20.dp)) {
                             drawRect(
@@ -201,6 +214,38 @@ fun LoginScreen(
                                 color = iconStrokeColor,
                                 style = Stroke(width = 1.5.dp.toPx())
                             )
+                        }
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Canvas(modifier = Modifier.size(20.dp)) {
+                                val w = size.width
+                                val h = size.height
+                                val eyePath = Path().apply {
+                                    moveTo(0f, h * 0.5f)
+                                    quadraticTo(w * 0.5f, 0f, w, h * 0.5f)
+                                    quadraticTo(w * 0.5f, h, 0f, h * 0.5f)
+                                }
+                                drawPath(
+                                    path = eyePath,
+                                    color = iconStrokeColor,
+                                    style = Stroke(width = 1.5.dp.toPx())
+                                )
+                                drawCircle(
+                                    color = iconStrokeColor,
+                                    radius = w * 0.18f,
+                                    center = Offset(w * 0.5f, h * 0.5f)
+                                )
+                                if (!passwordVisible) {
+                                    drawLine(
+                                        color = iconStrokeColor,
+                                        start = Offset(w * 0.15f, h * 0.15f),
+                                        end = Offset(w * 0.85f, h * 0.85f),
+                                        strokeWidth = 1.8.dp.toPx(),
+                                        cap = StrokeCap.Round
+                                    )
+                                }
+                            }
                         }
                     },
                     singleLine = true

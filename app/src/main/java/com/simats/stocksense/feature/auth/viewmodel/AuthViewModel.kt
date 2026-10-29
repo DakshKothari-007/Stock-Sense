@@ -20,7 +20,7 @@ data class AuthUiState(
 )
 
 data class LoginUiState(
-    val email: String = "ananya@greenbasket.in",
+    val email: String = "",
     val password: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
@@ -244,7 +244,7 @@ class AuthViewModel(
         viewModelScope.launch {
             authRepository.logout()
             _authUiState.update { AuthUiState() }
-            _loginState.update { LoginUiState(password = "") }
+            _loginState.update { LoginUiState(email = "", password = "") }
             onComplete()
         }
     }

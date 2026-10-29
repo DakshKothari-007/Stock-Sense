@@ -36,9 +36,14 @@ import com.simats.stocksense.data.model.StoreProfile
 @Composable
 fun ProfileContent(
     storeProfile: StoreProfile = StoreProfile(),
+    isProfileLoading: Boolean = false,
+    profileErrorMessage: String? = null,
+    onRetryClick: () -> Unit = {},
     onShopNameChange: (String) -> Unit = {},
     onUserNameChange: (String) -> Unit = {},
     onEmailChange: (String) -> Unit = {},
+    onUpdateProfile: (String, String) -> Unit = { name, email -> onUserNameChange(name); onEmailChange(email) },
+    onChangePassword: (String, String, String, (Boolean, String) -> Unit) -> Unit = { _, _, _, cb -> cb(true, "Password changed successfully") },
     onSettingsClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {}
 ) {
@@ -62,6 +67,8 @@ fun ProfileContent(
     var newPasswordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
+    var isChangingPassword by remember { mutableStateOf(false) }
+    var passwordErrorMessage by remember { mutableStateOf<String?>(null) }
     var passwordSuccessMessage by remember { mutableStateOf<String?>(null) }
 
     val initials = remember(storeProfile.ownerName) {
@@ -189,8 +196,7 @@ fun ProfileContent(
             confirmButton = {
                 Button(
                     onClick = {
-                        onUserNameChange(userNameInput.trim())
-                        onEmailChange(emailInput.trim())
+                        onUpdateProfile(userNameInput.trim(), emailInput.trim())
                         showEditUserInfoDialog = false
                     },
                     enabled = userNameInput.isNotBlank() && emailInput.contains("@") && emailInput.contains("."),
@@ -389,27 +395,60 @@ fun ProfileContent(
                             fontSize = 11.sp
                         )
                     }
+
+                    if (!passwordErrorMessage.isNullOrBlank()) {
+                        Text(
+                            text = passwordErrorMessage ?: "",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        passwordSuccessMessage = "Password changed successfully"
-                        showChangePasswordDialog = false
-                        currentPasswordInput = ""
-                        newPasswordInput = ""
-                        confirmPasswordInput = ""
+                        isChangingPassword = true
+                        passwordErrorMessage = null
+                        onChangePassword(
+                            currentPasswordInput,
+                            newPasswordInput,
+                            confirmPasswordInput
+                        ) { success, msg ->
+                            isChangingPassword = false
+                            if (success) {
+                                passwordSuccessMessage = msg
+                                showChangePasswordDialog = false
+                                currentPasswordInput = ""
+                                newPasswordInput = ""
+                                confirmPasswordInput = ""
+                            } else {
+                                passwordErrorMessage = msg
+                            }
+                        }
                     },
-                    enabled = isChangePasswordEnabled,
+                    enabled = isChangePasswordEnabled && !isChangingPassword,
                     colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
                 ) {
-                    Text("Update Password")
+                    if (isChangingPassword) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Update Password")
+                    }
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = {
                         showChangePasswordDialog = false
+                        passwordErrorMessage = null
+                        isChangingPassword = false
                         currentPasswordInput = ""
                         newPasswordInput = ""
                         confirmPasswordInput = ""
@@ -434,8 +473,13 @@ fun ProfileContent(
 
         // 1. Header
         Column(modifier = Modifier.fillMaxWidth()) {
+            val displayTitle = when {
+                storeProfile.name.isNotBlank() -> storeProfile.name
+                storeProfile.ownerName.isNotBlank() -> storeProfile.ownerName
+                else -> "Profile"
+            }
             Text(
-                text = storeProfile.name.ifEmpty { "Your shop" },
+                text = displayTitle,
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold,
@@ -451,6 +495,61 @@ fun ProfileContent(
                 letterSpacing = 1.2.sp,
                 fontSize = 10.sp
             )
+        }
+
+        if (isProfileLoading) {
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp),
+                color = primaryColor
+            )
+        }
+
+        if (!profileErrorMessage.isNullOrBlank()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Failed to load profile",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = profileErrorMessage,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            fontSize = 12.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Button(
+                        onClick = onRetryClick,
+                        colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = "Retry",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
         }
 
         if (passwordSuccessMessage != null) {
@@ -553,15 +652,20 @@ fun ProfileContent(
 
                         Column {
                             Text(
-                                text = storeProfile.ownerName,
+                                text = storeProfile.ownerName.ifBlank { "Store Owner" },
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontSize = 17.sp
                             )
                             Spacer(modifier = Modifier.height(2.dp))
+                            val roleSubtitle = if (storeProfile.name.isNotBlank()) {
+                                "Owner · ${storeProfile.name}"
+                            } else {
+                                "Owner"
+                            }
                             Text(
-                                text = "Owner · ${storeProfile.name.ifEmpty { "Your shop" }}",
+                                text = roleSubtitle,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 12.sp
@@ -588,9 +692,10 @@ fun ProfileContent(
                     }
                 }
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.8.dp)
-
-                InfoRow("Email address", storeProfile.email)
+                if (storeProfile.email.isNotBlank()) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.8.dp)
+                    InfoRow("Email address", storeProfile.email)
+                }
             }
         }
 
@@ -640,18 +745,20 @@ fun ProfileContent(
 
                         Column {
                             Text(
-                                text = storeProfile.name.ifEmpty { "Your shop" },
+                                text = storeProfile.name.ifBlank { "Store details" },
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontSize = 16.sp
                             )
-                            Text(
-                                text = storeProfile.location,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 12.sp
-                            )
+                            if (storeProfile.location.isNotBlank()) {
+                                Text(
+                                    text = storeProfile.location,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
                     }
 
@@ -673,12 +780,27 @@ fun ProfileContent(
                     }
                 }
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.8.dp)
+                val hasDetails = storeProfile.storeType.isNotBlank() ||
+                        storeProfile.storeId.isNotBlank() ||
+                        storeProfile.currency.isNotBlank() ||
+                        storeProfile.lastUpdated.isNotBlank()
 
-                InfoRow("Store type", "Neighbourhood supermarket")
-                InfoRow("Store ID", "GB-BLR-001")
-                InfoRow("Currency / timezone", "₹ INR / IST")
-                InfoRow("Data snapshot", "15 Oct 2026")
+                if (hasDetails) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.8.dp)
+
+                    if (storeProfile.storeType.isNotBlank()) {
+                        InfoRow("Store type", storeProfile.storeType)
+                    }
+                    if (storeProfile.storeId.isNotBlank()) {
+                        InfoRow("Store ID", storeProfile.storeId)
+                    }
+                    if (storeProfile.currency.isNotBlank()) {
+                        InfoRow("Currency / timezone", storeProfile.currency)
+                    }
+                    if (storeProfile.lastUpdated.isNotBlank()) {
+                        InfoRow("Data snapshot", storeProfile.lastUpdated)
+                    }
+                }
             }
         }
 
