@@ -16,7 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.components.StockSenseBottomNavigation
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.feature.dashboard.viewmodel.MainViewModel
-import com.simats.stocksense.feature.inventory.ui.InventoryContent
+import com.simats.stocksense.feature.inventory.ui.InventoryScreen
 
 @Composable
 fun MainScreen(
@@ -70,12 +70,7 @@ fun MainScreen(
                         onFreeUpStockClick = onProductBiscuitsClick,
                         onImportClick = onInventoryImportedClick
                     )
-                    1 -> InventoryContent(
-                        products = uiState.filteredProducts,
-                        searchQuery = uiState.searchQuery,
-                        onSearchQueryChange = { viewModel.updateSearchQuery(it) },
-                        selectedFilter = uiState.selectedFilter,
-                        onFilterSelected = { viewModel.selectFilter(it) },
+                    1 -> InventoryScreen(
                         onImportDataClick = onInventoryImportedClick,
                         onMilkProductClick = onProductMilkClick,
                         onBiscuitsProductClick = onProductBiscuitsClick,
