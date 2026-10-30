@@ -28,9 +28,17 @@ import java.net.UnknownHostException
  */
 class AuthRepository(
     private val apiService: AuthApiService = NetworkClient.createService(),
-    private val sessionManager: SessionManager? = NetworkClient.getSessionManager(),
-    private val tokenStore: TokenStore? = NetworkClient.getTokenStore()
+    customSessionManager: SessionManager? = null,
+    customTokenStore: TokenStore? = null
 ) {
+    private val _customSessionManager = customSessionManager
+    private val _customTokenStore = customTokenStore
+
+    private val sessionManager: SessionManager?
+        get() = _customSessionManager ?: NetworkClient.getSessionManager()
+
+    private val tokenStore: TokenStore?
+        get() = _customTokenStore ?: NetworkClient.getTokenStore()
 
     private val _currentUser = MutableStateFlow(
         UserProfile(

@@ -41,7 +41,7 @@ class SessionManager private constructor(context: Context) {
             user.storeId?.let { editor.putString(KEY_STORE_ID, it) }
             (user.dataSnapshot ?: user.updatedAt)?.let { editor.putString(KEY_LAST_UPDATED, it) }
         }
-        editor.apply()
+        editor.commit()
     }
 
     /**
@@ -63,7 +63,7 @@ class SessionManager private constructor(context: Context) {
         if (userId != null && userId > 0) {
             editor.putInt(KEY_USER_ID, userId)
         }
-        editor.apply()
+        editor.commit()
     }
 
     /**
@@ -73,7 +73,7 @@ class SessionManager private constructor(context: Context) {
         prefs.edit()
             .putString(KEY_FULL_NAME, fullName)
             .putString(KEY_EMAIL, email)
-            .apply()
+            .commit()
     }
 
     /**
@@ -82,7 +82,7 @@ class SessionManager private constructor(context: Context) {
     fun updateShopName(shopName: String) {
         prefs.edit()
             .putString(KEY_SHOP_NAME, shopName)
-            .apply()
+            .commit()
     }
 
     /**
@@ -161,7 +161,7 @@ class SessionManager private constructor(context: Context) {
      * Wipes session data completely from SharedPreferences upon logout or session invalidation.
      */
     fun clearSession() {
-        prefs.edit().clear().apply()
+        prefs.edit().clear().commit()
     }
 
     private fun isExpired(): Boolean {

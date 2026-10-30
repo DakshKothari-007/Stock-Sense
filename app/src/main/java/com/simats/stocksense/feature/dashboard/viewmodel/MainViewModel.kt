@@ -29,8 +29,13 @@ data class MainUiState(
 class MainViewModel(
     private val repository: StockRepository = StockRepository(),
     private val profileRepository: ProfileRepository = ProfileRepository(),
-    private val sessionManager: SessionManager? = NetworkClient.getSessionManager()
+    customSessionManager: SessionManager? = null
 ) : ViewModel() {
+
+    private val _customSessionManager = customSessionManager
+
+    private val sessionManager: SessionManager?
+        get() = _customSessionManager ?: NetworkClient.getSessionManager()
 
     private val _uiState = MutableStateFlow(
         MainUiState(

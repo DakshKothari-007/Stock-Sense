@@ -56,6 +56,7 @@ import com.simats.stocksense.feature.reorder.ui.SlowMovingRecommendationScreen
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        NetworkClient.initialize(applicationContext)
         enableEdgeToEdge()
         setContent {
             StockSenseTheme {
@@ -102,94 +103,148 @@ fun StockSenseAppNavigation() {
         popExitTransition = { ExitTransition.None }
     ) {
         composable("splash") {
-            SplashScreen(
-                onGetStartedClick = {
-                    navController.navigate("onboarding1")
+            if (sessionManager.isLoggedIn()) {
+                androidx.compose.runtime.LaunchedEffect(Unit) {
+                    navController.navigate("main") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 }
-            )
+            } else {
+                SplashScreen(
+                    onGetStartedClick = {
+                        navController.navigate("onboarding1")
+                    }
+                )
+            }
         }
         composable("onboarding1") {
-            OnboardingScreen1(
-                onNextClick = {
-                    navController.navigate("onboarding2")
-                },
-                onSkipClick = {
-                    navController.navigate("login") {
-                        popUpTo("splash") { inclusive = true }
+            if (sessionManager.isLoggedIn()) {
+                androidx.compose.runtime.LaunchedEffect(Unit) {
+                    navController.navigate("main") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
                     }
                 }
-            )
+            } else {
+                OnboardingScreen1(
+                    onNextClick = {
+                        navController.navigate("onboarding2")
+                    },
+                    onSkipClick = {
+                        navController.navigate("login") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
+            }
         }
         composable("onboarding2") {
-            OnboardingScreen2(
-                onNextClick = {
-                    navController.navigate("onboarding3")
-                },
-                onSkipClick = {
-                    navController.navigate("login") {
-                        popUpTo("splash") { inclusive = true }
+            if (sessionManager.isLoggedIn()) {
+                androidx.compose.runtime.LaunchedEffect(Unit) {
+                    navController.navigate("main") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
                     }
                 }
-            )
+            } else {
+                OnboardingScreen2(
+                    onNextClick = {
+                        navController.navigate("onboarding3")
+                    },
+                    onSkipClick = {
+                        navController.navigate("login") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
+            }
         }
         composable("onboarding3") {
-            OnboardingScreen3(
-                onGetStartedClick = {
-                    navController.navigate("login") {
-                        popUpTo("splash") { inclusive = true }
-                    }
-                },
-                onSkipClick = {
-                    navController.navigate("login") {
-                        popUpTo("splash") { inclusive = true }
+            if (sessionManager.isLoggedIn()) {
+                androidx.compose.runtime.LaunchedEffect(Unit) {
+                    navController.navigate("main") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
                     }
                 }
-            )
+            } else {
+                OnboardingScreen3(
+                    onGetStartedClick = {
+                        navController.navigate("login") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    onSkipClick = {
+                        navController.navigate("login") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
+            }
         }
         composable("login") {
-            LoginScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                },
-                onLoginClick = {
+            if (sessionManager.isLoggedIn()) {
+                androidx.compose.runtime.LaunchedEffect(Unit) {
                     navController.navigate("main") {
-                        popUpTo("splash") { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                         launchSingleTop = true
                     }
-                },
-                onForgotPasswordClick = {
-                    navController.navigate("forgot_password")
-                },
-                onGoogleSignInClick = {
-                    navController.navigate("google_signin")
-                },
-                onSignUpClick = {
-                    navController.navigate("signup")
-                },
-                viewModel = authViewModel
-            )
+                }
+            } else {
+                LoginScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onLoginClick = {
+                        navController.navigate("main") {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onForgotPasswordClick = {
+                        navController.navigate("forgot_password")
+                    },
+                    onGoogleSignInClick = {
+                        navController.navigate("google_signin")
+                    },
+                    onSignUpClick = {
+                        navController.navigate("signup")
+                    },
+                    viewModel = authViewModel
+                )
+            }
         }
         composable("signup") {
-            SignUpScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                },
-                onCreateAccountClick = {
+            if (sessionManager.isLoggedIn()) {
+                androidx.compose.runtime.LaunchedEffect(Unit) {
                     navController.navigate("main") {
-                        popUpTo("splash") { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                         launchSingleTop = true
                     }
-                },
-                onGoogleSignInClick = {
-                    navController.navigate("google_signin")
-                },
-                onLoginClick = {
-                    navController.navigate("login") {
-                        popUpTo("login") { inclusive = true }
-                    }
-                },
-                viewModel = authViewModel
-            )
+                }
+            } else {
+                SignUpScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onCreateAccountClick = {
+                        navController.navigate("main") {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onGoogleSignInClick = {
+                        navController.navigate("google_signin")
+                    },
+                    onLoginClick = {
+                        navController.navigate("login") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    },
+                    viewModel = authViewModel
+                )
+            }
         }
         composable("forgot_password") {
             ForgotPasswordScreen(
@@ -202,7 +257,7 @@ fun StockSenseAppNavigation() {
             GoogleSignInScreen(
                 onAccountSelected = { _ ->
                     navController.navigate("main") {
-                        popUpTo("splash") { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                         launchSingleTop = true
                     }
                 },
