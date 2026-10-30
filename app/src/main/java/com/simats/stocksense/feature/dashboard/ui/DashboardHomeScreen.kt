@@ -1,3 +1,4 @@
+
 package com.simats.stocksense.feature.dashboard.ui
 
 import androidx.compose.foundation.Canvas
@@ -10,37 +11,200 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.*
-import com.simats.stocksense.data.model.SalesSummary
-import com.simats.stocksense.data.model.StoreProfile
+import com.simats.stocksense.core.util.NumberFormatUtil
+import com.simats.stocksense.data.model.DashboardAiPriority
+import com.simats.stocksense.data.model.DashboardSummaryData
+import com.simats.stocksense.feature.dashboard.viewmodel.DashboardUiState
+import com.simats.stocksense.feature.dashboard.viewmodel.DashboardViewModel
 
+/**
+ * Stateful DashboardHomeScreen that collects StateFlow from DashboardViewModel.
+ */
 @Composable
-fun DashboardHomeContent(
-    salesSummary: SalesSummary = SalesSummary(),
-    storeProfile: StoreProfile = StoreProfile(),
+fun DashboardHomeScreen(
+    viewModel: DashboardViewModel = viewModel(),
     onNotificationsClick: () -> Unit = {},
     onLowStockClick: () -> Unit = {},
     onSlowMovingClick: () -> Unit = {},
     onAnalyticsClick: () -> Unit = {},
     onInsightsClick: () -> Unit = {},
     onReorderMilkClick: () -> Unit = {},
-    onFreeUpStockClick: () -> Unit = {}
+    onFreeUpStockClick: () -> Unit = {},
+    onImportClick: () -> Unit = {}
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Auto-refresh when screen resumes
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refresh()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    DashboardHomeScreenContent(
+        uiState = uiState,
+        onRefresh = { viewModel.refresh() },
+        onNotificationsClick = onNotificationsClick,
+        onLowStockClick = onLowStockClick,
+        onSlowMovingClick = onSlowMovingClick,
+        onAnalyticsClick = onAnalyticsClick,
+        onInsightsClick = onInsightsClick,
+        onReorderMilkClick = onReorderMilkClick,
+        onFreeUpStockClick = onFreeUpStockClick,
+        onImportClick = onImportClick
+    )
+}
+
+/**
+ * Renders the dashboard screen state (Loading, Error with Retry, or Real Dashboard Content).
+ */
+@Composable
+fun DashboardHomeScreenContent(
+    uiState: DashboardUiState,
+    onRefresh: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    onLowStockClick: () -> Unit = {},
+    onSlowMovingClick: () -> Unit = {},
+    onAnalyticsClick: () -> Unit = {},
+    onInsightsClick: () -> Unit = {},
+    onReorderMilkClick: () -> Unit = {},
+    onFreeUpStockClick: () -> Unit = {},
+    onImportClick: () -> Unit = {}
+) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        when {
+            uiState.isLoading -> {
+                // Initial Loading Spinner
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            color = primaryColor,
+                            modifier = Modifier.size(36.dp),
+                            strokeWidth = 3.dp
+                        )
+                        Text(
+                            text = "Loading dashboard...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            uiState.errorMessage != null && uiState.dashboardData == null -> {
+                // Error State with Retry Button
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            text = "Unable to load dashboard",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = uiState.errorMessage,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        Button(
+                            onClick = onRefresh,
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Retry")
+                        }
+                    }
+                }
+            }
+
+            uiState.dashboardData != null -> {
+                DashboardHomeContent(
+                    data = uiState.dashboardData,
+                    unreadCount = uiState.unreadCount,
+                    lastUpdatedText = uiState.lastUpdatedText,
+                    onNotificationsClick = onNotificationsClick,
+                    onLowStockClick = onLowStockClick,
+                    onSlowMovingClick = onSlowMovingClick,
+                    onAnalyticsClick = onAnalyticsClick,
+                    onInsightsClick = onInsightsClick,
+                    onReorderMilkClick = onReorderMilkClick,
+                    onFreeUpStockClick = onFreeUpStockClick,
+                    onImportClick = onImportClick
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Main dashboard content populated with real backend data from GET /dashboard/summary.php.
+ */
+@Composable
+fun DashboardHomeContent(
+    data: DashboardSummaryData,
+    unreadCount: Int = 0,
+    lastUpdatedText: String = "",
+    onNotificationsClick: () -> Unit = {},
+    onLowStockClick: () -> Unit = {},
+    onSlowMovingClick: () -> Unit = {},
+    onAnalyticsClick: () -> Unit = {},
+    onInsightsClick: () -> Unit = {},
+    onReorderMilkClick: () -> Unit = {},
+    onFreeUpStockClick: () -> Unit = {},
+    onImportClick: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
     val accentColor = Teal500
+
+    val storeName = data.store?.name?.takeIf { it.isNotBlank() } ?: "—"
+    val storeLocation = data.store?.location?.takeIf { it.isNotBlank() } ?: "—"
+    val todayHeaderDate = NumberFormatUtil.formatCurrentHeaderDate()
+
+    val totalActiveProducts = data.inventory?.totalActiveProducts ?: 0
+    val isNewEmptyStore = totalActiveProducts == 0 && (data.sales?.todaySalesAmount ?: 0.0) == 0.0
 
     Column(
         modifier = Modifier
@@ -51,27 +215,31 @@ fun DashboardHomeContent(
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 1. Header Row
+        // 1. Header Row (Shop name, location, and notification bell)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = storeProfile.name,
+                    text = storeName,
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp
+                    fontSize = 22.sp,
+                    maxLines = 1
                 )
                 Text(
-                    text = "${storeProfile.location} · Thu, 15 Oct 2026",
+                    text = if (todayHeaderDate.isNotEmpty()) "$storeLocation · $todayHeaderDate" else storeLocation,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    maxLines = 1
                 )
             }
+
+            Spacer(modifier = Modifier.width(12.dp))
 
             // Bell Notification Icon Box
             val bellIconColor = MaterialTheme.colorScheme.onSurface
@@ -135,18 +303,20 @@ fun DashboardHomeContent(
                         )
                     )
 
-                    // Notification badge dot (Top Right)
-                    drawCircle(
-                        color = bellBadgeColor,
-                        radius = w * 0.15f,
-                        center = Offset(w * 0.78f, h * 0.20f)
-                    )
-                    drawCircle(
-                        color = bellSurfaceColor,
-                        radius = w * 0.15f,
-                        center = Offset(w * 0.78f, h * 0.20f),
-                        style = Stroke(width = 1.dp.toPx())
-                    )
+                    // Notification badge dot (Shown ONLY when unreadCount > 0)
+                    if (unreadCount > 0) {
+                        drawCircle(
+                            color = bellBadgeColor,
+                            radius = w * 0.15f,
+                            center = Offset(w * 0.78f, h * 0.20f)
+                        )
+                        drawCircle(
+                            color = bellSurfaceColor,
+                            radius = w * 0.15f,
+                            center = Offset(w * 0.78f, h * 0.20f),
+                            style = Stroke(width = 1.dp.toPx())
+                        )
+                    }
                 }
             }
         }
@@ -171,15 +341,16 @@ fun DashboardHomeContent(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = salesSummary.todaySalesAmount,
+                        text = NumberFormatUtil.formatIndianRupees(data.sales?.todaySalesAmount),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
                     )
                     Spacer(modifier = Modifier.height(4.dp))
+                    val bills = data.sales?.todayBillsCount ?: 0
                     Text(
-                        text = "${salesSummary.todayBillsCount} bills · +12% vs yesterday",
+                        text = "${NumberFormatUtil.formatIndianNumber(bills)} bills today",
                         style = MaterialTheme.typography.bodySmall,
                         color = primaryColor,
                         fontWeight = FontWeight.Medium,
@@ -203,7 +374,7 @@ fun DashboardHomeContent(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = salesSummary.inventoryValue,
+                        text = NumberFormatUtil.formatIndianRupees(data.inventory?.totalStockValue),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold,
@@ -211,7 +382,7 @@ fun DashboardHomeContent(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "${salesSummary.activeProductsCount} active products",
+                        text = "${NumberFormatUtil.formatIndianNumber(totalActiveProducts)} active products",
                         style = MaterialTheme.typography.bodySmall,
                         color = primaryColor,
                         fontWeight = FontWeight.Medium,
@@ -221,48 +392,118 @@ fun DashboardHomeContent(
             }
         }
 
+        // Empty Store State Banner for newly registered shops
+        if (isNewEmptyStore) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Welcome to StockSense!",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Import your stock to get started with inventory tracking, low-stock alerts, and AI insights.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        fontSize = 12.sp
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onImportClick,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                    ) {
+                        Text("Import Stock", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
         // 3. Alerts Row (Low Stock & Slow Moving)
+        val lowStockCount = data.inventory?.lowStockCount ?: 0
+        val topLowItem = data.alerts?.lowStockItems?.firstOrNull()
+
+        val slowMovingMetadata = data.alerts?.slowMovingMetadata
+        val hasSalesHistory = slowMovingMetadata?.hasEnoughSalesHistory ?: false
+        val slowMovingCount = data.inventory?.slowMovingCount ?: 0
+        val topSlowItem = data.alerts?.slowMovingItems?.firstOrNull()
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Low Stock Alert Card -> ProductMilk
+            // Low Stock Alert Card
+            val isLowStockActive = lowStockCount > 0 && topLowItem != null
             Card(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(14.dp))
                     .clickable { onLowStockClick() },
-                colors = CardDefaults.cardColors(containerColor = Amber50),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isLowStockActive) Amber50 else MaterialTheme.colorScheme.surface
+                ),
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
                         text = "LOW STOCK",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Amber700,
+                        color = if (isLowStockActive) Amber700 else MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Bold,
                         fontSize = 10.sp,
                         letterSpacing = 1.sp
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Amul Milk · 8 left ›",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Below 24-unit minimum",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp
-                    )
+                    if (isLowStockActive) {
+                        Text(
+                            text = "${topLowItem.name} · ${topLowItem.units} left ›",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            maxLines = 1
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Below ${topLowItem.minStockThreshold}-unit minimum",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 11.sp,
+                            maxLines = 1
+                        )
+                    } else {
+                        Text(
+                            text = "Nothing needs attention",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            maxLines = 1
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "All stock levels healthy",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 11.sp,
+                            maxLines = 1
+                        )
+                    }
                 }
             }
 
-            // Slow Moving Alert Card -> ProductBiscuits
+            // Slow Moving Alert Card
+            val isSlowMovingActive = hasSalesHistory && slowMovingCount > 0 && topSlowItem != null
             Card(
                 modifier = Modifier
                     .weight(1f)
@@ -275,31 +516,87 @@ fun DashboardHomeContent(
                     Text(
                         text = "SLOW MOVING",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Amber700,
+                        color = if (isSlowMovingActive) Amber700 else MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Bold,
                         fontSize = 10.sp,
                         letterSpacing = 1.sp
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Marie Biscuits ›",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "96 left · 6 sold / 30 days",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp
-                    )
+                    when {
+                        !hasSalesHistory -> {
+                            Text(
+                                text = "Sales history needed",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                maxLines = 1
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = slowMovingMetadata?.message ?: "Requires 30 days history",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 11.sp,
+                                maxLines = 2
+                            )
+                        }
+                        isSlowMovingActive -> {
+                            Text(
+                                text = "${topSlowItem.name} ›",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                maxLines = 1
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "${topSlowItem.units} left · ${topSlowItem.soldLast30Days} sold / 30 days",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 11.sp,
+                                maxLines = 1
+                            )
+                        }
+                        else -> {
+                            Text(
+                                text = "Nothing needs attention",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                maxLines = 1
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "No slow-moving inventory",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 11.sp,
+                                maxLines = 1
+                            )
+                        }
+                    }
                 }
             }
         }
 
         // 4. Sales This Week Card (Chart)
+        val rawPoints = data.sales?.dailySalesPoints ?: emptyList()
+        // Take last 7 days points
+        val chartPoints = if (rawPoints.size > 7) rawPoints.takeLast(7) else rawPoints
+        val maxAmount = chartPoints.maxOfOrNull { it.amount ?: 0.0 } ?: 0.0
+
+        val firstLabel = chartPoints.firstOrNull()?.dayLabel ?: ""
+        val lastLabel = chartPoints.lastOrNull()?.dayLabel ?: ""
+        val weekDateRangeTag = if (firstLabel.isNotEmpty() && lastLabel.isNotEmpty()) {
+            val firstDay = firstLabel.split(" ").firstOrNull() ?: firstLabel
+            "$firstDay–$lastLabel"
+        } else {
+            "Past 7 days"
+        }
+
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -342,7 +639,7 @@ fun DashboardHomeContent(
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
-                                text = "9–15 Oct",
+                                text = weekDateRangeTag,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 fontSize = 10.sp,
@@ -355,7 +652,7 @@ fun DashboardHomeContent(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = salesSummary.weeklySalesTotal,
+                    text = NumberFormatUtil.formatIndianRupees(data.sales?.weeklySalesTotal),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -364,53 +661,69 @@ fun DashboardHomeContent(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Bar Chart
-                val barData = listOf(
-                    "9" to 0.45f,
-                    "10" to 0.52f,
-                    "11" to 0.45f,
-                    "12" to 0.60f,
-                    "13" to 0.82f,
-                    "14" to 0.55f,
-                    "15" to 0.70f
-                )
+                // Bar Chart dynamically rendered from dailySalesPoints
+                if (chartPoints.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(85.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        chartPoints.forEach { point ->
+                            val amount = point.amount ?: 0.0
+                            val ratio = if (maxAmount > 0.0) {
+                                (amount / maxAmount).toFloat().coerceIn(0.08f, 1.0f)
+                            } else {
+                                0.08f
+                            }
+                            val isCurrent = point.isCurrentDay == true
+                            val dayNumber = point.dayLabel?.split(" ")?.firstOrNull()
+                                ?: point.date?.split("-")?.lastOrNull()
+                                ?: ""
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(85.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    barData.forEachIndexed { index, (day, ratio) ->
-                        val isLast = index == barData.lastIndex
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Bottom,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .width(18.dp)
-                                    .fillMaxHeight(ratio)
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(if (isLast) primaryColor else accentColor)
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = day,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 10.sp
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Bottom,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .width(18.dp)
+                                        .fillMaxHeight(ratio)
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(if (isCurrent) primaryColor else accentColor)
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = dayNumber,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 10.sp
+                                )
+                            }
                         }
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(70.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No sales recorded this week",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp
+                        )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "9–15 Oct 2026 · Daily sales in ₹",
+                    text = "$weekDateRangeTag · Daily sales in ₹",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 10.sp
@@ -419,6 +732,7 @@ fun DashboardHomeContent(
         }
 
         // 5. Your AI Priorities Section
+        val aiPriorities = data.aiPriorities ?: emptyList()
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -445,155 +759,66 @@ fun DashboardHomeContent(
                 )
             }
 
-            // AI Priority Card 1 -> RecommendationReorder
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .clickable { onReorderMilkClick() },
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Canvas(modifier = Modifier.size(18.dp)) {
-                                val cx = size.width / 2f
-                                val cy = size.height / 2f
-                                val path = Path().apply {
-                                    moveTo(cx, 0f)
-                                    quadraticTo(cx, cy, size.width, cy)
-                                    quadraticTo(cx, cy, cx, size.height)
-                                    quadraticTo(cx, cy, 0f, cy)
-                                    quadraticTo(cx, cy, cx, 0f)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                )
+            if (aiPriorities.isNotEmpty()) {
+                aiPriorities.forEach { priority ->
+                    AiPriorityCard(
+                        priority = priority,
+                        primaryColor = primaryColor,
+                        onClick = {
+                            if (priority.type.equals("reorder", ignoreCase = true)) {
+                                onReorderMilkClick()
+                            } else {
+                                onFreeUpStockClick()
                             }
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = "Reorder 60 Amul Milk units",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 13.sp
-                            )
-                            Text(
-                                text = "12 units/day · estimated purchase ₹1,620",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 11.sp
-                            )
-                        }
-                    }
-
-                    Canvas(modifier = Modifier.size(12.dp)) {
-                        val path = Path().apply {
-                            moveTo(size.width * 0.2f, size.height * 0.1f)
-                            lineTo(size.width * 0.8f, size.height * 0.5f)
-                            lineTo(size.width * 0.2f, size.height * 0.9f)
-                        }
-                        drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-                    }
+                    )
                 }
-            }
-
-            // AI Priority Card 2 -> ProductBiscuits
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .clickable { onFreeUpStockClick() },
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Row(
+            } else {
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .clip(RoundedCornerShape(14.dp))
+                        .clickable { onInsightsClick() },
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(14.dp)
                 ) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Canvas(modifier = Modifier.size(18.dp)) {
-                                val cx = size.width / 2f
-                                val cy = size.height / 2f
-                                val path = Path().apply {
-                                    moveTo(cx, 0f)
-                                    quadraticTo(cx, cy, size.width, cy)
-                                    quadraticTo(cx, cy, cx, size.height)
-                                    quadraticTo(cx, cy, 0f, cy)
-                                    quadraticTo(cx, cy, cx, 0f)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                )
-                            }
-                        }
+                        SparkleIcon(primaryColor = primaryColor)
                         Spacer(modifier = Modifier.width(12.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Free up slow-moving stock",
+                                text = "All systems optimal",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontSize = 13.sp
                             )
                             Text(
-                                text = "Marie Biscuits · try a 10% clearance offer",
+                                text = "AI will alert you when reordering or clearance is recommended",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 11.sp
                             )
                         }
-                    }
-
-                    Canvas(modifier = Modifier.size(12.dp)) {
-                        val path = Path().apply {
-                            moveTo(size.width * 0.2f, size.height * 0.1f)
-                            lineTo(size.width * 0.8f, size.height * 0.5f)
-                            lineTo(size.width * 0.2f, size.height * 0.9f)
-                        }
-                        drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
                     }
                 }
             }
         }
 
+        // 6. Footer (Live store data & real timestamp)
+        val footerText = if (lastUpdatedText.isNotBlank()) {
+            "Live store data · Updated $lastUpdatedText"
+        } else {
+            "Live store data"
+        }
+
         Text(
-            text = "Sample store data · Updated 15 Oct, 9:30 am",
+            text = footerText,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 10.sp,
@@ -604,5 +829,116 @@ fun DashboardHomeContent(
         )
 
         Spacer(modifier = Modifier.height(12.dp))
+    }
+}
+
+/**
+ * Reusable AI Priority Card displaying reorder/clearance recommendations.
+ */
+@Composable
+private fun AiPriorityCard(
+    priority: DashboardAiPriority,
+    primaryColor: Color,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(14.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                SparkleIcon(primaryColor = primaryColor)
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = priority.title ?: "AI Recommendation",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 13.sp,
+                        maxLines = 1
+                    )
+                    if (!priority.subtitle.isNullOrBlank()) {
+                        Text(
+                            text = priority.subtitle,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 11.sp,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+
+            // Right Chevron
+            Canvas(modifier = Modifier.size(12.dp)) {
+                val path = Path().apply {
+                    moveTo(size.width * 0.2f, size.height * 0.1f)
+                    lineTo(size.width * 0.8f, size.height * 0.5f)
+                    lineTo(size.width * 0.2f, size.height * 0.9f)
+                }
+                drawPath(
+                    path = path,
+                    color = primaryColor,
+                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * AI Sparkle decorative icon.
+ */
+@Composable
+private fun SparkleIcon(primaryColor: Color) {
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primaryContainer),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.size(18.dp)) {
+            val cx = size.width / 2f
+            val cy = size.height / 2f
+            val path = Path().apply {
+                moveTo(cx, 0f)
+                quadraticTo(cx, cy, size.width, cy)
+                quadraticTo(cx, cy, cx, size.height)
+                quadraticTo(cx, cy, 0f, cy)
+                quadraticTo(cx, cy, cx, 0f)
+            }
+            drawPath(
+                path = path,
+                color = primaryColor,
+                style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DashboardHomeScreenPreview() {
+    StockSenseTheme {
+        DashboardHomeContent(
+            data = DashboardSummaryData(),
+            unreadCount = 2,
+            lastUpdatedText = "30 Oct, 1:30 pm"
+        )
     }
 }

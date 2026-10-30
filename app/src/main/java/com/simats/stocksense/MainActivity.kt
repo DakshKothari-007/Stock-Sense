@@ -81,6 +81,7 @@ fun StockSenseAppNavigation() {
     DisposableEffect(Unit) {
         NetworkClient.initialize(context) {
             android.os.Handler(android.os.Looper.getMainLooper()).post {
+                android.widget.Toast.makeText(context, "Session expired. Please log in again.", android.widget.Toast.LENGTH_LONG).show()
                 navController.navigate("login") {
                     popUpTo(0) { inclusive = true }
                     launchSingleTop = true

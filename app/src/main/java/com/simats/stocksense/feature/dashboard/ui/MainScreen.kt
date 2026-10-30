@@ -60,16 +60,15 @@ fun MainScreen(
                     .padding(innerPadding)
             ) {
                 when (uiState.selectedTab) {
-                    0 -> DashboardHomeContent(
-                        salesSummary = uiState.salesSummary,
-                        storeProfile = uiState.storeProfile,
+                    0 -> DashboardHomeScreen(
                         onNotificationsClick = onNotificationsClick,
                         onLowStockClick = onProductMilkClick,
                         onSlowMovingClick = onProductBiscuitsClick,
                         onAnalyticsClick = onSalesAnalyticsClick,
                         onInsightsClick = { viewModel.selectTab(2) },
                         onReorderMilkClick = onReorderRecommendationClick,
-                        onFreeUpStockClick = onProductBiscuitsClick
+                        onFreeUpStockClick = onProductBiscuitsClick,
+                        onImportClick = onInventoryImportedClick
                     )
                     1 -> InventoryContent(
                         products = uiState.filteredProducts,
