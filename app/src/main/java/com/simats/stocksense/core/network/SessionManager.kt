@@ -36,6 +36,10 @@ class SessionManager private constructor(context: Context) {
             user.location?.let { editor.putString(KEY_LOCATION, it) }
             user.storeType?.let { editor.putString(KEY_STORE_TYPE, it) }
             user.currency?.let { editor.putString(KEY_CURRENCY, it) }
+            user.role?.let { editor.putString(KEY_ROLE, it) }
+            user.plan?.let { editor.putString(KEY_PLAN, it) }
+            user.storeId?.let { editor.putString(KEY_STORE_ID, it) }
+            (user.dataSnapshot ?: user.updatedAt)?.let { editor.putString(KEY_LAST_UPDATED, it) }
         }
         editor.apply()
     }
@@ -52,6 +56,9 @@ class SessionManager private constructor(context: Context) {
             .putString(KEY_STORE_TYPE, profile.storeType)
             .putString(KEY_CURRENCY, profile.currency)
             .putString(KEY_LAST_UPDATED, profile.lastUpdated)
+            .putString(KEY_ROLE, profile.role)
+            .putString(KEY_PLAN, profile.plan)
+            .putString(KEY_STORE_ID, profile.storeId)
 
         if (userId != null && userId > 0) {
             editor.putInt(KEY_USER_ID, userId)
@@ -89,8 +96,10 @@ class SessionManager private constructor(context: Context) {
         val storeType = prefs.getString(KEY_STORE_TYPE, "") ?: ""
         val currency = prefs.getString(KEY_CURRENCY, "") ?: ""
         val lastUpdated = prefs.getString(KEY_LAST_UPDATED, "") ?: ""
+        val role = prefs.getString(KEY_ROLE, "") ?: ""
+        val plan = prefs.getString(KEY_PLAN, "") ?: ""
         val userId = prefs.getInt(KEY_USER_ID, 0)
-        val storeId = if (userId > 0) "GB-BLR-00$userId" else ""
+        val storeId = prefs.getString(KEY_STORE_ID, "")?.takeIf { it.isNotBlank() } ?: (if (userId > 0) "GB-BLR-00$userId" else "")
 
         return StoreProfile(
             name = shopName,
@@ -100,7 +109,9 @@ class SessionManager private constructor(context: Context) {
             ownerName = ownerName,
             storeType = storeType,
             storeId = storeId,
-            currency = currency
+            currency = currency,
+            role = role,
+            plan = plan
         )
     }
 
@@ -177,6 +188,9 @@ class SessionManager private constructor(context: Context) {
         private const val KEY_STORE_TYPE = "store_type"
         private const val KEY_CURRENCY = "currency"
         private const val KEY_LAST_UPDATED = "last_updated"
+        private const val KEY_ROLE = "role"
+        private const val KEY_PLAN = "plan"
+        private const val KEY_STORE_ID = "store_id"
 
         @Volatile
         private var instance: SessionManager? = null

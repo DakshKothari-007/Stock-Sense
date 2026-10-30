@@ -111,52 +111,55 @@ class MainViewModel(
     }
 
     /**
-     * Updates shop name optimistically and persists to database via POST auth/update_shop.php.
+     * Updates shop details (name, location, store_type) in DB via POST auth/update_shop.php.
      */
-    fun updateShopName(newName: String, onResult: (Boolean, String?) -> Unit = { _, _ -> }) {
-        val trimmed = newName.trim()
-        if (trimmed.isEmpty()) {
+    fun updateShop(
+        shopName: String,
+        location: String,
+        storeType: String,
+        onResult: (Boolean, String?) -> Unit = { _, _ -> }
+    ) {
+        val trimmedShop = shopName.trim()
+        val trimmedLocation = location.trim()
+        val trimmedType = storeType.trim()
+
+        if (trimmedShop.isEmpty()) {
             onResult(false, "Shop name cannot be empty.")
             return
         }
 
-        // Optimistic update
-        val previousName = _uiState.value.storeProfile.name
-        _uiState.update { currentState ->
-            val updated = currentState.storeProfile.copy(name = trimmed)
-            currentState.copy(storeProfile = updated)
-        }
-
         viewModelScope.launch {
-            val result = profileRepository.updateShopName(trimmed)
+            val result = profileRepository.updateShop(trimmedShop, trimmedLocation, trimmedType)
             result.fold(
                 onSuccess = { updatedProfile ->
                     _uiState.update { it.copy(storeProfile = updatedProfile) }
-                    onResult(true, "Shop name updated successfully.")
+                    onResult(true, "Shop details updated successfully.")
                 },
                 onFailure = { err ->
-                    // Revert on failure
-                    _uiState.update { currentState ->
-                        val reverted = currentState.storeProfile.copy(name = previousName)
-                        currentState.copy(storeProfile = reverted)
-                    }
-                    onResult(false, err.message ?: "Failed to update shop name.")
+                    onResult(false, err.message ?: "Failed to update shop details.")
                 }
             )
         }
     }
 
     /**
-     * Updates user full name optimistically and persists to database.
+     * Updates shop name optimistically and persists to database via POST auth/update_shop.php.
+     */
+    fun updateShopName(newName: String, onResult: (Boolean, String?) -> Unit = { _, _ -> }) {
+        val trimmed = newName.trim()
+        val currentLoc = _uiState.value.storeProfile.location
+        val currentType = _uiState.value.storeProfile.storeType
+        updateShop(trimmed, currentLoc, currentType, onResult)
+    }
+
+    /**
+     * Updates user full name and email in database.
      */
     fun updateUserName(newUserName: String) {
         val currentEmail = _uiState.value.storeProfile.email
         updateUserProfile(newUserName, currentEmail)
     }
 
-    /**
-     * Updates user email optimistically and persists to database.
-     */
     fun updateEmail(newEmail: String) {
         val currentName = _uiState.value.storeProfile.ownerName
         updateUserProfile(currentName, newEmail)
@@ -178,12 +181,6 @@ class MainViewModel(
             return
         }
 
-        val prevProfile = _uiState.value.storeProfile
-        _uiState.update { currentState ->
-            val updated = currentState.storeProfile.copy(ownerName = trimmedName, email = trimmedEmail)
-            currentState.copy(storeProfile = updated)
-        }
-
         viewModelScope.launch {
             val result = profileRepository.updateUserProfile(trimmedName, trimmedEmail)
             result.fold(
@@ -192,7 +189,6 @@ class MainViewModel(
                     onResult(true, "Profile details updated successfully.")
                 },
                 onFailure = { err ->
-                    _uiState.update { it.copy(storeProfile = prevProfile) }
                     onResult(false, err.message ?: "Failed to update profile.")
                 }
             )

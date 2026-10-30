@@ -8,5 +8,7 @@ data class StoreProfile(
     val ownerName: String = "",
     val storeType: String = "",
     val storeId: String = "",
-    val currency: String = ""
+    val currency: String = "",
+    val role: String = "",
+    val plan: String = ""
 )

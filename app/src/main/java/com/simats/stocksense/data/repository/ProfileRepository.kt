@@ -53,12 +53,14 @@ class ProfileRepository(
                     val updatedProfile = StoreProfile(
                         name = user.shopName.orEmpty(),
                         location = user.location.orEmpty(),
-                        lastUpdated = user.updatedAt ?: user.createdAt.orEmpty(),
+                        lastUpdated = user.dataSnapshot ?: user.updatedAt ?: user.createdAt.orEmpty(),
                         email = user.email.orEmpty(),
                         ownerName = user.fullName.orEmpty(),
                         storeType = user.storeType.orEmpty(),
-                        storeId = if ((user.id ?: 0) > 0) "GB-BLR-00${user.id}" else "",
-                        currency = user.currency.orEmpty()
+                        storeId = user.storeId?.takeIf { it.isNotBlank() } ?: (if ((user.id ?: 0) > 0) "GB-BLR-00${user.id}" else ""),
+                        currency = user.currency.orEmpty(),
+                        role = user.role.orEmpty(),
+                        plan = user.plan.orEmpty()
                     )
                     sessionManager?.saveStoreProfile(updatedProfile, user.id)
                     Result.success(updatedProfile)
@@ -75,11 +77,19 @@ class ProfileRepository(
     }
 
     /**
-     * Updates shop name in DB via POST auth/update_shop.php and persists in SharedPreferences.
+     * Updates shop details (name, location, store_type) in DB via POST auth/update_shop.php
+     * and persists in SessionManager SharedPreferences.
      */
-    suspend fun updateShopName(newName: String): Result<StoreProfile> = withContext(Dispatchers.IO) {
-        val trimmed = newName.trim()
-        if (trimmed.isEmpty()) {
+    suspend fun updateShop(
+        shopName: String,
+        location: String,
+        storeType: String
+    ): Result<StoreProfile> = withContext(Dispatchers.IO) {
+        val trimmedShop = shopName.trim()
+        val trimmedLocation = location.trim()
+        val trimmedStoreType = storeType.trim()
+
+        if (trimmedShop.isEmpty()) {
             return@withContext Result.failure(Exception("Shop name cannot be empty."))
         }
 
@@ -89,7 +99,9 @@ class ProfileRepository(
             val email = sessionManager?.getUserEmail() ?: sessionManager?.getStoreProfile()?.email
             val response = apiService.updateShop(
                 UpdateShopRequest(
-                    shopName = trimmed,
+                    shopName = trimmedShop,
+                    location = trimmedLocation,
+                    storeType = trimmedStoreType,
                     userId = userId,
                     email = email,
                     token = token
@@ -97,11 +109,33 @@ class ProfileRepository(
             )
 
             if (response.isSuccessful) {
-                sessionManager?.updateShopName(trimmed)
-                val current = sessionManager?.getStoreProfile() ?: StoreProfile()
-                val updated = current.copy(name = trimmed)
-                sessionManager?.saveStoreProfile(updated, userId)
-                Result.success(updated)
+                val body = response.body()
+                val user = body?.getEffectiveUser()
+                if (user != null) {
+                    val updatedProfile = StoreProfile(
+                        name = user.shopName.orEmpty(),
+                        location = user.location.orEmpty(),
+                        lastUpdated = user.dataSnapshot ?: user.updatedAt ?: user.createdAt.orEmpty(),
+                        email = user.email.orEmpty(),
+                        ownerName = user.fullName.orEmpty(),
+                        storeType = user.storeType.orEmpty(),
+                        storeId = user.storeId?.takeIf { it.isNotBlank() } ?: (if ((user.id ?: 0) > 0) "GB-BLR-00${user.id}" else ""),
+                        currency = user.currency.orEmpty(),
+                        role = user.role.orEmpty(),
+                        plan = user.plan.orEmpty()
+                    )
+                    sessionManager?.saveStoreProfile(updatedProfile, user.id ?: userId)
+                    Result.success(updatedProfile)
+                } else {
+                    val current = sessionManager?.getStoreProfile() ?: StoreProfile()
+                    val updated = current.copy(
+                        name = trimmedShop,
+                        location = trimmedLocation,
+                        storeType = trimmedStoreType
+                    )
+                    sessionManager?.saveStoreProfile(updated, userId)
+                    Result.success(updated)
+                }
             } else {
                 val err = parseHttpError(response.code(), response.errorBody()?.string())
                 Result.failure(Exception(err))
@@ -109,6 +143,14 @@ class ProfileRepository(
         } catch (e: Throwable) {
             Result.failure(Exception(parseNetworkException(e)))
         }
+    }
+
+    /**
+     * Updates shop name in DB via POST auth/update_shop.php and persists in SharedPreferences.
+     */
+    suspend fun updateShopName(newName: String): Result<StoreProfile> = withContext(Dispatchers.IO) {
+        val current = sessionManager?.getStoreProfile() ?: StoreProfile()
+        updateShop(newName, current.location, current.storeType)
     }
 
     /**
@@ -132,20 +174,40 @@ class ProfileRepository(
             val response = apiService.updateProfile(
                 UpdateProfileRequest(
                     fullName = trimmedName,
+                    email = trimmedEmail,
                     newEmail = trimmedEmail,
                     currentEmail = currentEmail,
-                    email = currentEmail,
                     userId = userId,
                     token = token
                 )
             )
 
             if (response.isSuccessful) {
-                sessionManager?.updateProfileUser(trimmedName, trimmedEmail)
-                val current = sessionManager?.getStoreProfile() ?: StoreProfile()
-                val updated = current.copy(ownerName = trimmedName, email = trimmedEmail)
-                sessionManager?.saveStoreProfile(updated, userId)
-                Result.success(updated)
+                val body = response.body()
+                val user = body?.getEffectiveUser()
+                if (user != null) {
+                    val updatedProfile = StoreProfile(
+                        name = user.shopName.orEmpty(),
+                        location = user.location.orEmpty(),
+                        lastUpdated = user.dataSnapshot ?: user.updatedAt ?: user.createdAt.orEmpty(),
+                        email = user.email.orEmpty(),
+                        ownerName = user.fullName.orEmpty(),
+                        storeType = user.storeType.orEmpty(),
+                        storeId = user.storeId?.takeIf { it.isNotBlank() } ?: (if ((user.id ?: 0) > 0) "GB-BLR-00${user.id}" else ""),
+                        currency = user.currency.orEmpty(),
+                        role = user.role.orEmpty(),
+                        plan = user.plan.orEmpty()
+                    )
+                    sessionManager?.saveStoreProfile(updatedProfile, user.id ?: userId)
+                    sessionManager?.updateProfileUser(trimmedName, trimmedEmail)
+                    Result.success(updatedProfile)
+                } else {
+                    sessionManager?.updateProfileUser(trimmedName, trimmedEmail)
+                    val current = sessionManager?.getStoreProfile() ?: StoreProfile()
+                    val updated = current.copy(ownerName = trimmedName, email = trimmedEmail)
+                    sessionManager?.saveStoreProfile(updated, userId)
+                    Result.success(updated)
+                }
             } else {
                 val err = parseHttpError(response.code(), response.errorBody()?.string())
                 Result.failure(Exception(err))

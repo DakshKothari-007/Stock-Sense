@@ -16,6 +16,9 @@ data class LoginRequest(
 data class SignUpRequest(
     @SerializedName("full_name") val fullName: String,
     @SerializedName("shop_name") val shopName: String,
+    @SerializedName("location") val location: String? = null,
+    @SerializedName("store_type") val storeType: String? = null,
+    @SerializedName("currency") val currency: String? = null,
     @SerializedName("email") val email: String,
     @SerializedName("password") val password: String
 )
@@ -37,12 +40,16 @@ data class LoginResponse(
  */
 data class AuthUser(
     @SerializedName("id") val id: Int? = null,
+    @SerializedName("store_id") val storeId: String? = null,
     @SerializedName("full_name") val fullName: String? = null,
     @SerializedName("shop_name") val shopName: String? = null,
     @SerializedName("location") val location: String? = null,
     @SerializedName("store_type") val storeType: String? = null,
     @SerializedName("currency") val currency: String? = null,
     @SerializedName("email") val email: String? = null,
+    @SerializedName("role") val role: String? = null,
+    @SerializedName("plan") val plan: String? = null,
+    @SerializedName("data_snapshot") val dataSnapshot: String? = null,
     @SerializedName("created_at") val createdAt: String? = null,
     @SerializedName("updated_at") val updatedAt: String? = null
 )

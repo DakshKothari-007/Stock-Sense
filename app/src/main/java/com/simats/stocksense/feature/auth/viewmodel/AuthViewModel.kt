@@ -30,6 +30,9 @@ data class LoginUiState(
 data class SignUpUiState(
     val fullName: String = "",
     val shopName: String = "",
+    val location: String = "",
+    val storeType: String = "Neighbourhood supermarket",
+    val currency: String = "INR (₹)",
     val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",
@@ -84,6 +87,21 @@ class AuthViewModel(
         _authUiState.update { it.copy(errorMessage = null) }
     }
 
+    fun updateSignUpLocation(location: String) {
+        _signUpState.update { it.copy(location = location, errorMessage = null) }
+        _authUiState.update { it.copy(errorMessage = null) }
+    }
+
+    fun updateSignUpStoreType(storeType: String) {
+        _signUpState.update { it.copy(storeType = storeType, errorMessage = null) }
+        _authUiState.update { it.copy(errorMessage = null) }
+    }
+
+    fun updateSignUpCurrency(currency: String) {
+        _signUpState.update { it.copy(currency = currency, errorMessage = null) }
+        _authUiState.update { it.copy(errorMessage = null) }
+    }
+
     fun updateSignUpEmail(email: String) {
         _signUpState.update { it.copy(email = email, errorMessage = null) }
         _authUiState.update { it.copy(errorMessage = null) }
@@ -111,7 +129,7 @@ class AuthViewModel(
      * Executes login with input validation, viewModelScope coroutine, and real backend authentication.
      */
     fun onLogin(email: String, password: String, onSuccess: () -> Unit = {}) {
-        val trimmedEmail = email.trim()
+        val trimmedEmail = email.trim().lowercase()
 
         // Validation
         if (trimmedEmail.isBlank() || password.isBlank()) {
@@ -166,6 +184,9 @@ class AuthViewModel(
     fun onSignup(
         fullName: String,
         shopName: String,
+        location: String = "",
+        storeType: String = "",
+        currency: String = "",
         email: String,
         password: String,
         confirmPassword: String? = null,
@@ -173,11 +194,14 @@ class AuthViewModel(
     ) {
         val trimmedName = fullName.trim()
         val trimmedShop = shopName.trim()
-        val trimmedEmail = email.trim()
+        val trimmedLocation = location.trim()
+        val trimmedStoreType = storeType.trim()
+        val trimmedCurrency = currency.trim()
+        val trimmedEmail = email.trim().lowercase()
 
         // Non-empty fields check
-        if (trimmedName.isBlank() || trimmedShop.isBlank() || trimmedEmail.isBlank() || password.isBlank()) {
-            val error = "Please fill in all fields."
+        if (trimmedName.isBlank() || trimmedShop.isBlank() || trimmedLocation.isBlank() || trimmedStoreType.isBlank() || trimmedEmail.isBlank() || password.isBlank()) {
+            val error = "Please fill in all required fields."
             _signUpState.update { it.copy(errorMessage = error, isLoading = false) }
             _authUiState.update { it.copy(errorMessage = error, isLoading = false) }
             return
@@ -211,7 +235,15 @@ class AuthViewModel(
         _authUiState.update { it.copy(isLoading = true, errorMessage = null, isSuccess = false) }
 
         viewModelScope.launch {
-            val result = authRepository.signUp(trimmedName, trimmedShop, trimmedEmail, password)
+            val result = authRepository.signUp(
+                fullName = trimmedName,
+                shopName = trimmedShop,
+                location = trimmedLocation,
+                storeType = trimmedStoreType,
+                currency = trimmedCurrency,
+                email = trimmedEmail,
+                password = password
+            )
             result.fold(
                 onSuccess = {
                     _signUpState.update { it.copy(isLoading = false, isSuccess = true, errorMessage = null) }
@@ -233,7 +265,17 @@ class AuthViewModel(
     fun signUp(onSuccess: () -> Unit) {
         val s = _signUpState.value
         val confirm = if (s.confirmPassword.isNotBlank()) s.confirmPassword else null
-        onSignup(s.fullName, s.shopName, s.email, s.password, confirm, onSuccess)
+        onSignup(
+            fullName = s.fullName,
+            shopName = s.shopName,
+            location = s.location,
+            storeType = s.storeType,
+            currency = s.currency,
+            email = s.email,
+            password = s.password,
+            confirmPassword = confirm,
+            onSuccess = onSuccess
+        )
     }
 
     // -------------------------------------------------------------

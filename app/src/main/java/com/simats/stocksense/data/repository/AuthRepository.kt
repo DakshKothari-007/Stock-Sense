@@ -10,6 +10,7 @@ import com.simats.stocksense.data.model.LoginRequest
 import com.simats.stocksense.data.model.LoginResponse
 import com.simats.stocksense.data.model.SignUpRequest
 import com.simats.stocksense.data.model.SignUpResponse
+import com.simats.stocksense.data.model.StoreProfile
 import com.simats.stocksense.data.model.UserProfile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,7 +47,8 @@ class AuthRepository(
      */
     suspend fun login(email: String, password: String): Result<LoginResponse> = withContext(Dispatchers.IO) {
         try {
-            val response = apiService.login(LoginRequest(email = email.trim(), password = password))
+            val normalizedEmail = email.trim().lowercase()
+            val response = apiService.login(LoginRequest(email = normalizedEmail, password = password))
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && (body.status == true || body.success == true)) {
@@ -61,7 +63,7 @@ class AuthRepository(
                     body.user?.let { u ->
                         _currentUser.value = UserProfile(
                             fullName = u.fullName.orEmpty(),
-                            email = u.email ?: email,
+                            email = u.email ?: normalizedEmail,
                             shopName = u.shopName.orEmpty()
                         )
                     }
@@ -84,18 +86,25 @@ class AuthRepository(
     suspend fun signUp(
         fullName: String,
         shopName: String,
+        location: String = "",
+        storeType: String = "",
+        currency: String = "",
         email: String,
         password: String
     ): Result<SignUpResponse> = withContext(Dispatchers.IO) {
         try {
-            val response = apiService.signup(
-                SignUpRequest(
-                    fullName = fullName.trim(),
-                    shopName = shopName.trim(),
-                    email = email.trim(),
-                    password = password
-                )
+            val normalizedEmail = email.trim().lowercase()
+            val request = SignUpRequest(
+                fullName = fullName.trim(),
+                shopName = shopName.trim(),
+                location = location.trim().ifEmpty { null },
+                storeType = storeType.trim().ifEmpty { null },
+                currency = currency.trim().ifEmpty { null },
+                email = normalizedEmail,
+                password = password
             )
+
+            val response = apiService.signup(request)
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && (body.status == true || body.success == true)) {
@@ -107,7 +116,10 @@ class AuthRepository(
                         id = body.data?.userId,
                         fullName = fullName.trim(),
                         shopName = shopName.trim(),
-                        email = email.trim()
+                        location = location.trim(),
+                        storeType = storeType.trim(),
+                        currency = currency.trim(),
+                        email = normalizedEmail
                     )
                     if (!token.isNullOrBlank()) {
                         sessionManager?.saveSession(token, body.expiresAt, userObj)
@@ -122,8 +134,18 @@ class AuthRepository(
 
                     _currentUser.value = UserProfile(
                         fullName = fullName.trim(),
-                        email = email.trim(),
+                        email = normalizedEmail,
                         shopName = shopName.trim()
+                    )
+                    sessionManager?.saveStoreProfile(
+                        StoreProfile(
+                            name = shopName.trim(),
+                            ownerName = fullName.trim(),
+                            email = normalizedEmail,
+                            location = location.trim().ifEmpty { "Bengaluru" },
+                            storeType = storeType.trim().ifEmpty { "Neighbourhood supermarket" },
+                            currency = currency.trim().ifEmpty { "INR (₹)" }
+                        )
                     )
                     Result.success(body)
                 } else {

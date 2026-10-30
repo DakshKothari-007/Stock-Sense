@@ -33,16 +33,18 @@ import androidx.compose.ui.unit.sp
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.data.model.StoreProfile
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileContent(
     storeProfile: StoreProfile = StoreProfile(),
     isProfileLoading: Boolean = false,
     profileErrorMessage: String? = null,
     onRetryClick: () -> Unit = {},
+    onUpdateShop: (String, String, String, (Boolean, String?) -> Unit) -> Unit = { _, _, _, cb -> cb(true, null) },
     onShopNameChange: (String) -> Unit = {},
     onUserNameChange: (String) -> Unit = {},
     onEmailChange: (String) -> Unit = {},
-    onUpdateProfile: (String, String) -> Unit = { name, email -> onUserNameChange(name); onEmailChange(email) },
+    onUpdateProfile: (String, String, (Boolean, String?) -> Unit) -> Unit = { _, _, cb -> cb(true, null) },
     onChangePassword: (String, String, String, (Boolean, String) -> Unit) -> Unit = { _, _, _, cb -> cb(true, "Password changed successfully") },
     onSettingsClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {}
@@ -50,12 +52,32 @@ fun ProfileContent(
     val primaryColor = MaterialTheme.colorScheme.primary
     val iconTint = MaterialTheme.colorScheme.onSurfaceVariant
 
+    var profileSuccessMessage by remember { mutableStateOf<String?>(null) }
+
+    // Edit Shop Dialog State
     var showEditShopDialog by remember { mutableStateOf(false) }
     var shopNameInput by remember(storeProfile.name) { mutableStateOf(storeProfile.name) }
+    var locationInput by remember(storeProfile.location) { mutableStateOf(storeProfile.location) }
+    var storeTypeInput by remember(storeProfile.storeType) { mutableStateOf(storeProfile.storeType) }
+    var storeTypeExpanded by remember { mutableStateOf(false) }
+    var isSavingShop by remember { mutableStateOf(false) }
+    var shopDialogErrorMessage by remember { mutableStateOf<String?>(null) }
 
+    val storeTypeOptions = remember {
+        listOf(
+            "Neighbourhood supermarket",
+            "Medium supermarket",
+            "Grocery / Kirana store",
+            "Other"
+        )
+    }
+
+    // Edit Profile Info Dialog State
     var showEditUserInfoDialog by remember { mutableStateOf(false) }
     var userNameInput by remember(storeProfile.ownerName) { mutableStateOf(storeProfile.ownerName) }
     var emailInput by remember(storeProfile.email) { mutableStateOf(storeProfile.email) }
+    var isSavingProfile by remember { mutableStateOf(false) }
+    var profileDialogErrorMessage by remember { mutableStateOf<String?>(null) }
 
     var showChangePasswordDialog by remember { mutableStateOf(false) }
 
@@ -85,8 +107,10 @@ fun ProfileContent(
     val isChangePasswordEnabled = isCurrentPasswordValid && isNewPasswordValid && isConfirmPasswordValid
     val showMismatchError = confirmPasswordInput.isNotEmpty() && !isConfirmPasswordValid
 
-    LaunchedEffect(storeProfile.name) {
+    LaunchedEffect(storeProfile.name, storeProfile.location, storeProfile.storeType) {
         shopNameInput = storeProfile.name
+        locationInput = storeProfile.location
+        storeTypeInput = storeProfile.storeType
     }
 
     LaunchedEffect(storeProfile.ownerName, storeProfile.email) {
@@ -94,29 +118,40 @@ fun ProfileContent(
         emailInput = storeProfile.email
     }
 
-    // Edit Shop Name Dialog
+    // Edit Shop Details Dialog
     if (showEditShopDialog) {
         AlertDialog(
-            onDismissRequest = { showEditShopDialog = false },
+            onDismissRequest = {
+                if (!isSavingShop) {
+                    showEditShopDialog = false
+                    shopDialogErrorMessage = null
+                }
+            },
             title = {
                 Text(
-                    text = "Edit Shop Name",
+                    text = "Edit Shop Details",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
             },
             text = {
-                Column {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     Text(
-                        text = "Enter the name for your shop workspace:",
+                        text = "Update your shop workspace, location, and category:",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+
                     OutlinedTextField(
                         value = shopNameInput,
-                        onValueChange = { shopNameInput = it },
-                        label = { Text("Shop name") },
+                        onValueChange = {
+                            if (it.length <= 150) shopNameInput = it
+                            shopDialogErrorMessage = null
+                        },
+                        label = { Text("Shop name *") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -125,21 +160,130 @@ fun ProfileContent(
                             unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         )
                     )
+
+                    OutlinedTextField(
+                        value = locationInput,
+                        onValueChange = {
+                            if (it.length <= 255) locationInput = it
+                            shopDialogErrorMessage = null
+                        },
+                        label = { Text("Location") },
+                        placeholder = { Text("e.g. Indiranagar, Bengaluru") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = primaryColor,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
+                    )
+
+                    ExposedDropdownMenuBox(
+                        expanded = storeTypeExpanded,
+                        onExpandedChange = { storeTypeExpanded = !storeTypeExpanded }
+                    ) {
+                        OutlinedTextField(
+                            value = storeTypeInput,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Store type") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = storeTypeExpanded) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = primaryColor,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            )
+                        )
+                        ExposedDropdownMenu(
+                            expanded = storeTypeExpanded,
+                            onDismissRequest = { storeTypeExpanded = false }
+                        ) {
+                            storeTypeOptions.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = {
+                                        storeTypeInput = option
+                                        storeTypeExpanded = false
+                                        shopDialogErrorMessage = null
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = storeProfile.currency.ifBlank { "₹ INR / IST" },
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Currency (Read-only)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.outline,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            disabledTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        enabled = false
+                    )
+
+                    if (!shopDialogErrorMessage.isNullOrBlank()) {
+                        Text(
+                            text = shopDialogErrorMessage ?: "",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        onShopNameChange(shopNameInput.trim())
-                        showEditShopDialog = false
+                        isSavingShop = true
+                        shopDialogErrorMessage = null
+                        onUpdateShop(
+                            shopNameInput.trim(),
+                            locationInput.trim(),
+                            storeTypeInput.trim()
+                        ) { success, msg ->
+                            isSavingShop = false
+                            if (success) {
+                                showEditShopDialog = false
+                                profileSuccessMessage = msg ?: "Shop details updated successfully."
+                            } else {
+                                shopDialogErrorMessage = msg ?: "Failed to update shop details."
+                            }
+                        }
                     },
+                    enabled = shopNameInput.isNotBlank() && !isSavingShop,
                     colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
                 ) {
-                    Text("Save")
+                    if (isSavingShop) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Save")
+                    }
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showEditShopDialog = false }) {
+                TextButton(
+                    onClick = {
+                        if (!isSavingShop) {
+                            showEditShopDialog = false
+                            shopDialogErrorMessage = null
+                        }
+                    }
+                ) {
                     Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
@@ -151,7 +295,12 @@ fun ProfileContent(
     // Edit User Profile Info Dialog (Username & Email)
     if (showEditUserInfoDialog) {
         AlertDialog(
-            onDismissRequest = { showEditUserInfoDialog = false },
+            onDismissRequest = {
+                if (!isSavingProfile) {
+                    showEditUserInfoDialog = false
+                    profileDialogErrorMessage = null
+                }
+            },
             title = {
                 Text(
                     text = "Edit Profile Details",
@@ -168,7 +317,10 @@ fun ProfileContent(
                     )
                     OutlinedTextField(
                         value = userNameInput,
-                        onValueChange = { userNameInput = it },
+                        onValueChange = {
+                            userNameInput = it
+                            profileDialogErrorMessage = null
+                        },
                         label = { Text("Full Name / Username") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
@@ -180,7 +332,10 @@ fun ProfileContent(
                     )
                     OutlinedTextField(
                         value = emailInput,
-                        onValueChange = { emailInput = it },
+                        onValueChange = {
+                            emailInput = it
+                            profileDialogErrorMessage = null
+                        },
                         label = { Text("Email Address") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         singleLine = true,
@@ -191,22 +346,55 @@ fun ProfileContent(
                             unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         )
                     )
+
+                    if (!profileDialogErrorMessage.isNullOrBlank()) {
+                        Text(
+                            text = profileDialogErrorMessage ?: "",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        onUpdateProfile(userNameInput.trim(), emailInput.trim())
-                        showEditUserInfoDialog = false
+                        isSavingProfile = true
+                        profileDialogErrorMessage = null
+                        onUpdateProfile(userNameInput.trim(), emailInput.trim()) { success, msg ->
+                            isSavingProfile = false
+                            if (success) {
+                                showEditUserInfoDialog = false
+                                profileSuccessMessage = msg ?: "Profile details updated successfully."
+                            } else {
+                                profileDialogErrorMessage = msg ?: "Failed to update profile."
+                            }
+                        }
                     },
-                    enabled = userNameInput.isNotBlank() && emailInput.contains("@") && emailInput.contains("."),
+                    enabled = userNameInput.isNotBlank() && emailInput.contains("@") && emailInput.contains(".") && !isSavingProfile,
                     colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
                 ) {
-                    Text("Save")
+                    if (isSavingProfile) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Save")
+                    }
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showEditUserInfoDialog = false }) {
+                TextButton(
+                    onClick = {
+                        if (!isSavingProfile) {
+                            showEditUserInfoDialog = false
+                            profileDialogErrorMessage = null
+                        }
+                    }
+                ) {
                     Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
@@ -552,6 +740,63 @@ fun ProfileContent(
             }
         }
 
+        if (profileSuccessMessage != null) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Canvas(modifier = Modifier.size(18.dp)) {
+                            val path = Path().apply {
+                                moveTo(size.width * 0.1f, size.height * 0.55f)
+                                lineTo(size.width * 0.35f, size.height * 0.8f)
+                                lineTo(size.width * 0.75f, size.height * 0.25f)
+                            }
+                            drawPath(
+                                path = path,
+                                color = primaryColor,
+                                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = profileSuccessMessage ?: "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 12.sp
+                        )
+                    }
+                    IconButton(
+                        onClick = { profileSuccessMessage = null },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Text(
+                            text = "✕",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+        }
+
         if (passwordSuccessMessage != null) {
             Surface(
                 modifier = Modifier
@@ -659,10 +904,11 @@ fun ProfileContent(
                                 fontSize = 17.sp
                             )
                             Spacer(modifier = Modifier.height(2.dp))
+                            val roleTitle = storeProfile.role.ifBlank { "Owner" }
                             val roleSubtitle = if (storeProfile.name.isNotBlank()) {
-                                "Owner · ${storeProfile.name}"
+                                "$roleTitle · ${storeProfile.name}"
                             } else {
-                                "Owner"
+                                roleTitle
                             }
                             Text(
                                 text = roleSubtitle,
@@ -679,6 +925,7 @@ fun ProfileContent(
                         onClick = {
                             userNameInput = storeProfile.ownerName
                             emailInput = storeProfile.email
+                            profileDialogErrorMessage = null
                             showEditUserInfoDialog = true
                         }
                     ) {
@@ -767,6 +1014,9 @@ fun ProfileContent(
                     TextButton(
                         onClick = {
                             shopNameInput = storeProfile.name
+                            locationInput = storeProfile.location
+                            storeTypeInput = storeProfile.storeType
+                            shopDialogErrorMessage = null
                             showEditShopDialog = true
                         }
                     ) {
@@ -805,63 +1055,65 @@ fun ProfileContent(
         }
 
         // 4. Plan Info Banner
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+        if (storeProfile.plan.isNotBlank()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Box(
+                Row(
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surface),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Canvas(modifier = Modifier.size(18.dp)) {
-                        val cx = size.width / 2f
-                        val cy = size.height / 2f
-                        val path = Path().apply {
-                            moveTo(cx, 0f)
-                            quadraticTo(cx, cy, size.width, cy)
-                            quadraticTo(cx, cy, cx, size.height)
-                            quadraticTo(cx, cy, 0f, cy)
-                            quadraticTo(cx, cy, cx, 0f)
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surface),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Canvas(modifier = Modifier.size(18.dp)) {
+                            val cx = size.width / 2f
+                            val cy = size.height / 2f
+                            val path = Path().apply {
+                                moveTo(cx, 0f)
+                                quadraticTo(cx, cy, size.width, cy)
+                                quadraticTo(cx, cy, cx, size.height)
+                                quadraticTo(cx, cy, 0f, cy)
+                                quadraticTo(cx, cy, cx, 0f)
+                            }
+                            drawPath(path = path, color = primaryColor, style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
                         }
-                        drawPath(path = path, color = primaryColor, style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
                     }
-                }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
 
-                Column {
-                    Text(
-                        text = "StockSense Starter",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 15.sp
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Sample plan · Up to 500 products",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "AI recommendations & sales intelligence included",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        color = primaryColor,
-                        fontSize = 11.sp
-                    )
+                    Column {
+                        Text(
+                            text = storeProfile.plan,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 15.sp
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Sample plan · Up to 500 products",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 11.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "AI recommendations & sales intelligence included",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = primaryColor,
+                            fontSize = 11.sp
+                        )
+                    }
                 }
             }
         }
