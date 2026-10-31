@@ -447,21 +447,21 @@ fun ImportInventoryUploadScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = item.fileName,
+                                        text = item.fileName?.takeIf { it.isNotBlank() } ?: "Spreadsheet",
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface,
                                         fontSize = 12.sp
                                     )
                                     Text(
-                                        text = item.createdAt,
+                                        text = item.createdAt ?: "",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 10.sp
                                     )
                                 }
                                 Text(
-                                    text = "${item.successCount} / ${item.totalRows} rows",
+                                    text = "${item.successCount ?: 0} / ${item.totalRows ?: 0} rows",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.SemiBold,
                                     color = if (item.status == "completed") primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,

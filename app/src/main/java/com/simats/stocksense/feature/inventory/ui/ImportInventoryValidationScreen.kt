@@ -277,7 +277,7 @@ fun ImportInventoryValidationScreen(
                             color = errorBgColor
                         ) {
                             Text(
-                                text = err.errorBadge.ifBlank { "ROW ${err.rowNumber} · ERROR" },
+                                text = err.errorBadge?.takeIf { it.isNotBlank() } ?: "ROW ${err.rowNumber ?: 0} · ERROR",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = errorColor,
                                 fontWeight = FontWeight.Bold,
@@ -288,7 +288,7 @@ fun ImportInventoryValidationScreen(
                         }
 
                         Text(
-                            text = err.productName.ifBlank { "Product" },
+                            text = err.productName?.takeIf { it.isNotBlank() } ?: "Product",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -296,7 +296,7 @@ fun ImportInventoryValidationScreen(
                         )
 
                         Text(
-                            text = "SKU ${err.sku.ifBlank { "N/A" }} · Excel row ${err.rowNumber}",
+                            text = "SKU ${err.sku?.takeIf { it.isNotBlank() } ?: "N/A"} · Excel row ${err.rowNumber ?: 0}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp
@@ -314,7 +314,7 @@ fun ImportInventoryValidationScreen(
                                 fontSize = 12.sp
                             )
                             Text(
-                                text = err.importedValue.ifBlank { "—" },
+                                text = err.importedValue?.takeIf { it.isNotBlank() } ?: "—",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -323,7 +323,7 @@ fun ImportInventoryValidationScreen(
                         }
 
                         Text(
-                            text = err.reason,
+                            text = err.reason ?: "",
                             style = MaterialTheme.typography.bodySmall,
                             color = errorColor,
                             fontSize = 12.sp,

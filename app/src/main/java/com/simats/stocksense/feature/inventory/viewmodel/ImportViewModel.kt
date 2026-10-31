@@ -21,7 +21,7 @@ data class ImportUiState(
     val selectedFileName: String? = null,
     val selectedFileSize: String? = null,
     val fileToken: String? = null,
-    val columnMapping: Map<String, String>? = null,
+    val columnMapping: Map<String, String?>? = null,
     val corrections: List<ImportCorrection> = emptyList(),
     val appliedCorrectionSummary: String? = null,
 
@@ -146,12 +146,18 @@ class ImportViewModel(
                 val uploadResult = repository.uploadSpreadsheet(filePart)
                 uploadResult.fold(
                     onSuccess = { uploadData ->
-                        val token = uploadData.fileToken
+                        val token = uploadData.fileToken.orEmpty()
+                        if (token.isBlank()) {
+                            val err = "Upload failed: file token missing from response."
+                            _uiState.update { it.copy(isUploading = false, uploadError = err) }
+                            onError(err)
+                            return@fold
+                        }
                         val mapping = uploadData.suggestedMapping
                         val previewResult = repository.previewImport(token, mapping)
                         previewResult.fold(
                             onSuccess = { previewData ->
-                                val activeMapping = previewData.mappings.takeIf { it.isNotEmpty() }
+                                val activeMapping = previewData.mappings?.takeIf { !it.isNullOrEmpty() }
                                     ?: mapping
                                     ?: emptyMap()
 
@@ -226,15 +232,13 @@ class ImportViewModel(
         val activeMapping = _uiState.value.columnMapping ?: _uiState.value.previewData?.mappings ?: emptyMap()
         Log.d("ImportMapping", "validate.php sending column_mapping: $activeMapping")
 
-        // Block import if name, sku, or quantity is not mapped
+        // Block import only if required fields (name, quantity) are not mapped
         val nameCol = activeMapping["name"]
-        val skuCol = activeMapping["sku"]
         val unitsCol = activeMapping["units"]
 
-        if (nameCol.isNullOrBlank() || skuCol.isNullOrBlank() || unitsCol.isNullOrBlank()) {
+        if (nameCol.isNullOrBlank() || unitsCol.isNullOrBlank()) {
             val missing = mutableListOf<String>()
             if (nameCol.isNullOrBlank()) missing.add("Product Name")
-            if (skuCol.isNullOrBlank()) missing.add("SKU")
             if (unitsCol.isNullOrBlank()) missing.add("Quantity")
             val err = "Validation blocked: Please map ${missing.joinToString(", ")} before continuing."
             _uiState.update { it.copy(validationError = err) }
@@ -258,7 +262,7 @@ class ImportViewModel(
                             validationError = null
                         )
                     }
-                    onSuccess(validateData.readyToImport)
+                    onSuccess(validateData.readyToImport ?: false)
                 },
                 onFailure = { error ->
                     val msg = error.message ?: "Validation failed."
@@ -276,8 +280,8 @@ class ImportViewModel(
     ) {
         val correctionValue = error.suggestedCorrection ?: return
         val newCorrection = ImportCorrection(
-            rowNumber = error.rowNumber,
-            field = error.field,
+            rowNumber = error.rowNumber ?: 0,
+            field = error.field.orEmpty(),
             value = correctionValue
         )
         val updatedCorrections = _uiState.value.corrections.filterNot {
@@ -314,15 +318,13 @@ class ImportViewModel(
         val activeMapping = _uiState.value.columnMapping ?: _uiState.value.previewData?.mappings ?: emptyMap()
         Log.d("ImportMapping", "execute.php sending column_mapping: $activeMapping")
 
-        // Block import if name, sku, or quantity is not mapped
+        // Block import only if required fields (name, quantity) are not mapped
         val nameCol = activeMapping["name"]
-        val skuCol = activeMapping["sku"]
         val unitsCol = activeMapping["units"]
 
-        if (nameCol.isNullOrBlank() || skuCol.isNullOrBlank() || unitsCol.isNullOrBlank()) {
+        if (nameCol.isNullOrBlank() || unitsCol.isNullOrBlank()) {
             val missing = mutableListOf<String>()
             if (nameCol.isNullOrBlank()) missing.add("Product Name")
-            if (skuCol.isNullOrBlank()) missing.add("SKU")
             if (unitsCol.isNullOrBlank()) missing.add("Quantity")
             val err = "Import blocked: Please map ${missing.joinToString(", ")} before importing."
             _uiState.update { it.copy(executeError = err) }

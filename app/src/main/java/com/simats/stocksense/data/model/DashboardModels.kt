@@ -4,10 +4,11 @@ import com.google.gson.annotations.SerializedName
 
 /**
  * Data models strictly adhering to API_DOCUMENT.md and backend dashboard/summary.php.
+ * All fields are nullable with safe defaults to guarantee crash resilience.
  */
 data class DashboardSummaryResponse(
-    @SerializedName("status") val status: Boolean = false,
-    @SerializedName("message") val message: String = "",
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = "",
     @SerializedName("data") val data: DashboardSummaryData? = null
 )
 
@@ -65,37 +66,37 @@ data class DashboardAlerts(
 )
 
 data class DashboardLowStockItem(
-    @SerializedName("id") val id: Int = 0,
-    @SerializedName("name") val name: String = "",
+    @SerializedName("id") val id: Any? = null,
+    @SerializedName("name") val name: String? = "",
     @SerializedName("sku") val sku: String? = null,
     @SerializedName("category") val category: String? = null,
-    @SerializedName("units") val units: Int = 0,
-    @SerializedName("min_stock_threshold") val minStockThreshold: Int = 0,
+    @SerializedName("units") val units: Int? = 0,
+    @SerializedName("min_stock_threshold") val minStockThreshold: Int? = 0,
     @SerializedName("price") val price: Double? = 0.0,
     @SerializedName("cost_price") val costPrice: Double? = 0.0,
     @SerializedName("status") val status: String? = null
 )
 
 data class DashboardOutOfStockItem(
-    @SerializedName("id") val id: Int = 0,
-    @SerializedName("name") val name: String = "",
+    @SerializedName("id") val id: Any? = null,
+    @SerializedName("name") val name: String? = "",
     @SerializedName("sku") val sku: String? = null,
     @SerializedName("category") val category: String? = null,
-    @SerializedName("units") val units: Int = 0,
-    @SerializedName("min_stock_threshold") val minStockThreshold: Int = 0,
+    @SerializedName("units") val units: Int? = 0,
+    @SerializedName("min_stock_threshold") val minStockThreshold: Int? = 0,
     @SerializedName("price") val price: Double? = 0.0,
     @SerializedName("cost_price") val costPrice: Double? = 0.0,
     @SerializedName("status") val status: String? = null
 )
 
 data class DashboardSlowMovingItem(
-    @SerializedName("id") val id: Int = 0,
-    @SerializedName("name") val name: String = "",
+    @SerializedName("id") val id: Any? = null,
+    @SerializedName("name") val name: String? = "",
     @SerializedName("sku") val sku: String? = null,
     @SerializedName("category") val category: String? = null,
-    @SerializedName("current_stock") val currentStock: Int = 0,
-    @SerializedName("units") val units: Int = 0,
-    @SerializedName("sold_last_30_days") val soldLast30Days: Int = 0,
+    @SerializedName("current_stock") val currentStock: Int? = 0,
+    @SerializedName("units") val units: Int? = 0,
+    @SerializedName("sold_last_30_days") val soldLast30Days: Int? = 0,
     @SerializedName("revenue_last_30_days") val revenueLast30Days: Double? = 0.0,
     @SerializedName("cash_tied_up_at_cost") val cashTiedUpAtCost: Double? = 0.0,
     @SerializedName("stock_cover_days") val stockCoverDays: Int? = null,
@@ -115,7 +116,7 @@ data class DashboardAiPriority(
     @SerializedName("type") val type: String? = null, // "reorder" or "clearance"
     @SerializedName("title") val title: String? = null,
     @SerializedName("subtitle") val subtitle: String? = null,
-    @SerializedName("product_id") val productId: Int? = null,
+    @SerializedName("product_id") val productId: Any? = null,
     @SerializedName("sku") val sku: String? = null,
     @SerializedName("units_to_order") val unitsToOrder: Int? = null,
     @SerializedName("estimated_cost") val estimatedCost: Double? = null,
@@ -125,20 +126,20 @@ data class DashboardAiPriority(
 )
 
 data class DashboardTopProduct(
-    @SerializedName("product_id") val productId: Int = 0,
-    @SerializedName("name") val name: String = "",
+    @SerializedName("product_id") val productId: Any? = null,
+    @SerializedName("name") val name: String? = "",
     @SerializedName("sku") val sku: String? = null,
     @SerializedName("category") val category: String? = null,
-    @SerializedName("units_sold") val unitsSold: Int = 0,
-    @SerializedName("revenue") val revenue: Double = 0.0
+    @SerializedName("units_sold") val unitsSold: Int? = 0,
+    @SerializedName("revenue") val revenue: Double? = 0.0
 )
 
 data class DashboardCategoryItem(
-    @SerializedName("category") val category: String = "",
-    @SerializedName("product_count") val productCount: Int = 0,
-    @SerializedName("total_units") val totalUnits: Int = 0,
-    @SerializedName("category_value") val categoryValue: Double = 0.0,
-    @SerializedName("value_percentage") val valuePercentage: Double = 0.0
+    @SerializedName("category") val category: String? = "",
+    @SerializedName("product_count") val productCount: Int? = 0,
+    @SerializedName("total_units") val totalUnits: Int? = 0,
+    @SerializedName("category_value") val categoryValue: Double? = 0.0,
+    @SerializedName("value_percentage") val valuePercentage: Double? = 0.0
 )
 
 data class DashboardLastImport(
@@ -155,12 +156,11 @@ data class DashboardLastImport(
  * Notifications unread count model adhering to API_DOCUMENT.md section 10.2.
  */
 data class UnreadCountResponse(
-    @SerializedName("status") val status: Boolean = false,
-    @SerializedName("message") val message: String = "",
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = "",
     @SerializedName("data") val data: UnreadCountData? = null
 )
 
 data class UnreadCountData(
-    @SerializedName("unread_count") val unreadCount: Int = 0
+    @SerializedName("unread_count") val unreadCount: Int? = 0
 )
-

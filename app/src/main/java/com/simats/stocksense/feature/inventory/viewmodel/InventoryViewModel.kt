@@ -152,7 +152,7 @@ class InventoryViewModel(
             result.fold(
                 onSuccess = { data ->
                     val domainProducts = (data.products ?: emptyList()).map { mapNetworkToDomain(it) }
-                    val total = if (data.totalProducts > 0) data.totalProducts else data.totalCount
+                    val total = if ((data.totalProducts ?: 0) > 0) (data.totalProducts ?: 0) else (data.totalCount ?: 0)
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -211,7 +211,7 @@ class InventoryViewModel(
                 onSuccess = { data ->
                     val newItems = (data.products ?: emptyList()).map { mapNetworkToDomain(it) }
                     val combined = currentState.allProducts + newItems
-                    val total = if (data.totalProducts > 0) data.totalProducts else data.totalCount
+                    val total = if ((data.totalProducts ?: 0) > 0) (data.totalProducts ?: 0) else (data.totalCount ?: 0)
                     _uiState.update {
                         it.copy(
                             isLoadingMore = false,

@@ -22,7 +22,7 @@ class ImportRepository(
                 val response = apiService.uploadSpreadsheet(filePart)
                 if (response.isSuccessful) {
                     val body = response.body()
-                    if (body != null && body.status && body.data != null) {
+                    if (body != null && body.status == true && body.data != null) {
                         Result.success(body.data)
                     } else {
                         Result.failure(Exception(body?.message ?: "Failed to upload spreadsheet."))
@@ -38,7 +38,7 @@ class ImportRepository(
 
     suspend fun previewImport(
         fileToken: String,
-        columnMapping: Map<String, String>? = null
+        columnMapping: Map<String, String?>? = null
     ): Result<ImportPreviewData> = withContext(Dispatchers.IO) {
         try {
             val response = apiService.previewImport(
@@ -49,7 +49,7 @@ class ImportRepository(
             )
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status && body.data != null) {
+                if (body != null && body.status == true && body.data != null) {
                     Result.success(body.data)
                 } else {
                     Result.failure(Exception(body?.message ?: "Failed to preview spreadsheet."))
@@ -65,7 +65,7 @@ class ImportRepository(
 
     suspend fun validateImport(
         fileToken: String,
-        columnMapping: Map<String, String>? = null,
+        columnMapping: Map<String, String?>? = null,
         corrections: List<ImportCorrection>? = null
     ): Result<ImportValidateData> = withContext(Dispatchers.IO) {
         try {
@@ -78,7 +78,7 @@ class ImportRepository(
             )
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status && body.data != null) {
+                if (body != null && body.status == true && body.data != null) {
                     Result.success(body.data)
                 } else {
                     Result.failure(Exception(body?.message ?: "Validation failed."))
@@ -95,7 +95,7 @@ class ImportRepository(
     suspend fun executeImport(
         fileToken: String,
         fileName: String? = null,
-        columnMapping: Map<String, String>? = null,
+        columnMapping: Map<String, String?>? = null,
         corrections: List<ImportCorrection>? = null,
         confirmReplace: Boolean = false
     ): Result<ImportExecuteData> = withContext(Dispatchers.IO) {
@@ -111,7 +111,7 @@ class ImportRepository(
             )
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status && body.data != null) {
+                if (body != null && body.status == true && body.data != null) {
                     Result.success(body.data)
                 } else {
                     Result.failure(Exception(body?.message ?: "Import execution failed."))
@@ -133,8 +133,8 @@ class ImportRepository(
             val response = apiService.getImportHistory(limit = limit, offset = offset)
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status && body.data != null) {
-                    Result.success(body.data.history)
+                if (body != null && body.status == true && body.data != null) {
+                    Result.success(body.data.history ?: emptyList())
                 } else {
                     Result.failure(Exception(body?.message ?: "Failed to retrieve import history."))
                 }

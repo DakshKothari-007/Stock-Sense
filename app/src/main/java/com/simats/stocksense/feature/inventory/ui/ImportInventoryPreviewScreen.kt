@@ -89,7 +89,13 @@ fun ImportInventoryPreviewScreen(
         )
     )
 
-    val mappedCount = currentMapping.filterValues { it.isNotBlank() }.size
+    val isNameMapped = !currentMapping["name"].isNullOrBlank()
+    val isUnitsMapped = !currentMapping["units"].isNullOrBlank()
+    val requiredMatched = previewData?.requiredMatched ?: (isNameMapped && isUnitsMapped)
+    val totalColumns = previewData?.totalColumns?.takeIf { it > 0 } ?: availableHeaders.size
+    val mappedCount = previewData?.matchedCount?.takeIf { it > 0 } ?: currentMapping.values.count { !it.isNullOrBlank() }
+
+    var isMappingExpanded by remember(requiredMatched) { mutableStateOf(!requiredMatched) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -197,83 +203,100 @@ fun ImportInventoryPreviewScreen(
                         .padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Column {
-                        Text(
-                            text = "$mappedCount columns mapped",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 15.sp
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Verify or adjust column assignments from your spreadsheet.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 11.sp
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "We matched $mappedCount of $totalColumns columns",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 15.sp
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = if (requiredMatched) "Verify or adjust column assignments from your spreadsheet." else "Required columns (Name, Quantity) need mapping.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (requiredMatched) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFFC62828),
+                                fontSize = 11.sp
+                            )
+                        }
+                        TextButton(
+                            onClick = { isMappingExpanded = !isMappingExpanded }
+                        ) {
+                            Text(
+                                text = if (isMappingExpanded) "Hide" else "Change",
+                                color = primaryColor,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.sp
+                            )
+                        }
                     }
 
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
+                    if (isMappingExpanded) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
 
-                    // Required Fields
-                    ColumnMappingDropdownRow(
-                        label = "Product Name",
-                        isRequired = true,
-                        currentValue = currentMapping["name"],
-                        availableHeaders = availableHeaders,
-                        onSelectHeader = { viewModel.updateColumnMapping("name", it) }
-                    )
+                        // Required Fields
+                        ColumnMappingDropdownRow(
+                            label = "Product Name",
+                            isRequired = true,
+                            currentValue = currentMapping["name"],
+                            availableHeaders = availableHeaders,
+                            onSelectHeader = { viewModel.updateColumnMapping("name", it) }
+                        )
 
-                    ColumnMappingDropdownRow(
-                        label = "SKU",
-                        isRequired = true,
-                        currentValue = currentMapping["sku"],
-                        availableHeaders = availableHeaders,
-                        onSelectHeader = { viewModel.updateColumnMapping("sku", it) }
-                    )
+                        ColumnMappingDropdownRow(
+                            label = "Quantity to add",
+                            isRequired = true,
+                            currentValue = currentMapping["units"],
+                            availableHeaders = availableHeaders,
+                            onSelectHeader = { viewModel.updateColumnMapping("units", it) }
+                        )
 
-                    ColumnMappingDropdownRow(
-                        label = "Quantity to add",
-                        isRequired = true,
-                        currentValue = currentMapping["units"],
-                        availableHeaders = availableHeaders,
-                        onSelectHeader = { viewModel.updateColumnMapping("units", it) }
-                    )
+                        // Optional Fields
+                        ColumnMappingDropdownRow(
+                            label = "SKU",
+                            isRequired = false,
+                            currentValue = currentMapping["sku"],
+                            availableHeaders = availableHeaders,
+                            onSelectHeader = { viewModel.updateColumnMapping("sku", it) }
+                        )
 
-                    // Pricing Fields
-                    ColumnMappingDropdownRow(
-                        label = "Selling Price (₹)",
-                        isRequired = false,
-                        currentValue = currentMapping["price"],
-                        availableHeaders = availableHeaders,
-                        onSelectHeader = { viewModel.updateColumnMapping("price", it) }
-                    )
+                        ColumnMappingDropdownRow(
+                            label = "Selling Price (₹)",
+                            isRequired = false,
+                            currentValue = currentMapping["price"],
+                            availableHeaders = availableHeaders,
+                            onSelectHeader = { viewModel.updateColumnMapping("price", it) }
+                        )
 
-                    ColumnMappingDropdownRow(
-                        label = "Unit Cost (₹)",
-                        isRequired = false,
-                        currentValue = currentMapping["cost_price"],
-                        availableHeaders = availableHeaders,
-                        onSelectHeader = { viewModel.updateColumnMapping("cost_price", it) }
-                    )
+                        ColumnMappingDropdownRow(
+                            label = "Unit Cost (₹)",
+                            isRequired = false,
+                            currentValue = currentMapping["cost_price"],
+                            availableHeaders = availableHeaders,
+                            onSelectHeader = { viewModel.updateColumnMapping("cost_price", it) }
+                        )
 
-                    // Optional Metadata Fields
-                    ColumnMappingDropdownRow(
-                        label = "Category",
-                        isRequired = false,
-                        currentValue = currentMapping["category"],
-                        availableHeaders = availableHeaders,
-                        onSelectHeader = { viewModel.updateColumnMapping("category", it) }
-                    )
+                        ColumnMappingDropdownRow(
+                            label = "Category",
+                            isRequired = false,
+                            currentValue = currentMapping["category"],
+                            availableHeaders = availableHeaders,
+                            onSelectHeader = { viewModel.updateColumnMapping("category", it) }
+                        )
 
-                    ColumnMappingDropdownRow(
-                        label = "Minimum Stock Threshold",
-                        isRequired = false,
-                        currentValue = currentMapping["minimum_stock"],
-                        availableHeaders = availableHeaders,
-                        onSelectHeader = { viewModel.updateColumnMapping("minimum_stock", it) }
-                    )
+                        ColumnMappingDropdownRow(
+                            label = "Minimum Stock Threshold",
+                            isRequired = false,
+                            currentValue = currentMapping["minimum_stock"],
+                            availableHeaders = availableHeaders,
+                            onSelectHeader = { viewModel.updateColumnMapping("minimum_stock", it) }
+                        )
+                    }
                 }
             }
 
@@ -381,14 +404,14 @@ fun ImportInventoryPreviewScreen(
                         ) {
                             Column(modifier = Modifier.weight(2f)) {
                                 Text(
-                                    text = row.name,
+                                    text = row.name?.takeIf { it.isNotBlank() } ?: "Unknown Product",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     fontSize = 13.sp
                                 )
                                 Text(
-                                    text = row.skuWithSellPrice,
+                                    text = row.skuWithSellPrice?.takeIf { it.isNotBlank() } ?: (row.sku ?: ""),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 11.sp
@@ -396,16 +419,16 @@ fun ImportInventoryPreviewScreen(
                             }
 
                             Text(
-                                text = row.unitsToAdd,
+                                text = row.unitsToAdd?.takeIf { it.isNotBlank() } ?: "0",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (row.isHighlighted) Color(0xFFC62828) else MaterialTheme.colorScheme.onSurface,
+                                color = if (row.isHighlighted == true) Color(0xFFC62828) else MaterialTheme.colorScheme.onSurface,
                                 fontSize = 13.sp,
                                 modifier = Modifier.width(45.dp)
                             )
 
                             Text(
-                                text = row.costPrice,
+                                text = row.costPrice?.takeIf { it.isNotBlank() } ?: "₹0",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 12.sp,
@@ -413,7 +436,7 @@ fun ImportInventoryPreviewScreen(
                             )
                         }
 
-                        if (row != displayedRows.last()) {
+                        if (row != displayedRows.lastOrNull()) {
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
                         }
                     }

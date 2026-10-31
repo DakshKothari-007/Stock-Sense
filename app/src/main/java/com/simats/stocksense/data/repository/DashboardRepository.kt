@@ -21,7 +21,7 @@ class DashboardRepository(
             val response = apiService.getDashboardSummary()
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status && body.data != null) {
+                if (body != null && body.status == true && body.data != null) {
                     Result.success(body.data)
                 } else {
                     Result.failure(Exception(body?.message ?: "Failed to retrieve dashboard summary."))
@@ -43,8 +43,8 @@ class DashboardRepository(
             val response = apiService.getUnreadCount()
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status && body.data != null) {
-                    Result.success(body.data.unreadCount)
+                if (body != null && body.status == true && body.data != null) {
+                    Result.success(body.data.unreadCount ?: 0)
                 } else {
                     Result.success(0)
                 }

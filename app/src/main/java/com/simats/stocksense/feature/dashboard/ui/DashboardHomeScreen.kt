@@ -465,8 +465,11 @@ fun DashboardHomeContent(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     if (isLowStockActive) {
+                        val lowName = topLowItem?.name?.takeIf { it.isNotBlank() } ?: "Item"
+                        val lowUnits = topLowItem?.units ?: 0
+                        val lowMin = topLowItem?.minStockThreshold ?: 0
                         Text(
-                            text = "${topLowItem.name} · ${topLowItem.units} left ›",
+                            text = "$lowName · $lowUnits left ›",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold,
@@ -475,7 +478,7 @@ fun DashboardHomeContent(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Below ${topLowItem.minStockThreshold}-unit minimum",
+                            text = "Below $lowMin-unit minimum",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 11.sp,
@@ -542,8 +545,11 @@ fun DashboardHomeContent(
                             )
                         }
                         isSlowMovingActive -> {
+                            val slowName = topSlowItem?.name?.takeIf { it.isNotBlank() } ?: "Item"
+                            val slowUnits = topSlowItem?.units ?: 0
+                            val slowSold = topSlowItem?.soldLast30Days ?: 0
                             Text(
-                                text = "${topSlowItem.name} ›",
+                                text = "$slowName ›",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold,
@@ -552,7 +558,7 @@ fun DashboardHomeContent(
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "${topSlowItem.units} left · ${topSlowItem.soldLast30Days} sold / 30 days",
+                                text = "$slowUnits left · $slowSold sold / 30 days",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 11.sp,

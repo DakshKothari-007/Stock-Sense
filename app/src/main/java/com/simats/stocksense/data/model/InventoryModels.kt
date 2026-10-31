@@ -13,10 +13,10 @@ data class InventoryProductsResponse(
 
 data class InventoryProductsData(
     @SerializedName("shop_name") val shopName: String? = null,
-    @SerializedName("total_products") val totalProducts: Int = 0,
-    @SerializedName("total_count") val totalCount: Int = 0,
-    @SerializedName("page") val page: Int = 1,
-    @SerializedName("limit") val limit: Int = 0,
+    @SerializedName("total_products") val totalProducts: Int? = 0,
+    @SerializedName("total_count") val totalCount: Int? = 0,
+    @SerializedName("page") val page: Int? = 1,
+    @SerializedName("limit") val limit: Int? = 0,
     @SerializedName("filter") val filter: String? = null,
     @SerializedName("category") val category: String? = null,
     @SerializedName("search") val search: String? = null,

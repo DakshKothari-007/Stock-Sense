@@ -308,8 +308,8 @@ fun ImportInventoryReadyScreen(
 
                     stockPreviewItems.forEach { item ->
                         SummaryRow(
-                            label = "${item.name}${if (item.isNew) " · New" else ""}",
-                            value = item.displayCalculation
+                            label = "${item.name?.takeIf { it.isNotBlank() } ?: "Product"}${if (item.isNew == true) " · New" else ""}",
+                            value = item.displayCalculation ?: ""
                         )
                     }
                 }
