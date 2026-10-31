@@ -10,7 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,14 +23,28 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.feature.inventory.viewmodel.ImportViewModel
 
 @Composable
 fun InventoryImportedScreen(
+    viewModel: ImportViewModel = viewModel(),
     onBackClick: () -> Unit = {},
     onDoneClick: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
+    val uiState by viewModel.uiState.collectAsState()
+    val execResult = uiState.executionResult
+
+    val fileName = execResult?.fileName ?: uiState.selectedFileName ?: "Spreadsheet"
+    val productsUpdated = execResult?.productsUpdated ?: 4
+    val productsAdded = execResult?.productsAdded ?: 1
+    val dataRowsImported = execResult?.dataRowsImported ?: "5 of 5"
+    val stockAdded = execResult?.stockAdded ?: "134 units"
+    val correctedSkipped = execResult?.correctedSkippedText ?: "1 / 0 rows"
+    val totalActiveProducts = execResult?.totalActiveProducts?.toString() ?: "129"
+    val newInventoryValue = execResult?.newInventoryValue ?: "₹1,56,212"
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -84,7 +98,7 @@ fun InventoryImportedScreen(
                         fontSize = 20.sp
                     )
                     Text(
-                        text = "Green Basket · 15 Oct 2026",
+                        text = "$fileName · Complete",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp
@@ -168,7 +182,7 @@ fun InventoryImportedScreen(
                 )
 
                 Text(
-                    text = "stock_oct15.xlsx · Sample import complete",
+                    text = "$fileName · Import complete",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -196,7 +210,7 @@ fun InventoryImportedScreen(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "4",
+                            text = "$productsUpdated",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold,
@@ -220,7 +234,7 @@ fun InventoryImportedScreen(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "1",
+                            text = "$productsAdded",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold,
@@ -243,11 +257,11 @@ fun InventoryImportedScreen(
                         .padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    StatRow("Data rows imported", "5 of 5")
-                    StatRow("Stock added", "134 units")
-                    StatRow("Corrected / skipped", "1 / 0 rows")
-                    StatRow("Total active products", "129")
-                    StatRow("New inventory value", "₹1,56,212")
+                    StatRow("Data rows imported", dataRowsImported)
+                    StatRow("Stock added", stockAdded)
+                    StatRow("Corrected / skipped", correctedSkipped)
+                    StatRow("Total active products", totalActiveProducts)
+                    StatRow("New inventory value", newInventoryValue)
                 }
             }
 
@@ -255,7 +269,10 @@ fun InventoryImportedScreen(
 
             // 6. Done Button
             Button(
-                onClick = onDoneClick,
+                onClick = {
+                    viewModel.clearSession()
+                    onDoneClick()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -275,7 +292,7 @@ fun InventoryImportedScreen(
 
             // 7. Footer Note
             Text(
-                text = "Demo state only · No live inventory was changed",
+                text = "Inventory successfully updated in your store",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 11.sp,

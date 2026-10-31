@@ -18,6 +18,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -28,19 +30,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.feature.inventory.viewmodel.ImportViewModel
 
 @Composable
 fun ImportInventoryUploadScreen(
+    viewModel: ImportViewModel = viewModel(),
     onBackClick: () -> Unit = {},
     onPreviewImportClick: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
     val context = LocalContext.current
-
-    var selectedFileName by remember { mutableStateOf<String?>(null) }
-    var selectedFileSize by remember { mutableStateOf<String?>(null) }
-    var isFileChosen by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsState()
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -70,9 +72,7 @@ fun ImportInventoryUploadScreen(
                 }
             } catch (_: Exception) {
             }
-            selectedFileName = fileName
-            selectedFileSize = fileSize
-            isFileChosen = true
+            viewModel.setSelectedFile(selectedUri, fileName, fileSize)
         }
     }
 
@@ -86,6 +86,8 @@ fun ImportInventoryUploadScreen(
             "*/*"
         )
     }
+
+    val isFileChosen = uiState.selectedUri != null
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -247,7 +249,7 @@ fun ImportInventoryUploadScreen(
                 ) {
                     Column {
                         Text(
-                            text = selectedFileName ?: "No file selected",
+                            text = uiState.selectedFileName ?: "No file selected",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = if (isFileChosen) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -255,11 +257,60 @@ fun ImportInventoryUploadScreen(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = selectedFileSize ?: "Select a .csv, .xls, or .xlsx file",
+                            text = uiState.selectedFileSize ?: "Select a .csv, .xls, or .xlsx file",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp
                         )
+                    }
+                }
+            }
+
+            // Upload Error Alert Card (if any error occurred)
+            if (uiState.uploadError != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Canvas(modifier = Modifier.size(20.dp)) {
+                            drawCircle(color = Color(0xFFC62828), radius = size.width / 2f, style = Stroke(width = 1.8.dp.toPx()))
+                            drawLine(
+                                color = Color(0xFFC62828),
+                                start = Offset(size.width * 0.5f, size.height * 0.25f),
+                                end = Offset(size.width * 0.5f, size.height * 0.6f),
+                                strokeWidth = 2.dp.toPx(),
+                                cap = StrokeCap.Round
+                            )
+                            drawCircle(
+                                color = Color(0xFFC62828),
+                                radius = 1.5.dp.toPx(),
+                                center = Offset(size.width * 0.5f, size.height * 0.75f)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Upload error",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFC62828),
+                                fontSize = 13.sp
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = uiState.uploadError ?: "An error occurred while uploading file.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFFC62828).copy(alpha = 0.85f),
+                                fontSize = 11.sp
+                            )
+                        }
                     }
                 }
             }
@@ -301,63 +352,16 @@ fun ImportInventoryUploadScreen(
                 }
             }
 
-            // 6. Sample File Demo Box
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Canvas(modifier = Modifier.size(20.dp)) {
-                        drawCircle(
-                            color = primaryColor,
-                            radius = size.width / 2f,
-                            style = Stroke(width = 1.5.dp.toPx())
-                        )
-                        val path = Path().apply {
-                            moveTo(size.width * 0.25f, size.height * 0.5f)
-                            lineTo(size.width * 0.45f, size.height * 0.7f)
-                            lineTo(size.width * 0.75f, size.height * 0.35f)
-                        }
-                        drawPath(
-                            path = path,
-                            color = primaryColor,
-                            style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column {
-                        Text(
-                            text = "Spreadsheet File Upload",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 13.sp
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Tap the upload area to pick your CSV or Excel file.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 11.sp
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // 7. Preview Import Button
+            // 6. Preview Import Button
             Button(
-                onClick = onPreviewImportClick,
-                enabled = isFileChosen,
+                onClick = {
+                    viewModel.uploadAndPreview(
+                        context = context,
+                        onSuccess = onPreviewImportClick,
+                        onError = {}
+                    )
+                },
+                enabled = isFileChosen && !uiState.isUploading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -369,12 +373,107 @@ fun ImportInventoryUploadScreen(
                     disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
-                Text(
-                    text = "Preview Import",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
+                if (uiState.isUploading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Uploading & Parsing...",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                } else {
+                    Text(
+                        text = "Preview Import",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                }
+            }
+
+            // 7. Recent Imports / History Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Recent Imports",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 14.sp
+                        )
+                        if (uiState.isLoadingHistory) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = primaryColor,
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
+
+                    if (!uiState.isLoadingHistory && uiState.historyList.isEmpty()) {
+                        Text(
+                            text = "No imports yet",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                    } else {
+                        uiState.historyList.take(5).forEachIndexed { index, item ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = item.fileName,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontSize = 12.sp
+                                    )
+                                    Text(
+                                        text = item.createdAt,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 10.sp
+                                    )
+                                }
+                                Text(
+                                    text = "${item.successCount} / ${item.totalRows} rows",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (item.status == "completed") primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 11.sp
+                                )
+                            }
+                            if (index < minOf(uiState.historyList.size, 5) - 1) {
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
+                            }
+                        }
+                    }
+                }
             }
 
             // 8. Cancel - Back to Inventory Text Button

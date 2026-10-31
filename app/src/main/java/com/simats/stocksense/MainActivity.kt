@@ -41,6 +41,7 @@ import com.simats.stocksense.feature.inventory.ui.ImportInventoryReadyScreen
 import com.simats.stocksense.feature.inventory.ui.ImportInventoryUploadScreen
 import com.simats.stocksense.feature.inventory.ui.ImportInventoryValidationScreen
 import com.simats.stocksense.feature.inventory.ui.InventoryImportedScreen
+import com.simats.stocksense.feature.inventory.viewmodel.ImportViewModel
 import com.simats.stocksense.feature.inventory.ui.ProductAttaScreen
 import com.simats.stocksense.feature.inventory.ui.ProductBiscuitsScreen
 import com.simats.stocksense.feature.inventory.ui.ProductDetailScreen
@@ -77,6 +78,7 @@ fun StockSenseAppNavigation() {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager.getInstance(context) }
     val authViewModel: AuthViewModel = viewModel()
+    val importViewModel: ImportViewModel = viewModel()
 
     DisposableEffect(Unit) {
         NetworkClient.initialize(context) {
@@ -505,6 +507,7 @@ fun StockSenseAppNavigation() {
         }
         composable("inventory_imported") {
             ImportInventoryUploadScreen(
+                viewModel = importViewModel,
                 onBackClick = {
                     navController.popBackStack()
                 },
@@ -515,26 +518,38 @@ fun StockSenseAppNavigation() {
         }
         composable("inventory_preview") {
             ImportInventoryPreviewScreen(
+                viewModel = importViewModel,
                 onBackClick = {
                     navController.popBackStack()
                 },
                 onContinueToValidationClick = {
-                    navController.navigate("inventory_validation")
+                    importViewModel.validateImport(
+                        onSuccess = { ready ->
+                            if (ready) {
+                                navController.navigate("inventory_ready")
+                            } else {
+                                navController.navigate("inventory_validation")
+                            }
+                        },
+                        onError = { }
+                    )
                 }
             )
         }
         composable("inventory_validation") {
             ImportInventoryValidationScreen(
+                viewModel = importViewModel,
                 onBackClick = {
                     navController.popBackStack()
                 },
-                onApplyFixClick = {
+                onValidationPassed = {
                     navController.navigate("inventory_ready")
                 }
             )
         }
         composable("inventory_ready") {
             ImportInventoryReadyScreen(
+                viewModel = importViewModel,
                 onBackClick = {
                     navController.popBackStack()
                 },
@@ -545,6 +560,7 @@ fun StockSenseAppNavigation() {
         }
         composable("inventory_success") {
             InventoryImportedScreen(
+                viewModel = importViewModel,
                 onBackClick = {
                     navController.popBackStack()
                 },

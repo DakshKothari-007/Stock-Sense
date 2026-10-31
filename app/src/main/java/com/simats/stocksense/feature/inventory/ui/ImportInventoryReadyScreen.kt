@@ -10,10 +10,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -23,14 +24,36 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.data.model.ImportStockPreviewItem
+import com.simats.stocksense.feature.inventory.viewmodel.ImportViewModel
 
 @Composable
 fun ImportInventoryReadyScreen(
+    viewModel: ImportViewModel = viewModel(),
     onBackClick: () -> Unit = {},
     onImportProductsClick: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
+    val uiState by viewModel.uiState.collectAsState()
+    val validationData = uiState.validationData
+    val summary = validationData?.summary
+
+    val stockPreviewItems = validationData?.stockPreview?.takeIf { it.isNotEmpty() } ?: listOf(
+        ImportStockPreviewItem(name = "Amul Milk", sku = "DAI-001", currentUnits = 8, unitsToAdd = 60, newUnits = 68, displayCalculation = "8 + 60 = 68"),
+        ImportStockPreviewItem(name = "Aashirvaad Atta", sku = "STP-003", currentUnits = 24, unitsToAdd = 12, newUnits = 36, displayCalculation = "24 + 12 = 36"),
+        ImportStockPreviewItem(name = "Tata Tea", sku = "BEV-008", currentUnits = 42, unitsToAdd = 18, newUnits = 60, displayCalculation = "42 + 18 = 60"),
+        ImportStockPreviewItem(name = "Parle-G", sku = "SNK-002", currentUnits = 120, unitsToAdd = 24, newUnits = 144, displayCalculation = "120 + 24 = 144"),
+        ImportStockPreviewItem(name = "Surf Excel", sku = "HOM-021", currentUnits = 0, unitsToAdd = 20, newUnits = 20, displayCalculation = "0 + 20 = 20", isNew = true)
+    )
+
+    val readyRowsCount = validationData?.readyRows ?: 5
+    val totalRowsCount = validationData?.rowsChecked ?: 5
+    val existingCount = summary?.existingProductsToUpdate ?: 4
+    val newCount = summary?.newProductsToCreate ?: 1
+    val totalStockFormatted = summary?.totalStockToAddFormatted ?: "134 units"
+    val inventoryValueFormatted = summary?.inventoryValueToAddFormatted ?: "₹7,592"
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -84,7 +107,7 @@ fun ImportInventoryReadyScreen(
                         fontSize = 20.sp
                     )
                     Text(
-                        text = "stock_oct15.xlsx · Validation complete",
+                        text = "${uiState.selectedFileName ?: "Spreadsheet"} · Validation complete",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp
@@ -125,7 +148,7 @@ fun ImportInventoryReadyScreen(
                 }
             }
 
-            // 3. Correction Applied Banner
+            // 3. Validation Ready / Correction Applied Banner
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
@@ -159,7 +182,7 @@ fun ImportInventoryReadyScreen(
 
                     Column {
                         Text(
-                            text = "Correction applied · Zero errors",
+                            text = if (uiState.appliedCorrectionSummary != null) "Correction applied · Zero errors" else "All rows validated · Zero errors",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -167,7 +190,7 @@ fun ImportInventoryReadyScreen(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Row 4: Tata Tea quantity changed from \"18O\" to 18.",
+                            text = uiState.appliedCorrectionSummary ?: "All $readyRowsCount rows are valid and ready to import.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 11.sp
@@ -196,7 +219,7 @@ fun ImportInventoryReadyScreen(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "5 / 5",
+                            text = "$readyRowsCount / $totalRowsCount",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold,
@@ -253,10 +276,10 @@ fun ImportInventoryReadyScreen(
 
                     Spacer(modifier = Modifier.height(2.dp))
 
-                    SummaryRow("Existing products to update", "4")
-                    SummaryRow("New product to create", "1")
-                    SummaryRow("Total stock to add", "134 units")
-                    SummaryRow("Inventory value to add", "₹7,592")
+                    SummaryRow("Existing products to update", "$existingCount")
+                    SummaryRow("New products to create", "$newCount")
+                    SummaryRow("Total stock to add", totalStockFormatted)
+                    SummaryRow("Inventory value to add", inventoryValueFormatted)
                 }
             }
 
@@ -283,41 +306,114 @@ fun ImportInventoryReadyScreen(
 
                     Spacer(modifier = Modifier.height(2.dp))
 
-                    SummaryRow("Amul Milk", "8 + 60 = 68")
-                    SummaryRow("Aashirvaad Atta", "24 + 12 = 36")
-                    SummaryRow("Tata Tea", "42 + 18 = 60")
-                    SummaryRow("Parle-G", "120 + 24 = 144")
-                    SummaryRow("Surf Excel · New", "0 + 20 = 20")
+                    stockPreviewItems.forEach { item ->
+                        SummaryRow(
+                            label = "${item.name}${if (item.isNew) " · New" else ""}",
+                            value = item.displayCalculation
+                        )
+                    }
+                }
+            }
+
+            // Error alert if execution failed
+            if (uiState.executeError != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Canvas(modifier = Modifier.size(20.dp)) {
+                            drawCircle(color = Color(0xFFC62828), radius = size.width / 2f, style = Stroke(width = 1.8.dp.toPx()))
+                            drawLine(
+                                color = Color(0xFFC62828),
+                                start = Offset(size.width * 0.5f, size.height * 0.25f),
+                                end = Offset(size.width * 0.5f, size.height * 0.6f),
+                                strokeWidth = 2.dp.toPx(),
+                                cap = StrokeCap.Round
+                            )
+                            drawCircle(
+                                color = Color(0xFFC62828),
+                                radius = 1.5.dp.toPx(),
+                                center = Offset(size.width * 0.5f, size.height * 0.75f)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Import failed",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFC62828),
+                                fontSize = 13.sp
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = uiState.executeError ?: "An error occurred while importing.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFFC62828).copy(alpha = 0.85f),
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
                 }
             }
 
             // 7. Footer Note
             Text(
-                text = "Quantities are added, not replaced. Marie Biscuits stays at 96 units. Your store will have 129 products.",
+                text = "Quantities are added, not replaced. Your store inventory will update immediately.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 11.sp,
                 lineHeight = 15.sp
             )
 
-            // 8. Import Products Button
+            // 8. Import Products Button (disabled while executing to prevent double-tap)
             Button(
-                onClick = onImportProductsClick,
+                onClick = {
+                    viewModel.executeImport(
+                        onSuccess = onImportProductsClick,
+                        onError = {}
+                    )
+                },
+                enabled = !uiState.isExecuting,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = primaryColor,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
-                Text(
-                    text = "Import Products",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
+                if (uiState.isExecuting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Importing Products...",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                } else {
+                    Text(
+                        text = "Import Products",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))

@@ -10,7 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,16 +24,43 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.data.model.ImportValidationError
+import com.simats.stocksense.feature.inventory.viewmodel.ImportViewModel
 
 @Composable
 fun ImportInventoryValidationScreen(
+    viewModel: ImportViewModel = viewModel(),
     onBackClick: () -> Unit = {},
-    onApplyFixClick: () -> Unit = {}
+    onValidationPassed: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
     val errorColor = Color(0xFFC62828)
     val errorBgColor = Color(0xFFFFEBEE)
+
+    val uiState by viewModel.uiState.collectAsState()
+    val validationData = uiState.validationData
+
+    val errors = validationData?.errors ?: listOf(
+        ImportValidationError(
+            rowNumber = 4,
+            field = "units",
+            errorType = "QUANTITY_ERROR",
+            errorBadge = "ROW 4 · QUANTITY ERROR",
+            productName = "Tata Tea · 250 g",
+            sku = "BEV-008",
+            importedValue = "18O",
+            reason = "\"18O\" contains the letter O. Quantity must be a whole number greater than zero.",
+            suggestedCorrection = 18,
+            suggestedLabel = "18 units"
+        )
+    )
+
+    val fixableError = errors.firstOrNull { it.suggestedCorrection != null }
+    val rowsChecked = validationData?.rowsChecked ?: 5
+    val readyRows = validationData?.readyRows ?: 4
+    val errorsRemaining = validationData?.errorsRemaining ?: errors.size
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -80,14 +107,14 @@ fun ImportInventoryValidationScreen(
 
                 Column {
                     Text(
-                        text = "One value needs a fix",
+                        text = if (errorsRemaining == 1) "One value needs a fix" else "$errorsRemaining values need a fix",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
                     )
                     Text(
-                        text = "stock_oct15.xlsx · Validation",
+                        text = "${uiState.selectedFileName ?: "Spreadsheet"} · Validation",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp
@@ -148,7 +175,7 @@ fun ImportInventoryValidationScreen(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "5",
+                            text = "$rowsChecked",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold,
@@ -172,7 +199,7 @@ fun ImportInventoryValidationScreen(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "4",
+                            text = "$readyRows",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold,
@@ -214,7 +241,7 @@ fun ImportInventoryValidationScreen(
 
                     Column {
                         Text(
-                            text = "1 invalid row · Import not ready",
+                            text = "$errorsRemaining invalid row${if (errorsRemaining > 1) "s" else ""} · Import not ready",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = errorColor,
@@ -222,7 +249,7 @@ fun ImportInventoryValidationScreen(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Correct the quantity below before importing.",
+                            text = "Correct the values below or re-upload your file.",
                             style = MaterialTheme.typography.bodySmall,
                             color = errorColor.copy(alpha = 0.85f),
                             fontSize = 11.sp
@@ -231,156 +258,207 @@ fun ImportInventoryValidationScreen(
                 }
             }
 
-            // 5. Error Item Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+            // 5. Dynamic Error Item Cards
+            errors.forEach { err ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = errorBgColor
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = errorBgColor
+                        ) {
+                            Text(
+                                text = err.errorBadge.ifBlank { "ROW ${err.rowNumber} · ERROR" },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = errorColor,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 10.sp,
+                                letterSpacing = 0.8.sp,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            )
+                        }
+
                         Text(
-                            text = "ROW 4 · QUANTITY ERROR",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = errorColor,
+                            text = err.productName.ifBlank { "Product" },
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 10.sp,
-                            letterSpacing = 0.8.sp,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 18.sp
                         )
-                    }
 
-                    Text(
-                        text = "Tata Tea · 250 g",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 18.sp
-                    )
-
-                    Text(
-                        text = "SKU BEV-008 · Excel row 4",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
                         Text(
-                            text = "Imported quantity",
+                            text = "SKU ${err.sku.ifBlank { "N/A" }} · Excel row ${err.rowNumber}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp
                         )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Imported value",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                text = err.importedValue.ifBlank { "—" },
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 14.sp
+                            )
+                        }
+
                         Text(
-                            text = "180",
+                            text = err.reason,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = errorColor,
+                            fontSize = 12.sp,
+                            lineHeight = 16.sp
+                        )
+                    }
+                }
+            }
+
+            // 6. Suggested Correction Card (if available)
+            if (fixableError != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "Suggested correction",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 14.sp
                         )
-                    }
 
-                    Text(
-                        text = "\"18O\" contains the letter O. Quantity must be a whole number greater than zero.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = errorColor,
-                        fontSize = 12.sp,
-                        lineHeight = 16.sp
-                    )
-                }
-            }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Replace \"${fixableError.importedValue}\" with",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                text = fixableError.suggestedLabel ?: "${fixableError.suggestedCorrection}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 13.sp
+                            )
+                        }
 
-            // 6. Suggested Correction Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "Suggested correction",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 14.sp
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
                         Text(
-                            text = "Replace \"18O\" with",
+                            text = "The source appears to have an invalid value or stray letter. Apply the fix to re-validate.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-                        Text(
-                            text = "18 units",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 13.sp
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp
                         )
                     }
-
-                    Text(
-                        text = "The source appears to have a stray letter. Apply the sample fix to re-check this row.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp,
-                        lineHeight = 15.sp
-                    )
                 }
             }
 
             // 7. Footer Note
             Text(
-                text = "No products have been imported. Four valid rows are held until all five are ready.",
+                text = "No products have been imported. $readyRows valid rows are held until all $rowsChecked are ready.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 11.sp,
                 lineHeight = 15.sp
             )
 
-            // 8. Apply Fix Button
-            Button(
-                onClick = onApplyFixClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = primaryColor,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
-                Text(
-                    text = "Apply Fix · Use 18 units",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
+            // 8. Action Button
+            if (fixableError != null) {
+                Button(
+                    onClick = {
+                        viewModel.applyCorrection(
+                            error = fixableError,
+                            onSuccess = { ready ->
+                                if (ready) onValidationPassed()
+                            },
+                            onError = { }
+                        )
+                    },
+                    enabled = !uiState.isValidating,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = primaryColor,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    if (uiState.isValidating) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Applying correction...",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
+                        )
+                    } else {
+                        Text(
+                            text = "Apply Fix · Use ${fixableError.suggestedLabel ?: fixableError.suggestedCorrection.toString()}",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
+                        )
+                    }
+                }
+            } else {
+                Button(
+                    onClick = onBackClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = primaryColor,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Text(
+                        text = "Fix in Spreadsheet · Upload Again",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
