@@ -210,6 +210,82 @@ fun ImportInventoryValidationScreen(
             }
 
             // 4. Error Alert Banner Box
+            if (uiState.validationError != null) {
+                val isTimeout = uiState.validationError?.contains("timed out", ignoreCase = true) == true ||
+                        uiState.validationError?.contains("timeout", ignoreCase = true) == true
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = errorBgColor),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Canvas(modifier = Modifier.size(20.dp)) {
+                            drawCircle(color = errorColor, radius = size.width / 2f, style = Stroke(width = 1.8.dp.toPx()))
+                            drawLine(
+                                color = errorColor,
+                                start = Offset(size.width * 0.5f, size.height * 0.25f),
+                                end = Offset(size.width * 0.5f, size.height * 0.6f),
+                                strokeWidth = 2.dp.toPx(),
+                                cap = StrokeCap.Round
+                            )
+                            drawCircle(
+                                color = errorColor,
+                                radius = 1.5.dp.toPx(),
+                                center = Offset(size.width * 0.5f, size.height * 0.75f)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (isTimeout) "Connection timed out" else "Validation error",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = errorColor,
+                                fontSize = 13.sp
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = uiState.validationError ?: "",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = errorColor.copy(alpha = 0.85f),
+                                fontSize = 11.sp
+                            )
+                        }
+                        if (isTimeout && fixableError != null) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = {
+                                    viewModel.applyCorrection(
+                                        error = fixableError,
+                                        onSuccess = { ready -> if (ready) onValidationPassed() },
+                                        onError = { }
+                                    )
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = errorColor,
+                                    contentColor = Color.White
+                                ),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Text(
+                                    text = "Retry",
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = errorBgColor),

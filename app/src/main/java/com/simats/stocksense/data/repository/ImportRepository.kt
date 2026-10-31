@@ -32,7 +32,7 @@ class ImportRepository(
                     Result.failure(Exception(errorMsg))
                 }
             } catch (e: Exception) {
-                Result.failure(e)
+                Result.failure(mapThrowable(e))
             }
         }
 
@@ -59,7 +59,7 @@ class ImportRepository(
                 Result.failure(Exception(errorMsg))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(mapThrowable(e))
         }
     }
 
@@ -88,7 +88,7 @@ class ImportRepository(
                 Result.failure(Exception(errorMsg))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(mapThrowable(e))
         }
     }
 
@@ -97,17 +97,21 @@ class ImportRepository(
         fileName: String? = null,
         columnMapping: Map<String, String?>? = null,
         corrections: List<ImportCorrection>? = null,
-        confirmReplace: Boolean = false
+        confirmReplace: Boolean = false,
+        idempotencyKey: String? = null
     ): Result<ImportExecuteData> = withContext(Dispatchers.IO) {
         try {
+            val request = ImportExecuteRequest(
+                fileToken = fileToken,
+                fileName = fileName,
+                columnMapping = columnMapping,
+                corrections = corrections,
+                confirmReplace = confirmReplace,
+                idempotencyKey = idempotencyKey
+            )
             val response = apiService.executeImport(
-                ImportExecuteRequest(
-                    fileToken = fileToken,
-                    fileName = fileName,
-                    columnMapping = columnMapping,
-                    corrections = corrections,
-                    confirmReplace = confirmReplace
-                )
+                request = request,
+                idempotencyKey = idempotencyKey
             )
             if (response.isSuccessful) {
                 val body = response.body()
@@ -121,7 +125,7 @@ class ImportRepository(
                 Result.failure(Exception(errorMsg))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(mapThrowable(e))
         }
     }
 
@@ -143,17 +147,55 @@ class ImportRepository(
                 Result.failure(Exception(errorMsg))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(mapThrowable(e))
         }
     }
 
+    private fun mapThrowable(e: Throwable): Exception {
+        return if (isTimeout(e)) {
+            Exception("Connection timed out. Check your Wi-Fi and try again")
+        } else if (e is Exception) {
+            e
+        } else {
+            Exception(e.message, e)
+        }
+    }
+
+    private fun isTimeout(e: Throwable): Boolean {
+        var current: Throwable? = e
+        while (current != null) {
+            if (current is java.net.SocketTimeoutException ||
+                current is java.io.InterruptedIOException ||
+                current is java.net.ConnectException ||
+                current.message?.contains("timeout", ignoreCase = true) == true ||
+                current.message?.contains("timed out", ignoreCase = true) == true
+            ) {
+                return true
+            }
+            current = current.cause
+        }
+        return false
+    }
+
     private fun extractErrorMessage(errorBody: String?, fallbackCode: Int): String {
+        if (fallbackCode == 408 || fallbackCode == 504) {
+            return "Connection timed out. Check your Wi-Fi and try again"
+        }
         if (errorBody.isNullOrBlank()) return "Server returned error code $fallbackCode"
         return try {
             val map = gson.fromJson(errorBody, Map::class.java)
-            map["message"]?.toString() ?: errorBody
+            val msg = map["message"]?.toString() ?: errorBody
+            if (msg.contains("timeout", ignoreCase = true) || msg.contains("timed out", ignoreCase = true)) {
+                "Connection timed out. Check your Wi-Fi and try again"
+            } else {
+                msg
+            }
         } catch (e: Exception) {
-            errorBody
+            if (errorBody.contains("timeout", ignoreCase = true) || errorBody.contains("timed out", ignoreCase = true)) {
+                "Connection timed out. Check your Wi-Fi and try again"
+            } else {
+                errorBody
+            }
         }
     }
 }

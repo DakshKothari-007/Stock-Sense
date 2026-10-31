@@ -317,6 +317,8 @@ fun ImportInventoryReadyScreen(
 
             // Error alert if execution failed
             if (uiState.executeError != null) {
+                val isTimeout = uiState.executeError?.contains("timed out", ignoreCase = true) == true ||
+                        uiState.executeError?.contains("timeout", ignoreCase = true) == true
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
@@ -344,9 +346,9 @@ fun ImportInventoryReadyScreen(
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Import failed",
+                                text = if (isTimeout) "Connection timed out" else "Import failed",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFC62828),
@@ -359,6 +361,31 @@ fun ImportInventoryReadyScreen(
                                 color = Color(0xFFC62828).copy(alpha = 0.85f),
                                 fontSize = 11.sp
                             )
+                        }
+                        if (isTimeout) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = {
+                                    viewModel.executeImport(
+                                        onSuccess = onImportProductsClick,
+                                        onError = {}
+                                    )
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFC62828),
+                                    contentColor = Color.White
+                                ),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Text(
+                                    text = "Retry",
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }

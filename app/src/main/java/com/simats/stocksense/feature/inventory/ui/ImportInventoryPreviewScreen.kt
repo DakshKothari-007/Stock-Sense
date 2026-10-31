@@ -300,8 +300,10 @@ fun ImportInventoryPreviewScreen(
                 }
             }
 
-            // Validation Error Alert Banner (e.g. if required columns are unmapped)
+            // Validation Error Alert Banner (e.g. if required columns are unmapped or timeout)
             if (uiState.validationError != null) {
+                val isTimeout = uiState.validationError?.contains("timed out", ignoreCase = true) == true ||
+                        uiState.validationError?.contains("timeout", ignoreCase = true) == true
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
@@ -329,9 +331,9 @@ fun ImportInventoryPreviewScreen(
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Mapping required",
+                                text = if (isTimeout) "Connection timed out" else "Mapping required",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFC62828),
@@ -344,6 +346,26 @@ fun ImportInventoryPreviewScreen(
                                 color = Color(0xFFC62828).copy(alpha = 0.85f),
                                 fontSize = 11.sp
                             )
+                        }
+                        if (isTimeout) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = onContinueToValidationClick,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFC62828),
+                                    contentColor = Color.White
+                                ),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Text(
+                                    text = "Retry",
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }

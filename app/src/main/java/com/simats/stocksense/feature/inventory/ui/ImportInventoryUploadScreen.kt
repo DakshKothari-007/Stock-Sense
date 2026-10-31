@@ -268,6 +268,8 @@ fun ImportInventoryUploadScreen(
 
             // Upload Error Alert Card (if any error occurred)
             if (uiState.uploadError != null) {
+                val isTimeout = uiState.uploadError?.contains("timed out", ignoreCase = true) == true ||
+                        uiState.uploadError?.contains("timeout", ignoreCase = true) == true
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
@@ -295,9 +297,9 @@ fun ImportInventoryUploadScreen(
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Upload error",
+                                text = if (isTimeout) "Connection timed out" else "Upload error",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFC62828),
@@ -310,6 +312,32 @@ fun ImportInventoryUploadScreen(
                                 color = Color(0xFFC62828).copy(alpha = 0.85f),
                                 fontSize = 11.sp
                             )
+                        }
+                        if (isTimeout) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = {
+                                    viewModel.uploadAndPreview(
+                                        context = context,
+                                        onSuccess = onPreviewImportClick,
+                                        onError = {}
+                                    )
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFC62828),
+                                    contentColor = Color.White
+                                ),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Text(
+                                    text = "Retry",
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }

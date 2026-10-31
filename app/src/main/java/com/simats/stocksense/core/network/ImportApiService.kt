@@ -25,7 +25,8 @@ interface ImportApiService {
 
     @POST("import/execute.php")
     suspend fun executeImport(
-        @Body request: ImportExecuteRequest
+        @Body request: ImportExecuteRequest,
+        @Header("Idempotency-Key") idempotencyKey: String? = null
     ): Response<ImportExecuteResponse>
 
     @GET("import/get_history.php")

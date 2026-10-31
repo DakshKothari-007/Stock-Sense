@@ -77,6 +77,17 @@ object NetworkClient {
             .build()
     }
 
+    // 60-second timeouts specifically for bulk spreadsheet import endpoints
+    private val importOkHttpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .addInterceptor(authInterceptor)
+            .addInterceptor(loggingInterceptor)
+            .build()
+    }
+
     val gson: Gson by lazy {
         GsonBuilder()
             .setLenient()
@@ -91,5 +102,19 @@ object NetworkClient {
             .build()
     }
 
-    inline fun <reified T> createService(): T = retrofit.create(T::class.java)
+    val importRetrofit: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(ApiConstants.BASE_URL)
+            .client(importOkHttpClient)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+    }
+
+    inline fun <reified T> createService(): T {
+        return if (T::class.java.name.contains("ImportApiService")) {
+            importRetrofit.create(T::class.java)
+        } else {
+            retrofit.create(T::class.java)
+        }
+    }
 }

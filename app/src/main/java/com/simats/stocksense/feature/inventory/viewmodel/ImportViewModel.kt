@@ -53,11 +53,15 @@ class ImportViewModel(
     private val _uiState = MutableStateFlow(ImportUiState())
     val uiState: StateFlow<ImportUiState> = _uiState.asStateFlow()
 
+    // Random idempotency key per import attempt; preserved across retries of the same attempt
+    private var activeIdempotencyKey: String = java.util.UUID.randomUUID().toString()
+
     init {
         fetchHistory()
     }
 
     fun setSelectedFile(uri: Uri?, name: String?, sizeText: String?) {
+        activeIdempotencyKey = java.util.UUID.randomUUID().toString()
         _uiState.update {
             it.copy(
                 selectedUri = uri,
@@ -339,10 +343,13 @@ class ImportViewModel(
                 fileName = _uiState.value.selectedFileName,
                 columnMapping = activeMapping,
                 corrections = _uiState.value.corrections.takeIf { it.isNotEmpty() },
-                confirmReplace = false
+                confirmReplace = false,
+                idempotencyKey = activeIdempotencyKey
             )
             result.fold(
                 onSuccess = { execData ->
+                    // On successful execution, generate a fresh idempotency key for any future attempt
+                    activeIdempotencyKey = java.util.UUID.randomUUID().toString()
                     _uiState.update {
                         it.copy(
                             executionResult = execData,
@@ -354,6 +361,7 @@ class ImportViewModel(
                     onSuccess()
                 },
                 onFailure = { error ->
+                    // Preserves activeIdempotencyKey across retries so re-executing ignores duplicate attempts
                     val msg = error.message ?: "Failed to execute import."
                     _uiState.update { it.copy(isExecuting = false, executeError = msg) }
                     onError(msg)
@@ -363,6 +371,7 @@ class ImportViewModel(
     }
 
     fun clearSession() {
+        activeIdempotencyKey = java.util.UUID.randomUUID().toString()
         _uiState.update {
             ImportUiState(
                 historyList = it.historyList,

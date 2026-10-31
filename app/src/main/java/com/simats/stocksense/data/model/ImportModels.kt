@@ -141,7 +141,8 @@ data class ImportExecuteRequest(
     @SerializedName("file_name") val fileName: String? = null,
     @SerializedName("column_mapping") val columnMapping: Map<String, String?>? = null,
     @SerializedName("corrections") val corrections: List<ImportCorrection>? = null,
-    @SerializedName("confirm_replace") val confirmReplace: Boolean = false
+    @SerializedName("confirm_replace") val confirmReplace: Boolean = false,
+    @SerializedName("idempotency_key") val idempotencyKey: String? = null
 )
 
 data class ImportExecuteResponse(
