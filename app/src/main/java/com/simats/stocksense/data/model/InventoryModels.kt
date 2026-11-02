@@ -6,8 +6,8 @@ import com.google.gson.annotations.SerializedName
  * Inventory network response and request models strictly adhering to API_DOCUMENT.md.
  */
 data class InventoryProductsResponse(
-    @SerializedName("status") val status: Boolean? = false,
-    @SerializedName("message") val message: String? = "",
+    @SerializedName("status") val status: Boolean = false,
+    @SerializedName("message") val message: String = "",
     @SerializedName("data") val data: InventoryProductsData? = null
 )
 
@@ -77,8 +77,8 @@ data class DeleteProductRequest(
 )
 
 data class InventoryActionResponse(
-    @SerializedName("status") val status: Boolean? = false,
-    @SerializedName("message") val message: String? = "",
+    @SerializedName("status") val status: Boolean = false,
+    @SerializedName("message") val message: String = "",
     @SerializedName("data") val data: Any? = null
 )
 
