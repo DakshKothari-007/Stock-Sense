@@ -228,17 +228,16 @@ fun InventoryContent(
 
     val isShopEmpty = allProductsCount == 0 && searchQuery.isEmpty() && selectedFilter == 0
     val isNoSearchResults = products.isEmpty() && (searchQuery.isNotEmpty() || selectedFilter != 0)
+    val showBottomImportButton = !isShopEmpty && searchQuery.isEmpty()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 20.dp)
-            .verticalScroll(scrollState),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 1. Header
+        // 1. Header (Fixed at top)
         Column {
             Text(
                 text = "Inventory",
@@ -255,7 +254,9 @@ fun InventoryContent(
             )
         }
 
-        // 2. Find a Product Section (Search & Filter)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 2. Find a Product Section (Search & Filter - Fixed at top)
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 text = "Find a product",
@@ -361,287 +362,314 @@ fun InventoryContent(
             }
         }
 
-        // 3. Empty State for New Stores
-        if (isShopEmpty) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "No products in inventory",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Your store has no inventory yet. Import your stock spreadsheet to start tracking products, stock levels, and sales.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        fontSize = 12.sp
-                    )
-                    Spacer(modifier = Modifier.height(14.dp))
-                    Button(
-                        onClick = onImportDataClick,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
-                    ) {
-                        Text("Import Stock", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-        } else if (isNoSearchResults) {
-            // Empty State for Filter/Search with 0 matches
-            Box(
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 3. Product List Area with Fixed Bottom Import Button
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 36.dp),
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .verticalScroll(scrollState),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "No products found",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 15.sp
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Try searching for a different item or clear filters",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
-                    )
-                }
-            }
-        } else {
-            // 4. Your Products List
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(
-                    text = "Your products",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 15.sp
-                )
-
-                products.forEach { item ->
-                    val isMarie = item.name.contains("Marie", ignoreCase = true)
-                    val isAtta = item.name.contains("Atta", ignoreCase = true)
-                    val isTea = item.name.contains("Tea", ignoreCase = true)
-                    val isParleG = item.name.contains("Parle", ignoreCase = true)
-
+                // Empty State for New Stores
+                if (isShopEmpty) {
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .clickable {
-                                when {
-                                    isMarie -> onBiscuitsProductClick()
-                                    isAtta -> onAttaProductClick()
-                                    isTea -> onTeaProductClick()
-                                    isParleG -> onParleGProductClick()
-                                    else -> onMilkProductClick()
-                                }
-                            },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
                         shape = RoundedCornerShape(14.dp)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                        Column(
+                            modifier = Modifier.padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.weight(1f)
+                            Text(
+                                text = "No products in inventory",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "Your store has no inventory yet. Import your stock spreadsheet to start tracking products, stock levels, and sales.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                fontSize = 12.sp
+                            )
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Button(
+                                onClick = onImportDataClick,
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
                             ) {
-                                Box(
+                                Text("Import Stock", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                } else if (isNoSearchResults) {
+                    // Empty State for Filter/Search with 0 matches
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 36.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "No products found",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 15.sp
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Try searching for a different item or clear filters",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                } else {
+                    // 4. Your Products List
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            text = "Your products",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 15.sp
+                        )
+
+                        products.forEach { item ->
+                            val isMarie = item.name.contains("Marie", ignoreCase = true)
+                            val isAtta = item.name.contains("Atta", ignoreCase = true)
+                            val isTea = item.name.contains("Tea", ignoreCase = true)
+                            val isParleG = item.name.contains("Parle", ignoreCase = true)
+
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .clickable {
+                                        when {
+                                            isMarie -> onBiscuitsProductClick()
+                                            isAtta -> onAttaProductClick()
+                                            isTea -> onTeaProductClick()
+                                            isParleG -> onParleGProductClick()
+                                            else -> onMilkProductClick()
+                                        }
+                                    },
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                shape = RoundedCornerShape(14.dp)
+                            ) {
+                                Row(
                                     modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primaryContainer),
-                                    contentAlignment = Alignment.Center
+                                        .fillMaxWidth()
+                                        .padding(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Canvas(modifier = Modifier.size(20.dp)) {
-                                        when (item.iconType) {
-                                            0 -> { // Milk Bottle
-                                                drawRect(
-                                                    color = primaryColor,
-                                                    topLeft = Offset(size.width * 0.35f, 0f),
-                                                    size = Size(size.width * 0.3f, size.height * 0.3f)
-                                                )
-                                                drawRect(
-                                                    color = primaryColor,
-                                                    topLeft = Offset(size.width * 0.2f, size.height * 0.3f),
-                                                    size = Size(size.width * 0.6f, size.height * 0.7f)
-                                                )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.primaryContainer),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Canvas(modifier = Modifier.size(20.dp)) {
+                                                when (item.iconType) {
+                                                    0 -> { // Milk Bottle
+                                                        drawRect(
+                                                            color = primaryColor,
+                                                            topLeft = Offset(size.width * 0.35f, 0f),
+                                                            size = Size(size.width * 0.3f, size.height * 0.3f)
+                                                        )
+                                                        drawRect(
+                                                            color = primaryColor,
+                                                            topLeft = Offset(size.width * 0.2f, size.height * 0.3f),
+                                                            size = Size(size.width * 0.6f, size.height * 0.7f)
+                                                        )
+                                                    }
+                                                    1 -> { // Cookie / Biscuit
+                                                        drawCircle(
+                                                            color = primaryColor,
+                                                            radius = size.width * 0.45f,
+                                                            center = Offset(size.width / 2f, size.height / 2f),
+                                                            style = Stroke(width = 1.5.dp.toPx())
+                                                        )
+                                                        drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.35f, size.height * 0.35f))
+                                                        drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.65f, size.height * 0.45f))
+                                                        drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.45f, size.height * 0.65f))
+                                                    }
+                                                    2 -> { // Box / Package
+                                                        drawRect(
+                                                            color = primaryColor,
+                                                            topLeft = Offset(size.width * 0.1f, size.height * 0.15f),
+                                                            size = Size(size.width * 0.8f, size.height * 0.75f),
+                                                            style = Stroke(width = 1.5.dp.toPx())
+                                                        )
+                                                        drawLine(
+                                                            color = primaryColor,
+                                                            start = Offset(size.width * 0.1f, size.height * 0.4f),
+                                                            end = Offset(size.width * 0.9f, size.height * 0.4f),
+                                                            strokeWidth = 1.5.dp.toPx()
+                                                        )
+                                                    }
+                                                    3 -> { // Tea Cup
+                                                        drawArc(
+                                                            color = primaryColor,
+                                                            startAngle = 0f,
+                                                            sweepAngle = 180f,
+                                                            useCenter = false,
+                                                            topLeft = Offset(size.width * 0.15f, size.height * 0.3f),
+                                                            size = Size(size.width * 0.7f, size.height * 0.6f),
+                                                            style = Stroke(width = 1.5.dp.toPx())
+                                                        )
+                                                        drawLine(
+                                                            color = primaryColor,
+                                                            start = Offset(size.width * 0.15f, size.height * 0.3f),
+                                                            end = Offset(size.width * 0.85f, size.height * 0.3f),
+                                                            strokeWidth = 1.5.dp.toPx()
+                                                        )
+                                                    }
+                                                }
                                             }
-                                            1 -> { // Cookie / Biscuit
-                                                drawCircle(
-                                                    color = primaryColor,
-                                                    radius = size.width * 0.45f,
-                                                    center = Offset(size.width / 2f, size.height / 2f),
-                                                    style = Stroke(width = 1.5.dp.toPx())
-                                                )
-                                                drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.35f, size.height * 0.35f))
-                                                drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.65f, size.height * 0.45f))
-                                                drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.45f, size.height * 0.65f))
-                                            }
-                                            2 -> { // Box / Package
-                                                drawRect(
-                                                    color = primaryColor,
-                                                    topLeft = Offset(size.width * 0.1f, size.height * 0.15f),
-                                                    size = Size(size.width * 0.8f, size.height * 0.75f),
-                                                    style = Stroke(width = 1.5.dp.toPx())
-                                                )
-                                                drawLine(
-                                                    color = primaryColor,
-                                                    start = Offset(size.width * 0.1f, size.height * 0.4f),
-                                                    end = Offset(size.width * 0.9f, size.height * 0.4f),
-                                                    strokeWidth = 1.5.dp.toPx()
-                                                )
-                                            }
-                                            3 -> { // Tea Cup
-                                                drawArc(
-                                                    color = primaryColor,
-                                                    startAngle = 0f,
-                                                    sweepAngle = 180f,
-                                                    useCenter = false,
-                                                    topLeft = Offset(size.width * 0.15f, size.height * 0.3f),
-                                                    size = Size(size.width * 0.7f, size.height * 0.6f),
-                                                    style = Stroke(width = 1.5.dp.toPx())
-                                                )
-                                                drawLine(
-                                                    color = primaryColor,
-                                                    start = Offset(size.width * 0.15f, size.height * 0.3f),
-                                                    end = Offset(size.width * 0.85f, size.height * 0.3f),
-                                                    strokeWidth = 1.5.dp.toPx()
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column {
+                                            Text(
+                                                text = item.name.ifBlank { "—" },
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontSize = 13.sp,
+                                                maxLines = 1
+                                            )
+                                            val skuDisplay = item.sku.ifBlank { "—" }
+                                            val priceDisplay = item.price.ifBlank { "—" }
+                                            Text(
+                                                text = "$skuDisplay · $priceDisplay",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontSize = 11.sp,
+                                                maxLines = 1
+                                            )
+                                            if (item.status != null) {
+                                                Text(
+                                                    text = item.status,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = Color(item.statusColorHex),
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontSize = 11.sp,
+                                                    maxLines = 1
                                                 )
                                             }
                                         }
                                     }
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column {
-                                    Text(
-                                        text = item.name.ifBlank { "—" },
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontSize = 13.sp,
-                                        maxLines = 1
-                                    )
-                                    val skuDisplay = item.sku.ifBlank { "—" }
-                                    val priceDisplay = item.price.ifBlank { "—" }
-                                    Text(
-                                        text = "$skuDisplay · $priceDisplay",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 11.sp,
-                                        maxLines = 1
-                                    )
-                                    if (item.status != null) {
-                                        Text(
-                                            text = item.status,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Color(item.statusColorHex),
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 11.sp,
-                                            maxLines = 1
-                                        )
+
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Column(horizontalAlignment = Alignment.End) {
+                                            Text(
+                                                text = item.units.ifBlank { "0" },
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontSize = 14.sp
+                                            )
+                                            Text(
+                                                text = "units",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontSize = 10.sp
+                                            )
+                                        }
+                                        if (item.status != null) {
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Canvas(modifier = Modifier.size(10.dp)) {
+                                                val path = Path().apply {
+                                                    moveTo(size.width * 0.2f, size.height * 0.1f)
+                                                    lineTo(size.width * 0.8f, size.height * 0.5f)
+                                                    lineTo(size.width * 0.2f, size.height * 0.9f)
+                                                }
+                                                drawPath(
+                                                    path = path,
+                                                    color = Color.Gray,
+                                                    style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
+                        }
 
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        text = item.units.ifBlank { "0" },
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontSize = 14.sp
-                                    )
-                                    Text(
-                                        text = "units",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 10.sp
-                                    )
-                                }
-                                if (item.status != null) {
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Canvas(modifier = Modifier.size(10.dp)) {
-                                        val path = Path().apply {
-                                            moveTo(size.width * 0.2f, size.height * 0.1f)
-                                            lineTo(size.width * 0.8f, size.height * 0.5f)
-                                            lineTo(size.width * 0.2f, size.height * 0.9f)
-                                        }
-                                        drawPath(
-                                            path = path,
-                                            color = Color.Gray,
-                                            style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                        )
-                                    }
-                                }
+                        // Loading More Indicator
+                        if (isLoadingMore) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 12.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = primaryColor,
+                                    strokeWidth = 2.dp
+                                )
                             }
                         }
                     }
                 }
 
-                // Loading More Indicator
-                if (isLoadingMore) {
-                    Box(
+                // Bottom padding so the last product is not hidden behind the button
+                if (showBottomImportButton) {
+                    Spacer(modifier = Modifier.height(88.dp))
+                } else {
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+
+            // Fixed "Import Data" Button at bottom (above bottom navigation bar)
+            if (showBottomImportButton) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(bottom = 16.dp, top = 8.dp)
+                ) {
+                    Button(
+                        onClick = onImportDataClick,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 12.dp),
-                        contentAlignment = Alignment.Center
+                            .height(52.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = primaryColor,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = primaryColor,
-                            strokeWidth = 2.dp
+                        Text(
+                            text = "Import Data",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
                         )
                     }
                 }
             }
         }
-
-        // 5. Import Data Button (Hidden while using search bar)
-        if (searchQuery.isEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = onImportDataClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = primaryColor,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
-                Text(
-                    text = "Import Data",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
