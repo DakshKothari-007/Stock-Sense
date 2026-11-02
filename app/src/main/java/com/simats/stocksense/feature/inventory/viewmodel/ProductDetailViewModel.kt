@@ -8,11 +8,23 @@ import com.simats.stocksense.data.model.PurchaseOrderDto
 import com.simats.stocksense.data.model.UpdateProductRequest
 import com.simats.stocksense.data.repository.InventoryRepository
 import com.simats.stocksense.data.repository.ReorderRepository
+import com.simats.stocksense.data.repository.SalesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/**
+ * Data point for the 7-day sales history bar chart.
+ */
+data class SalesBarPoint(
+    val dayNumber: String = "",
+    val dayLabel: String = "",
+    val unitsSold: Int = 0,
+    val heightRatio: Float = 0.0f,
+    val isToday: Boolean = false
+)
 
 /**
  * UI State for the Product Detail screen.
@@ -29,39 +41,52 @@ data class ProductDetailUiState(
     val stockCoverDays: Double? = null,
     val stockCoverDaysText: String = "—",
     val unitsToReorder: Int = 0,
+    val onOrderUnits: Int = 0,
     val estimatedCost: String = "—",
-    val lastPlacedOrder: PurchaseOrderDto? = null
+    val lastPlacedOrder: PurchaseOrderDto? = null,
+    val salesHistory: List<SalesBarPoint> = emptyList(),
+    val has7DaySales: Boolean = false,
+    val total7DayUnits: Int = 0
 )
 
 /**
  * ViewModel for ProductDetailScreen fetching live data via GET /inventory/get_product_detail.php
- * and wiring edit/delete/reorder actions.
+ * and 7-day sales history via GET /sales/product_history.php.
  */
 class ProductDetailViewModel(
     private val repository: InventoryRepository = InventoryRepository(),
-    private val reorderRepository: ReorderRepository = ReorderRepository()
+    private val reorderRepository: ReorderRepository = ReorderRepository(),
+    private val salesRepository: SalesRepository = SalesRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProductDetailUiState())
     val uiState: StateFlow<ProductDetailUiState> = _uiState.asStateFlow()
 
-    private var currentProductId: Int = 1
+    private var currentProductId: Int? = null
+    private var currentProductSku: String? = "DAI-001"
 
     init {
-        loadProduct(1)
+        loadProduct(productId = null, sku = "DAI-001")
     }
 
     /**
-     * Loads product details from GET /inventory/get_product_detail.php by ID
-     * synchronized with Reorder module recommendations.
+     * Loads product details from GET /inventory/get_product_detail.php
+     * and 7-day sales history from GET /sales/product_history.php.
      */
-    fun loadProduct(productId: Int = currentProductId) {
+    fun loadProduct(productId: Int? = currentProductId, sku: String? = currentProductSku) {
         currentProductId = productId
+        currentProductSku = sku ?: currentProductSku
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val result = repository.fetchProductDetail(id = productId)
+            val result = repository.fetchProductDetail(id = productId, sku = sku)
             result.fold(
                 onSuccess = { data ->
+                    val resolvedId = data.id?.toString()?.toIntOrNull() ?: productId ?: 0
+                    val resolvedSku = data.sku?.takeIf { it.isNotBlank() } ?: sku ?: ""
+                    currentProductId = if (resolvedId > 0) resolvedId else null
+                    currentProductSku = resolvedSku.takeIf { it.isNotBlank() }
+
                     val rawUnits = data.rawUnits ?: data.units?.toString()?.toIntOrNull() ?: 0
                     val threshold = data.minimumStockThreshold ?: data.minStockThreshold ?: 10
                     val rawPrice = data.rawPrice
@@ -74,9 +99,11 @@ class ProductDetailViewModel(
                     val formattedPrice = NumberFormatUtil.formatIndianRupees(rawPrice)
                     val formattedCostPrice = NumberFormatUtil.formatIndianRupees(rawCostPrice)
 
+                    val onOrderUnits = data.onOrderUnits ?: 0
+
                     // Fetch synchronized reorder recommendation from reorder module
                     val reorderResult = reorderRepository.fetchRecommendations()
-                    var unitsToReorder = data.unitsToReorder ?: 0
+                    var unitsToReorder = data.suggestedReorderUnits ?: data.unitsToReorder ?: 0
                     var estCostFormatted = data.estimatedCost?.toString()?.takeIf { it.isNotBlank() }
                         ?: NumberFormatUtil.formatIndianRupees(unitsToReorder * rawCostPrice)
                     var coverDays = data.stockCoverDays
@@ -84,13 +111,42 @@ class ProductDetailViewModel(
                     if (reorderResult.isSuccess) {
                         val items = reorderResult.getOrNull()?.items.orEmpty()
                         val match = items.firstOrNull {
-                            it.product?.id == productId || (it.product?.sku != null && it.product.sku == data.sku)
+                            (resolvedId > 0 && it.product?.id == resolvedId) ||
+                            (!it.product?.sku.isNullOrBlank() && it.product?.sku == resolvedSku)
                         }
                         if (match != null) {
                             unitsToReorder = match.suggestedQuantity ?: 0
                             estCostFormatted = NumberFormatUtil.formatIndianRupees(match.estimatedCost ?: (unitsToReorder * rawCostPrice))
                             if (match.daysOfStockLeft != null) {
                                 coverDays = match.daysOfStockLeft
+                            }
+                        } else if (onOrderUnits > 0) {
+                            unitsToReorder = 0
+                        }
+                    }
+
+                    // Fetch 7-day sales history for the bar chart
+                    val historyResult = salesRepository.fetchProductSalesHistory(
+                        id = if (resolvedId > 0) resolvedId else null,
+                        sku = resolvedSku.takeIf { it.isNotBlank() }
+                    )
+                    var salesPoints: List<SalesBarPoint> = emptyList()
+                    var has7DaySales = false
+                    var total7DayUnits = 0
+
+                    if (historyResult.isSuccess) {
+                        val histData = historyResult.getOrNull()
+                        if (histData != null) {
+                            has7DaySales = histData.hasSales == true
+                            total7DayUnits = histData.totalUnitsSold ?: 0
+                            salesPoints = (histData.history ?: emptyList()).map { pt ->
+                                SalesBarPoint(
+                                    dayNumber = pt.dayNumber ?: "",
+                                    dayLabel = pt.dayLabel ?: "",
+                                    unitsSold = pt.unitsSold ?: 0,
+                                    heightRatio = pt.heightRatio ?: 0.0f,
+                                    isToday = pt.isToday == true
+                                )
                             }
                         }
                     }
@@ -133,9 +189,9 @@ class ProductDetailViewModel(
                     }
 
                     val domainProduct = InventoryProduct(
-                        id = data.id?.toString() ?: productId.toString(),
+                        id = data.id?.toString() ?: resolvedId.toString(),
                         name = data.name?.takeIf { it.isNotBlank() } ?: "—",
-                        sku = data.sku?.takeIf { it.isNotBlank() } ?: "—",
+                        sku = resolvedSku.takeIf { it.isNotBlank() } ?: "—",
                         price = formattedPrice,
                         status = calculatedStatus,
                         statusColorHex = calculatedColorHex,
@@ -161,7 +217,11 @@ class ProductDetailViewModel(
                             stockCoverDays = coverDays,
                             stockCoverDaysText = coverText,
                             unitsToReorder = unitsToReorder,
-                            estimatedCost = estCostFormatted
+                            onOrderUnits = onOrderUnits,
+                            estimatedCost = estCostFormatted,
+                            salesHistory = salesPoints,
+                            has7DaySales = has7DaySales,
+                            total7DayUnits = total7DayUnits
                         )
                     }
                 },
@@ -194,9 +254,15 @@ class ProductDetailViewModel(
             return
         }
 
+        val pid = currentProductId ?: current.product.id.toIntOrNull() ?: 0
+        if (pid <= 0) {
+            onError("Invalid product id.")
+            return
+        }
+
         viewModelScope.launch {
             _uiState.update { it.copy(isOrdering = true) }
-            val result = reorderRepository.createOrder(productId = currentProductId, quantity = units)
+            val result = reorderRepository.createOrder(productId = pid, quantity = units)
             result.fold(
                 onSuccess = { order ->
                     _uiState.update {
@@ -205,7 +271,7 @@ class ProductDetailViewModel(
                             lastPlacedOrder = order
                         )
                     }
-                    loadProduct(currentProductId)
+                    loadProduct(currentProductId, currentProductSku)
                     onSuccess(order)
                 },
                 onFailure = { err ->
@@ -227,7 +293,7 @@ class ProductDetailViewModel(
             val result = repository.updateProduct(request)
             result.fold(
                 onSuccess = { msg ->
-                    loadProduct(currentProductId)
+                    loadProduct(currentProductId, currentProductSku)
                     onResult(true, msg)
                 },
                 onFailure = { err ->
@@ -243,10 +309,11 @@ class ProductDetailViewModel(
     fun deleteProduct(
         onResult: (Boolean, String) -> Unit = { _, _ -> }
     ) {
+        val pid = currentProductId ?: _uiState.value.product.id.toIntOrNull()
         viewModelScope.launch {
             val result = repository.deleteProduct(
-                id = currentProductId,
-                sku = _uiState.value.product.sku
+                id = pid,
+                sku = _uiState.value.product.sku.takeIf { it.isNotBlank() && it != "—" } ?: currentProductSku
             )
             result.fold(
                 onSuccess = { msg ->

@@ -191,11 +191,12 @@ fun ReorderRecommendationScreen(
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Spacer(modifier = Modifier.height(16.dp))
-
                     // 1. Header with Back Button and Title
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .statusBarsPadding()
+                            .padding(top = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(

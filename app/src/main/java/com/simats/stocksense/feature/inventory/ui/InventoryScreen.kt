@@ -49,6 +49,7 @@ import com.simats.stocksense.feature.inventory.viewmodel.InventoryViewModel
 fun InventoryScreen(
     viewModel: InventoryViewModel = viewModel(),
     onImportDataClick: () -> Unit = {},
+    onProductClick: (InventoryProduct) -> Unit = {},
     onMilkProductClick: () -> Unit = {},
     onBiscuitsProductClick: () -> Unit = {},
     onAttaProductClick: () -> Unit = {},
@@ -78,6 +79,7 @@ fun InventoryScreen(
         onRetryClick = { viewModel.refresh() },
         onLoadMore = { viewModel.loadMore() },
         onImportDataClick = onImportDataClick,
+        onProductClick = onProductClick,
         onMilkProductClick = onMilkProductClick,
         onBiscuitsProductClick = onBiscuitsProductClick,
         onAttaProductClick = onAttaProductClick,
@@ -97,6 +99,7 @@ fun InventoryScreenContent(
     onRetryClick: () -> Unit = {},
     onLoadMore: () -> Unit = {},
     onImportDataClick: () -> Unit = {},
+    onProductClick: (InventoryProduct) -> Unit = {},
     onMilkProductClick: () -> Unit = {},
     onBiscuitsProductClick: () -> Unit = {},
     onAttaProductClick: () -> Unit = {},
@@ -178,6 +181,7 @@ fun InventoryScreenContent(
                     isLoadingMore = uiState.isLoadingMore,
                     onLoadMore = onLoadMore,
                     onImportDataClick = onImportDataClick,
+                    onProductClick = onProductClick,
                     onMilkProductClick = onMilkProductClick,
                     onBiscuitsProductClick = onBiscuitsProductClick,
                     onAttaProductClick = onAttaProductClick,
@@ -206,6 +210,7 @@ fun InventoryContent(
     isLoadingMore: Boolean = false,
     onLoadMore: () -> Unit = {},
     onImportDataClick: () -> Unit = {},
+    onProductClick: (InventoryProduct) -> Unit = {},
     onMilkProductClick: () -> Unit = {},
     onBiscuitsProductClick: () -> Unit = {},
     onAttaProductClick: () -> Unit = {},
@@ -458,6 +463,7 @@ fun InventoryContent(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(14.dp))
                                     .clickable {
+                                        onProductClick(item)
                                         when {
                                             isMarie -> onBiscuitsProductClick()
                                             isAtta -> onAttaProductClick()

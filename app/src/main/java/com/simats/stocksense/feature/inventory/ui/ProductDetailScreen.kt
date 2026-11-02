@@ -116,7 +116,7 @@ fun ProductDetailScreenContent(
                 }
             }
 
-            uiState.errorMessage != null && uiState.product.name == "—" -> {
+            uiState.errorMessage != null || uiState.product.name.isBlank() || uiState.product.name == "—" -> {
                 // Error State with Retry Button
                 Box(
                     modifier = Modifier
@@ -135,7 +135,7 @@ fun ProductDetailScreenContent(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = uiState.errorMessage,
+                            text = uiState.errorMessage ?: "Product details could not be loaded. Please check your connection and retry.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -440,45 +440,51 @@ fun ProductDetailScreenContent(
 
                                 Spacer(modifier = Modifier.height(16.dp))
 
-                                // Bar Chart Visualization
-                                val barData = listOf(
-                                    "1" to 0.50f,
-                                    "2" to 0.60f,
-                                    "3" to 0.52f,
-                                    "4" to 0.65f,
-                                    "5" to 0.85f,
-                                    "6" to 0.60f,
-                                    "7" to 0.70f
-                                )
-
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(85.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.Bottom
-                                ) {
-                                    barData.forEachIndexed { index, (day, ratio) ->
-                                        val isLast = index == barData.lastIndex
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.Bottom,
-                                            modifier = Modifier.weight(1f)
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .width(18.dp)
-                                                    .fillMaxHeight(ratio)
-                                                    .clip(RoundedCornerShape(4.dp))
-                                                    .background(if (isLast) primaryColor else accentColor)
-                                            )
-                                            Spacer(modifier = Modifier.height(6.dp))
-                                            Text(
-                                                text = day,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                fontSize = 10.sp
-                                            )
+                                if (!uiState.has7DaySales || uiState.salesHistory.isEmpty()) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(85.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "No sales in the last 7 days",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            fontSize = 13.sp
+                                        )
+                                    }
+                                } else {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(85.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.Bottom
+                                    ) {
+                                        uiState.salesHistory.forEachIndexed { index, point ->
+                                            val isLast = point.isToday || index == uiState.salesHistory.lastIndex
+                                            val ratio = point.heightRatio.coerceIn(0.18f, 1.0f)
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                verticalArrangement = Arrangement.Bottom,
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .width(18.dp)
+                                                        .fillMaxHeight(ratio)
+                                                        .clip(RoundedCornerShape(4.dp))
+                                                        .background(if (isLast) primaryColor else accentColor)
+                                                )
+                                                Spacer(modifier = Modifier.height(6.dp))
+                                                Text(
+                                                    text = point.dayNumber.ifEmpty { (index + 1).toString() },
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    fontSize = 10.sp
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -565,14 +571,22 @@ fun ProductDetailScreenContent(
 
                                     Column {
                                         Text(
-                                            text = "Suggested reorder: ${uiState.unitsToReorder} units",
+                                            text = if (uiState.onOrderUnits > 0 && uiState.unitsToReorder <= 0) {
+                                                "${uiState.onOrderUnits} units already on order"
+                                            } else {
+                                                "Suggested reorder: ${uiState.unitsToReorder} units"
+                                            },
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface,
                                             fontSize = 14.sp
                                         )
                                         Text(
-                                            text = "Estimated purchase: ${uiState.estimatedCost}",
+                                            text = if (uiState.onOrderUnits > 0 && uiState.unitsToReorder <= 0) {
+                                                "Awaiting delivery from placed purchase order"
+                                            } else {
+                                                "Estimated purchase: ${uiState.estimatedCost}"
+                                            },
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontSize = 12.sp
@@ -581,14 +595,25 @@ fun ProductDetailScreenContent(
                                 }
 
                                 val currentStockUnits = uiState.product.rawUnits
-                                val targetStock = currentStockUnits + uiState.unitsToReorder
-                                Text(
-                                    text = "Your $currentStockUnits units cover ${uiState.stockCoverDaysText}. Adding ${uiState.unitsToReorder} brings stock to $targetStock units.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 12.sp,
-                                    lineHeight = 16.sp
-                                )
+                                if (uiState.onOrderUnits > 0 && uiState.unitsToReorder <= 0) {
+                                    val totalWithOnOrder = currentStockUnits + uiState.onOrderUnits
+                                    Text(
+                                        text = "Your $currentStockUnits units cover ${uiState.stockCoverDaysText}. ${uiState.onOrderUnits} units on order will bring stock to $totalWithOnOrder units.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 12.sp,
+                                        lineHeight = 16.sp
+                                    )
+                                } else {
+                                    val targetStock = currentStockUnits + uiState.unitsToReorder
+                                    Text(
+                                        text = "Your $currentStockUnits units cover ${uiState.stockCoverDaysText}. Adding ${uiState.unitsToReorder} brings stock to $targetStock units.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 12.sp,
+                                        lineHeight = 16.sp
+                                    )
+                                }
                             }
                         }
 
@@ -597,35 +622,58 @@ fun ProductDetailScreenContent(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // 7. Bottom Reorder Button
-                    Button(
-                        onClick = onReorderClick,
-                        enabled = !uiState.isOrdering && uiState.unitsToReorder > 0,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = primaryColor,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
-                    ) {
-                        if (uiState.isOrdering) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(22.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp
+                    if (uiState.onOrderUnits > 0 && uiState.unitsToReorder <= 0) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "${uiState.onOrderUnits} units already on order",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 16.sp
+                                )
+                            }
+                        }
+                    } else {
+                        Button(
+                            onClick = onReorderClick,
+                            enabled = !uiState.isOrdering && uiState.unitsToReorder > 0,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = primaryColor,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             )
-                        } else {
-                            Text(
-                                text = if (uiState.unitsToReorder > 0) {
-                                    "Reorder ${uiState.unitsToReorder} units · ${uiState.estimatedCost}"
-                                } else {
-                                    "Stock is sufficient"
-                                },
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
+                        ) {
+                            if (uiState.isOrdering) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(22.dp),
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(
+                                    text = if (uiState.unitsToReorder > 0) {
+                                        "Reorder ${uiState.unitsToReorder} units · ${uiState.estimatedCost}"
+                                    } else {
+                                        "Stock is sufficient"
+                                    },
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
+                            }
                         }
                     }
                 }

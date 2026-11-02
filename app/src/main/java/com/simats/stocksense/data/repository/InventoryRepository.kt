@@ -33,7 +33,7 @@ class InventoryRepository(
 
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status && body.data != null) {
+                if (body != null && body.status == true && body.data != null) {
                     Result.success(body.data)
                 } else {
                     Result.failure(Exception(body?.message ?: "Failed to retrieve inventory products."))
@@ -52,7 +52,7 @@ class InventoryRepository(
             val response = apiService.getProductDetail(id = id, sku = sku)
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status && body.data != null) {
+                if (body != null && body.status == true && body.data != null) {
                     val resolved = body.data.product ?: body.data
                     Result.success(resolved)
                 } else {
@@ -72,8 +72,8 @@ class InventoryRepository(
             val response = apiService.addProduct(request)
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status) {
-                    Result.success(body.message.ifBlank { "Product added successfully." })
+                if (body != null && body.status == true) {
+                    Result.success(body.message?.ifBlank { "Product added successfully." } ?: "Product added successfully.")
                 } else {
                     Result.failure(Exception(body?.message ?: "Failed to add product."))
                 }
@@ -91,8 +91,8 @@ class InventoryRepository(
             val response = apiService.updateProduct(request)
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status) {
-                    Result.success(body.message.ifBlank { "Product updated successfully." })
+                if (body != null && body.status == true) {
+                    Result.success(body.message?.ifBlank { "Product updated successfully." } ?: "Product updated successfully.")
                 } else {
                     Result.failure(Exception(body?.message ?: "Failed to update product."))
                 }
@@ -110,8 +110,8 @@ class InventoryRepository(
             val response = apiService.deleteProduct(DeleteProductRequest(id = id, sku = sku))
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status) {
-                    Result.success(body.message.ifBlank { "Product deleted successfully." })
+                if (body != null && body.status == true) {
+                    Result.success(body.message?.ifBlank { "Product deleted successfully." } ?: "Product deleted successfully.")
                 } else {
                     Result.failure(Exception(body?.message ?: "Failed to delete product."))
                 }

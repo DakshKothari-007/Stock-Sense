@@ -54,6 +54,7 @@ import com.simats.stocksense.feature.reorder.ui.RecommendationPairsScreen
 import com.simats.stocksense.feature.reorder.ui.ReorderPlacedScreen
 import com.simats.stocksense.feature.reorder.ui.ReorderRecommendationScreen
 import com.simats.stocksense.feature.reorder.ui.SlowMovingRecommendationScreen
+import com.simats.stocksense.feature.reorder.viewmodel.InsightsViewModel
 import com.simats.stocksense.feature.reorder.viewmodel.ReorderViewModel
 
 class MainActivity : ComponentActivity() {
@@ -83,6 +84,7 @@ fun StockSenseAppNavigation() {
     val importViewModel: ImportViewModel = viewModel()
     val reorderViewModel: ReorderViewModel = viewModel()
     val productDetailViewModel: ProductDetailViewModel = viewModel()
+    val insightsViewModel: InsightsViewModel = viewModel()
 
     DisposableEffect(Unit) {
         NetworkClient.initialize(context) {
@@ -283,7 +285,14 @@ fun StockSenseAppNavigation() {
                         launchSingleTop = true
                     }
                 },
+                onProductDetailClick = { prod ->
+                    productDetailViewModel.loadProduct(
+                        productId = prod.id.toIntOrNull(),
+                        sku = prod.sku.takeIf { it.isNotBlank() && it != "—" }
+                    )
+                },
                 onProductMilkClick = {
+                    productDetailViewModel.loadProduct(sku = "DAI-001")
                     navController.navigate("product_detail") {
                         launchSingleTop = true
                     }
@@ -323,6 +332,11 @@ fun StockSenseAppNavigation() {
                         launchSingleTop = true
                     }
                 },
+                onSlowMovingRecommendationClick = {
+                    navController.navigate("slow_moving_recommendation") {
+                        launchSingleTop = true
+                    }
+                },
                 onInventoryImportedClick = {
                     navController.navigate("inventory_imported") {
                         launchSingleTop = true
@@ -340,7 +354,8 @@ fun StockSenseAppNavigation() {
                             launchSingleTop = true
                         }
                     }
-                }
+                },
+                insightsViewModel = insightsViewModel
             )
         }
         composable("settings") {
@@ -367,6 +382,7 @@ fun StockSenseAppNavigation() {
                     navController.popBackStack()
                 },
                 onAmulMilkClick = {
+                    productDetailViewModel.loadProduct(sku = "DAI-001")
                     navController.navigate("product_detail")
                 },
                 onMarieBiscuitsClick = {
@@ -456,7 +472,8 @@ fun StockSenseAppNavigation() {
                 },
                 onDismissClick = {
                     navController.navigate("dismissed_overlay")
-                }
+                },
+                viewModel = insightsViewModel
             )
         }
         composable("reorder_recommendation") {
@@ -483,7 +500,8 @@ fun StockSenseAppNavigation() {
                 },
                 onDismissClick = {
                     navController.navigate("dismissed_overlay")
-                }
+                },
+                viewModel = insightsViewModel
             )
         }
         composable("accepted_overlay") {

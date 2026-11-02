@@ -1,5 +1,6 @@
 package com.simats.stocksense.feature.dashboard.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,6 +12,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,14 +28,36 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.simats.stocksense.core.util.NumberFormatUtil
+import com.simats.stocksense.feature.reorder.viewmodel.InsightsViewModel
+import java.util.Locale
 
 @Composable
 fun InsightsContent(
     onReorderMilkClick: () -> Unit = {},
     onMoveBiscuitsClick: () -> Unit = {},
-    onTeaPairClick: () -> Unit = {}
+    onTeaPairClick: () -> Unit = {},
+    viewModel: InsightsViewModel = viewModel()
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
+    val uiState by viewModel.uiState.collectAsState()
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refresh()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -52,7 +78,7 @@ fun InsightsContent(
                 fontSize = 22.sp
             )
             Text(
-                text = "Green Basket - 15 Oct 2026",
+                text = "Green Basket - ${NumberFormatUtil.formatCurrentHeaderDate()}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp
@@ -87,8 +113,10 @@ fun InsightsContent(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Column {
+                    val count = uiState.totalOpportunities
+                    val oppText = if (count == 1) "1 opportunity for your shop" else "$count opportunities for your shop"
                     Text(
-                        text = "3 opportunities for your shop",
+                        text = oppText,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -96,7 +124,7 @@ fun InsightsContent(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Based on stock levels and sales through 15 Oct.",
+                        text = "Based on stock levels and recent sales.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 11.sp
@@ -105,263 +133,444 @@ fun InsightsContent(
             }
         }
 
-        // Recommendation Cards List
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            // Recommendation Card 1: Reorder Amul Milk
-            Card(
+        if (uiState.isLoading && uiState.slowMovingData == null && uiState.productPairsData == null) {
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .clickable { onReorderMilkClick() },
+                    .height(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = primaryColor)
+            }
+        } else if (uiState.errorMessage != null && uiState.totalOpportunities == 0) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primaryContainer),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Canvas(modifier = Modifier.size(20.dp)) {
-                                    drawRect(
-                                        color = primaryColor,
-                                        topLeft = Offset(size.width * 0.15f, size.height * 0.2f),
-                                        size = Size(size.width * 0.7f, size.height * 0.7f),
-                                        style = Stroke(width = 1.5.dp.toPx())
-                                    )
-                                    drawLine(
-                                        color = primaryColor,
-                                        start = Offset(size.width * 0.5f, size.height * 0.35f),
-                                        end = Offset(size.width * 0.5f, size.height * 0.75f),
-                                        strokeWidth = 1.5.dp.toPx()
-                                    )
-                                    drawLine(
-                                        color = primaryColor,
-                                        start = Offset(size.width * 0.3f, size.height * 0.55f),
-                                        end = Offset(size.width * 0.7f, size.height * 0.55f),
-                                        strokeWidth = 1.5.dp.toPx()
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Column {
-                                Text(
-                                    text = "Reorder Amul Milk",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 14.sp
-                                )
-                                Text(
-                                    text = "HIGH PRIORITY · REORDER",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = primaryColor,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 10.sp,
-                                    letterSpacing = 1.sp
-                                )
-                            }
-                        }
-
-                        Canvas(modifier = Modifier.size(12.dp)) {
-                            val path = Path().apply {
-                                moveTo(size.width * 0.2f, size.height * 0.1f)
-                                lineTo(size.width * 0.8f, size.height * 0.5f)
-                                lineTo(size.width * 0.2f, size.height * 0.9f)
-                            }
-                            drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-                        }
-                    }
-
                     Text(
-                        text = "8 units left, 12 sold per day. Add 60 units for ₹1,620 to avoid an empty shelf.",
+                        text = uiState.errorMessage ?: "Failed to load insights.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center
+                    )
+                    Button(
+                        onClick = { viewModel.refresh() },
+                        colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                    ) {
+                        Text("Retry", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        } else if (!uiState.hasEnoughSlowMovingHistory && !uiState.hasEnoughPairsHistory && uiState.reorderItems.isEmpty()) {
+            // Backend returns has_enough_sales_history == false
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Sales history needed",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = uiState.slowMovingHistoryMessage ?: uiState.productPairsHistoryMessage
+                            ?: "Need at least 30 days of sales history to calculate insights accurately.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp,
-                        lineHeight = 17.sp
+                        textAlign = TextAlign.Center,
+                        fontSize = 12.sp
                     )
                 }
             }
-
-            // Recommendation Card 2: Move Marie Biscuits faster
+        } else if (uiState.totalOpportunities == 0) {
+            // Empty state
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .clickable { onMoveBiscuitsClick() },
+                modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primaryContainer),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Canvas(modifier = Modifier.size(20.dp)) {
-                                    drawCircle(
-                                        color = primaryColor,
-                                        radius = size.width * 0.45f,
-                                        center = Offset(size.width / 2f, size.height / 2f),
-                                        style = Stroke(width = 1.5.dp.toPx())
-                                    )
-                                    drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.35f, size.height * 0.35f))
-                                    drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.65f, size.height * 0.45f))
-                                    drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.45f, size.height * 0.65f))
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Column {
-                                Text(
-                                    text = "Move Marie Biscuits faster",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 14.sp
-                                )
-                                Text(
-                                    text = "SLOW-MOVING INVENTORY",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = primaryColor,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 10.sp,
-                                    letterSpacing = 1.sp
-                                )
-                            }
-                        }
-
-                        Canvas(modifier = Modifier.size(12.dp)) {
-                            val path = Path().apply {
-                                moveTo(size.width * 0.2f, size.height * 0.1f)
-                                lineTo(size.width * 0.8f, size.height * 0.5f)
-                                lineTo(size.width * 0.2f, size.height * 0.9f)
-                            }
-                            drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-                        }
-                    }
-
                     Text(
-                        text = "96 packs left; only 6 sold in 30 days. Try 10% off or a tea-time bundle.",
+                        text = "No insights yet",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Nothing slow-moving right now. Check back as new sales are recorded.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp,
-                        lineHeight = 17.sp
+                        textAlign = TextAlign.Center,
+                        fontSize = 12.sp
                     )
                 }
             }
-
-            // Recommendation Card 3: A smarter tea-time pair
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .clickable { onTeaPairClick() },
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+        } else {
+            // Recommendation Cards List
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Recommendation Card 1: Reorder Recommendations
+                if (uiState.reorderItems.isNotEmpty()) {
+                    val reorder = uiState.reorderItems.first()
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .clickable { onReorderMilkClick() },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        shape = RoundedCornerShape(14.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f)
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primaryContainer),
-                                contentAlignment = Alignment.Center
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Canvas(modifier = Modifier.size(20.dp)) {
-                                    drawLine(color = primaryColor, start = Offset(size.width * 0.2f, size.height * 0.3f), end = Offset(size.width * 0.8f, size.height * 0.3f), strokeWidth = 1.8.dp.toPx())
-                                    drawLine(color = primaryColor, start = Offset(size.width * 0.2f, size.height * 0.5f), end = Offset(size.width * 0.8f, size.height * 0.5f), strokeWidth = 1.8.dp.toPx())
-                                    drawLine(color = primaryColor, start = Offset(size.width * 0.2f, size.height * 0.7f), end = Offset(size.width * 0.8f, size.height * 0.7f), strokeWidth = 1.8.dp.toPx())
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.primaryContainer),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Canvas(modifier = Modifier.size(20.dp)) {
+                                            drawRect(
+                                                color = primaryColor,
+                                                topLeft = Offset(size.width * 0.15f, size.height * 0.2f),
+                                                size = Size(size.width * 0.7f, size.height * 0.7f),
+                                                style = Stroke(width = 1.5.dp.toPx())
+                                            )
+                                            drawLine(
+                                                color = primaryColor,
+                                                start = Offset(size.width * 0.5f, size.height * 0.35f),
+                                                end = Offset(size.width * 0.5f, size.height * 0.75f),
+                                                strokeWidth = 1.5.dp.toPx()
+                                            )
+                                            drawLine(
+                                                color = primaryColor,
+                                                start = Offset(size.width * 0.3f, size.height * 0.55f),
+                                                end = Offset(size.width * 0.7f, size.height * 0.55f),
+                                                strokeWidth = 1.5.dp.toPx()
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.width(12.dp))
+
+                                    Column {
+                                        Text(
+                                            text = "Reorder ${reorder.product?.name ?: "Stock"}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            fontSize = 14.sp
+                                        )
+                                        Text(
+                                            text = "${(reorder.priority ?: "HIGH").uppercase(Locale.ENGLISH)} PRIORITY · REORDER",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = primaryColor,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 10.sp,
+                                            letterSpacing = 1.sp
+                                        )
+                                    }
+                                }
+
+                                Canvas(modifier = Modifier.size(12.dp)) {
+                                    val path = Path().apply {
+                                        moveTo(size.width * 0.2f, size.height * 0.1f)
+                                        lineTo(size.width * 0.8f, size.height * 0.5f)
+                                        lineTo(size.width * 0.2f, size.height * 0.9f)
+                                    }
+                                    drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
                                 }
                             }
 
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Column {
-                                Text(
-                                    text = "A smarter tea-time pair",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 14.sp
-                                )
-                                Text(
-                                    text = "FREQUENTLY BOUGHT TOGETHER",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = primaryColor,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 10.sp,
-                                    letterSpacing = 1.sp
-                                )
-                            }
-                        }
-
-                        Canvas(modifier = Modifier.size(12.dp)) {
-                            val path = Path().apply {
-                                moveTo(size.width * 0.2f, size.height * 0.1f)
-                                lineTo(size.width * 0.8f, size.height * 0.5f)
-                                lineTo(size.width * 0.2f, size.height * 0.9f)
-                            }
-                            drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                            val stockText = "${reorder.currentStock ?: 0} units left, ${reorder.dailySalesRate ?: 0.0} sold per day. Add ${reorder.suggestedQuantity ?: 0} units for ${NumberFormatUtil.formatIndianRupees(reorder.estimatedCost)} to avoid an empty shelf."
+                            Text(
+                                text = stockText,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 12.sp,
+                                lineHeight = 17.sp
+                            )
                         }
                     }
+                }
 
-                    Text(
-                        text = "Tata Tea + Parle-G appear together in 40% of tea baskets. Offer the pair at ₹125.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp,
-                        lineHeight = 17.sp
-                    )
+                // Recommendation Card 2: Slow-Moving Recommendations
+                if (!uiState.hasEnoughSlowMovingHistory && uiState.slowMovingHistoryMessage != null) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        shape = RoundedCornerShape(14.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "SLOW-MOVING INVENTORY",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = primaryColor,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 10.sp,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = uiState.slowMovingHistoryMessage ?: "",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                } else {
+                    uiState.slowMovingItems.forEachIndexed { index, item ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .clickable {
+                                    viewModel.selectSlowMovingIndex(index)
+                                    onMoveBiscuitsClick()
+                                },
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.primaryContainer),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Canvas(modifier = Modifier.size(20.dp)) {
+                                                drawCircle(
+                                                    color = primaryColor,
+                                                    radius = size.width * 0.45f,
+                                                    center = Offset(size.width / 2f, size.height / 2f),
+                                                    style = Stroke(width = 1.5.dp.toPx())
+                                                )
+                                                drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.35f, size.height * 0.35f))
+                                                drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.65f, size.height * 0.45f))
+                                                drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.45f, size.height * 0.65f))
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.width(12.dp))
+
+                                        Column {
+                                            Text(
+                                                text = "Move ${item.name ?: "stock"} faster",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontSize = 14.sp
+                                            )
+                                            Text(
+                                                text = "SLOW-MOVING INVENTORY",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = primaryColor,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 10.sp,
+                                                letterSpacing = 1.sp
+                                            )
+                                        }
+                                    }
+
+                                    Canvas(modifier = Modifier.size(12.dp)) {
+                                        val path = Path().apply {
+                                            moveTo(size.width * 0.2f, size.height * 0.1f)
+                                            lineTo(size.width * 0.8f, size.height * 0.5f)
+                                            lineTo(size.width * 0.2f, size.height * 0.9f)
+                                        }
+                                        drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                                    }
+                                }
+
+                                val slowText = "${item.effectiveStock} packs left; only ${item.unitsSold30Days ?: 0} sold in 30 days. Try ${item.effectiveDiscountPct}% off or a clearance offer."
+                                Text(
+                                    text = slowText,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 12.sp,
+                                    lineHeight = 17.sp
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Recommendation Card 3: Frequently Bought Together
+                if (!uiState.hasEnoughPairsHistory && uiState.productPairsHistoryMessage != null) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        shape = RoundedCornerShape(14.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "FREQUENTLY BOUGHT TOGETHER",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = primaryColor,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 10.sp,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = uiState.productPairsHistoryMessage ?: "",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                } else {
+                    uiState.productPairItems.forEachIndexed { index, pair ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .clickable {
+                                    viewModel.selectPairIndex(index)
+                                    onTeaPairClick()
+                                },
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.primaryContainer),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Canvas(modifier = Modifier.size(20.dp)) {
+                                                drawLine(color = primaryColor, start = Offset(size.width * 0.2f, size.height * 0.3f), end = Offset(size.width * 0.8f, size.height * 0.3f), strokeWidth = 1.8.dp.toPx())
+                                                drawLine(color = primaryColor, start = Offset(size.width * 0.2f, size.height * 0.5f), end = Offset(size.width * 0.8f, size.height * 0.5f), strokeWidth = 1.8.dp.toPx())
+                                                drawLine(color = primaryColor, start = Offset(size.width * 0.2f, size.height * 0.7f), end = Offset(size.width * 0.8f, size.height * 0.7f), strokeWidth = 1.8.dp.toPx())
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.width(12.dp))
+
+                                        Column {
+                                            val pairTitle = "${pair.product1?.name ?: "Product 1"} + ${pair.product2?.name ?: "Product 2"}"
+                                            Text(
+                                                text = pairTitle,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontSize = 14.sp
+                                            )
+                                            Text(
+                                                text = "FREQUENTLY BOUGHT TOGETHER",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = primaryColor,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 10.sp,
+                                                letterSpacing = 1.sp
+                                            )
+                                        }
+                                    }
+
+                                    Canvas(modifier = Modifier.size(12.dp)) {
+                                        val path = Path().apply {
+                                            moveTo(size.width * 0.2f, size.height * 0.1f)
+                                            lineTo(size.width * 0.8f, size.height * 0.5f)
+                                            lineTo(size.width * 0.2f, size.height * 0.9f)
+                                        }
+                                        drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                                    }
+                                }
+
+                                val supportPct = ((pair.effectiveSupport) * 100).toInt()
+                                val bundlePrice = pair.suggestedAction?.bundlePrice ?: 0.0
+                                val pairDetail = "${pair.product1?.name ?: "Product 1"} + ${pair.product2?.name ?: "Product 2"} appear together in $supportPct% of baskets. Offer the pair at ${NumberFormatUtil.formatIndianRupees(bundlePrice)}."
+                                Text(
+                                    text = pairDetail,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 12.sp,
+                                    lineHeight = 17.sp
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

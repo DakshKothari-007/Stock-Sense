@@ -54,5 +54,15 @@ interface SalesApiService {
         @Part file: MultipartBody.Part,
         @Query("deduct_stock") deductStock: Boolean = false
     ): Response<ImportSalesResponse>
+
+    /**
+     * Module 6.5 Product 7-Day Sales History
+     * Returns last 7 days of daily units sold per day for a specific product.
+     */
+    @GET("sales/product_history.php")
+    suspend fun getProductSalesHistory(
+        @Query("id") id: Int? = null,
+        @Query("sku") sku: String? = null
+    ): Response<ProductHistoryResponse>
 }
 

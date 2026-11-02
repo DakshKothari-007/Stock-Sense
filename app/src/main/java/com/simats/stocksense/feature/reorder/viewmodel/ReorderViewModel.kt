@@ -197,11 +197,11 @@ class ReorderViewModel(
             else -> "Reorder recommended"
         }
 
-        val shortTitle = "Keep ${name.split(" ").firstOrNull() ?: "stock"} on the shelf"
+        val fullTitle = "Keep $name on the shelf"
 
         return ReorderRecommendation(
             productId = prod?.id,
-            title = shortTitle,
+            title = fullTitle,
             productName = displayName,
             recommendedUnits = recUnits,
             estimatedPurchaseText = purchaseText,

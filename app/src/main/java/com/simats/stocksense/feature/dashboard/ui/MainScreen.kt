@@ -17,11 +17,13 @@ import com.simats.stocksense.core.components.StockSenseBottomNavigation
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.feature.dashboard.viewmodel.MainViewModel
 import com.simats.stocksense.feature.inventory.ui.InventoryScreen
+import com.simats.stocksense.feature.reorder.viewmodel.InsightsViewModel
 
 @Composable
 fun MainScreen(
     onBackClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
+    onProductDetailClick: (com.simats.stocksense.data.model.InventoryProduct) -> Unit = {},
     onProductMilkClick: () -> Unit = {},
     onProductBiscuitsClick: () -> Unit = {},
     onProductAttaClick: () -> Unit = {},
@@ -30,9 +32,11 @@ fun MainScreen(
     onSalesAnalyticsClick: () -> Unit = {},
     onReorderRecommendationClick: () -> Unit = {},
     onRecommendationPairsClick: () -> Unit = {},
+    onSlowMovingRecommendationClick: () -> Unit = onProductBiscuitsClick,
     onInventoryImportedClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {},
+    insightsViewModel: InsightsViewModel = viewModel(),
     viewModel: MainViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -72,6 +76,7 @@ fun MainScreen(
                     )
                     1 -> InventoryScreen(
                         onImportDataClick = onInventoryImportedClick,
+                        onProductClick = onProductDetailClick,
                         onMilkProductClick = onProductMilkClick,
                         onBiscuitsProductClick = onProductBiscuitsClick,
                         onAttaProductClick = onProductAttaClick,
@@ -80,8 +85,9 @@ fun MainScreen(
                     )
                     2 -> InsightsContent(
                         onReorderMilkClick = onReorderRecommendationClick,
-                        onMoveBiscuitsClick = onProductBiscuitsClick,
-                        onTeaPairClick = onRecommendationPairsClick
+                        onMoveBiscuitsClick = onSlowMovingRecommendationClick,
+                        onTeaPairClick = onRecommendationPairsClick,
+                        viewModel = insightsViewModel
                     )
                     3 -> ProfileContent(
                         storeProfile = uiState.storeProfile,

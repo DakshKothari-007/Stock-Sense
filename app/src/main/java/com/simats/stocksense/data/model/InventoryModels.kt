@@ -6,8 +6,8 @@ import com.google.gson.annotations.SerializedName
  * Inventory network response and request models strictly adhering to API_DOCUMENT.md.
  */
 data class InventoryProductsResponse(
-    @SerializedName("status") val status: Boolean = false,
-    @SerializedName("message") val message: String = "",
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = "",
     @SerializedName("data") val data: InventoryProductsData? = null
 )
 
@@ -77,14 +77,14 @@ data class DeleteProductRequest(
 )
 
 data class InventoryActionResponse(
-    @SerializedName("status") val status: Boolean = false,
-    @SerializedName("message") val message: String = "",
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = "",
     @SerializedName("data") val data: Any? = null
 )
 
 data class ProductDetailResponse(
-    @SerializedName("status") val status: Boolean = false,
-    @SerializedName("message") val message: String = "",
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = "",
     @SerializedName("data") val data: ProductDetailData? = null
 )
 
@@ -108,7 +108,38 @@ data class ProductDetailData(
     @SerializedName("iconType") val iconType: Int? = null,
     @SerializedName("stock_cover_days") val stockCoverDays: Double? = null,
     @SerializedName("unitsToReorder") val unitsToReorder: Int? = null,
+    @SerializedName("suggested_reorder_units") val suggestedReorderUnits: Int? = null,
+    @SerializedName("on_order_units") val onOrderUnits: Int? = null,
     @SerializedName("estimatedCost") val estimatedCost: Any? = null,
     @SerializedName("product") val product: ProductDetailData? = null
+)
+
+data class ProductHistoryResponse(
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = "",
+    @SerializedName("data") val data: ProductHistoryData? = null
+)
+
+data class ProductHistoryData(
+    @SerializedName("product_id") val productId: Int? = null,
+    @SerializedName("product_name") val productName: String? = null,
+    @SerializedName("sku") val sku: String? = null,
+    @SerializedName("days_count") val daysCount: Int? = 7,
+    @SerializedName("total_units_sold") val totalUnitsSold: Int? = 0,
+    @SerializedName("total_revenue") val totalRevenue: Double? = 0.0,
+    @SerializedName("average_daily_units") val averageDailyUnits: Double? = 0.0,
+    @SerializedName("has_sales") val hasSales: Boolean? = false,
+    @SerializedName("history") val history: List<DailyProductSalesPoint>? = emptyList()
+)
+
+data class DailyProductSalesPoint(
+    @SerializedName("date") val date: String? = null,
+    @SerializedName("day_number") val dayNumber: String? = null,
+    @SerializedName("day_label") val dayLabel: String? = null,
+    @SerializedName("day_of_week") val dayOfWeek: String? = null,
+    @SerializedName("units_sold") val unitsSold: Int? = 0,
+    @SerializedName("revenue") val revenue: Double? = 0.0,
+    @SerializedName("height_ratio") val heightRatio: Float? = 0.0f,
+    @SerializedName("is_today") val isToday: Boolean? = false
 )
 
