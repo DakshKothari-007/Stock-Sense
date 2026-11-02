@@ -9,6 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,13 +23,45 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.util.NumberFormatUtil
+import com.simats.stocksense.data.model.PurchaseOrderDto
+import com.simats.stocksense.feature.reorder.viewmodel.ReorderViewModel
 
 @Composable
 fun ReorderPlacedScreen(
-    onDoneClick: () -> Unit = {}
+    onDoneClick: () -> Unit = {},
+    placedOrder: PurchaseOrderDto? = null,
+    viewModel: ReorderViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val order = placedOrder ?: uiState.lastPlacedOrder
     val primaryColor = MaterialTheme.colorScheme.primary
+
+    val statusBadgeText = if (!order?.orderNo.isNullOrBlank()) {
+        "ORDER ${order?.orderNo}"
+    } else {
+        "ORDER PLACED"
+    }
+
+    val item = order?.items?.firstOrNull()
+    val detailsText = if (item != null) {
+        val costText = NumberFormatUtil.formatIndianRupees(item.costPrice ?: 0.0)
+        val totalText = NumberFormatUtil.formatIndianRupees(order?.totalEstimatedCost ?: 0.0)
+        "${item.productName ?: "Product"} · ${order?.totalUnits ?: item.quantity} units × $costText = $totalText"
+    } else if (order != null && (order.totalUnits ?: 0) > 0) {
+        val totalText = NumberFormatUtil.formatIndianRupees(order.totalEstimatedCost ?: 0.0)
+        "${order.totalUnits} units · Total estimated $totalText"
+    } else {
+        "Reorder request recorded with supplier."
+    }
+
+    val descText = if (!order?.orderNo.isNullOrBlank()) {
+        "Purchase order ${order.orderNo} was recorded successfully. Status: ${order.status ?: "placed"}."
+    } else {
+        "A purchase order was created and recorded into your store inventory system."
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -97,7 +131,7 @@ fun ReorderPlacedScreen(
                         color = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         Text(
-                            text = "DEMO LOCAL ACTION",
+                            text = statusBadgeText,
                             style = MaterialTheme.typography.labelSmall,
                             color = primaryColor,
                             fontWeight = FontWeight.Bold,
@@ -109,7 +143,7 @@ fun ReorderPlacedScreen(
 
                     // Details
                     Text(
-                        text = "Amul Milk · 500 ml 60 units × ₹27 = ₹1,620",
+                        text = detailsText,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -118,7 +152,7 @@ fun ReorderPlacedScreen(
                     )
 
                     Text(
-                        text = "A sample reorder was recorded locally. No supplier order was placed; stock stays at 8.",
+                        text = descText,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,

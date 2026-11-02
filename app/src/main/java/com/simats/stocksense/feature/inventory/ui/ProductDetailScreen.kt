@@ -1,5 +1,6 @@
 package com.simats.stocksense.feature.inventory.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,11 +58,20 @@ fun ProductDetailScreen(
         }
     }
 
+    val context = LocalContext.current
+
     ProductDetailScreenContent(
         uiState = uiState,
         onRetryClick = { viewModel.loadProduct() },
         onBackClick = onBackClick,
-        onReorderClick = onReorderClick,
+        onReorderClick = {
+            viewModel.createReorder(
+                onSuccess = { onReorderClick() },
+                onError = { msg ->
+                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                }
+            )
+        },
         onSalesAnalyticsClick = onSalesAnalyticsClick
     )
 }
@@ -581,50 +592,6 @@ fun ProductDetailScreenContent(
                             }
                         }
 
-                        // 6. Demo Action Box
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(14.dp))
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp)),
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(14.dp),
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Canvas(modifier = Modifier.size(18.dp)) {
-                                    val path = Path().apply {
-                                        moveTo(size.width * 0.2f, size.height * 0.52f)
-                                        lineTo(size.width * 0.42f, size.height * 0.74f)
-                                        lineTo(size.width * 0.8f, size.height * 0.26f)
-                                    }
-                                    drawCircle(color = primaryColor, radius = size.width / 2f, style = Stroke(width = 1.5.dp.toPx()))
-                                    drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-                                }
-
-                                Spacer(modifier = Modifier.width(10.dp))
-
-                                Column {
-                                    Text(
-                                        text = "Demo local action only",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontSize = 12.sp
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = "Reorder records a sample request. No supplier is contacted.",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 11.sp,
-                                        lineHeight = 15.sp
-                                    )
-                                }
-                            }
-                        }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -632,6 +599,7 @@ fun ProductDetailScreenContent(
                     // 7. Bottom Reorder Button
                     Button(
                         onClick = onReorderClick,
+                        enabled = !uiState.isOrdering && uiState.unitsToReorder > 0,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
@@ -641,12 +609,24 @@ fun ProductDetailScreenContent(
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     ) {
-                        Text(
-                            text = "Reorder ${uiState.unitsToReorder} units · ${uiState.estimatedCost}",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
+                        if (uiState.isOrdering) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(22.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = if (uiState.unitsToReorder > 0) {
+                                    "Reorder ${uiState.unitsToReorder} units · ${uiState.estimatedCost}"
+                                } else {
+                                    "Stock is sufficient"
+                                },
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                        }
                     }
                 }
             }

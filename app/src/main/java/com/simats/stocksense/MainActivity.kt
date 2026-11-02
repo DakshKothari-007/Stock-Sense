@@ -47,12 +47,14 @@ import com.simats.stocksense.feature.inventory.ui.ProductBiscuitsScreen
 import com.simats.stocksense.feature.inventory.ui.ProductDetailScreen
 import com.simats.stocksense.feature.inventory.ui.ProductParleGScreen
 import com.simats.stocksense.feature.inventory.ui.ProductTeaScreen
+import com.simats.stocksense.feature.inventory.viewmodel.ProductDetailViewModel
 import com.simats.stocksense.feature.reorder.ui.AcceptedOverlayScreen
 import com.simats.stocksense.feature.reorder.ui.DismissedOverlayScreen
 import com.simats.stocksense.feature.reorder.ui.RecommendationPairsScreen
 import com.simats.stocksense.feature.reorder.ui.ReorderPlacedScreen
 import com.simats.stocksense.feature.reorder.ui.ReorderRecommendationScreen
 import com.simats.stocksense.feature.reorder.ui.SlowMovingRecommendationScreen
+import com.simats.stocksense.feature.reorder.viewmodel.ReorderViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,6 +81,8 @@ fun StockSenseAppNavigation() {
     val sessionManager = remember { SessionManager.getInstance(context) }
     val authViewModel: AuthViewModel = viewModel()
     val importViewModel: ImportViewModel = viewModel()
+    val reorderViewModel: ReorderViewModel = viewModel()
+    val productDetailViewModel: ProductDetailViewModel = viewModel()
 
     DisposableEffect(Unit) {
         NetworkClient.initialize(context) {
@@ -379,11 +383,15 @@ fun StockSenseAppNavigation() {
                     navController.popBackStack()
                 },
                 onReorderClick = {
+                    productDetailViewModel.uiState.value.lastPlacedOrder?.let {
+                        reorderViewModel.setLastPlacedOrder(it)
+                    }
                     navController.navigate("reorder_placed")
                 },
                 onSalesAnalyticsClick = {
                     navController.navigate("sales_analytics")
-                }
+                },
+                viewModel = productDetailViewModel
             )
         }
         composable("product_biscuits") {
@@ -457,11 +465,12 @@ fun StockSenseAppNavigation() {
                     navController.popBackStack()
                 },
                 onAcceptClick = {
-                    navController.navigate("accepted_overlay")
+                    navController.navigate("reorder_placed")
                 },
                 onDismissClick = {
                     navController.navigate("dismissed_overlay")
-                }
+                },
+                viewModel = reorderViewModel
             )
         }
         composable("recommendation_pairs") {
@@ -494,8 +503,9 @@ fun StockSenseAppNavigation() {
         composable("reorder_placed") {
             ReorderPlacedScreen(
                 onDoneClick = {
-                    navController.popBackStack()
-                }
+                    navController.popBackStack("main", inclusive = false)
+                },
+                viewModel = reorderViewModel
             )
         }
         composable("sales_analytics") {

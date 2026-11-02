@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.data.model.InventoryProduct
+import com.simats.stocksense.data.model.PurchaseOrderDto
 import com.simats.stocksense.data.model.UpdateProductRequest
 import com.simats.stocksense.data.repository.InventoryRepository
+import com.simats.stocksense.data.repository.ReorderRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +19,7 @@ import kotlinx.coroutines.launch
  */
 data class ProductDetailUiState(
     val isLoading: Boolean = true,
+    val isOrdering: Boolean = false,
     val errorMessage: String? = null,
     val product: InventoryProduct = InventoryProduct(),
     val categoryName: String = "—",
@@ -26,7 +29,8 @@ data class ProductDetailUiState(
     val stockCoverDays: Double? = null,
     val stockCoverDaysText: String = "—",
     val unitsToReorder: Int = 0,
-    val estimatedCost: String = "—"
+    val estimatedCost: String = "—",
+    val lastPlacedOrder: PurchaseOrderDto? = null
 )
 
 /**
@@ -34,7 +38,8 @@ data class ProductDetailUiState(
  * and wiring edit/delete/reorder actions.
  */
 class ProductDetailViewModel(
-    private val repository: InventoryRepository = InventoryRepository()
+    private val repository: InventoryRepository = InventoryRepository(),
+    private val reorderRepository: ReorderRepository = ReorderRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProductDetailUiState())
@@ -47,7 +52,8 @@ class ProductDetailViewModel(
     }
 
     /**
-     * Loads product details from GET /inventory/get_product_detail.php by ID.
+     * Loads product details from GET /inventory/get_product_detail.php by ID
+     * synchronized with Reorder module recommendations.
      */
     fun loadProduct(productId: Int = currentProductId) {
         currentProductId = productId
@@ -68,11 +74,27 @@ class ProductDetailViewModel(
                     val formattedPrice = NumberFormatUtil.formatIndianRupees(rawPrice)
                     val formattedCostPrice = NumberFormatUtil.formatIndianRupees(rawCostPrice)
 
-                    val unitsToReorder = data.unitsToReorder ?: maxOf(0, (threshold * 2) - rawUnits)
-                    val estCostFormatted = data.estimatedCost?.toString()?.takeIf { it.isNotBlank() }
+                    // Fetch synchronized reorder recommendation from reorder module
+                    val reorderResult = reorderRepository.fetchRecommendations()
+                    var unitsToReorder = data.unitsToReorder ?: 0
+                    var estCostFormatted = data.estimatedCost?.toString()?.takeIf { it.isNotBlank() }
                         ?: NumberFormatUtil.formatIndianRupees(unitsToReorder * rawCostPrice)
+                    var coverDays = data.stockCoverDays
 
-                    val coverDays = data.stockCoverDays
+                    if (reorderResult.isSuccess) {
+                        val items = reorderResult.getOrNull()?.items.orEmpty()
+                        val match = items.firstOrNull {
+                            it.product?.id == productId || (it.product?.sku != null && it.product.sku == data.sku)
+                        }
+                        if (match != null) {
+                            unitsToReorder = match.suggestedQuantity ?: 0
+                            estCostFormatted = NumberFormatUtil.formatIndianRupees(match.estimatedCost ?: (unitsToReorder * rawCostPrice))
+                            if (match.daysOfStockLeft != null) {
+                                coverDays = match.daysOfStockLeft
+                            }
+                        }
+                    }
+
                     val coverText = when {
                         coverDays != null && coverDays > 0 -> "$coverDays days"
                         rawUnits <= 0 -> "0 days (out of stock)"
@@ -150,6 +172,45 @@ class ProductDetailViewModel(
                             errorMessage = err.message ?: "Failed to load product details."
                         )
                     }
+                }
+            )
+        }
+    }
+
+    /**
+     * Places a purchase order via POST /reorder/create_order.php for this product.
+     * Prevents double-tap by checking isOrdering flag.
+     */
+    fun createReorder(
+        onSuccess: (PurchaseOrderDto) -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        val current = _uiState.value
+        if (current.isOrdering) return
+
+        val units = current.unitsToReorder
+        if (units <= 0) {
+            onError("Item quantity must be a positive integer greater than 0.")
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isOrdering = true) }
+            val result = reorderRepository.createOrder(productId = currentProductId, quantity = units)
+            result.fold(
+                onSuccess = { order ->
+                    _uiState.update {
+                        it.copy(
+                            isOrdering = false,
+                            lastPlacedOrder = order
+                        )
+                    }
+                    loadProduct(currentProductId)
+                    onSuccess(order)
+                },
+                onFailure = { err ->
+                    _uiState.update { it.copy(isOrdering = false) }
+                    onError(err.message ?: "Failed to place reorder.")
                 }
             )
         }
