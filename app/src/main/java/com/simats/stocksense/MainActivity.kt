@@ -381,15 +381,46 @@ fun StockSenseAppNavigation() {
                 onBackClick = {
                     navController.popBackStack()
                 },
-                onAmulMilkClick = {
-                    productDetailViewModel.loadProduct(sku = "DAI-001")
-                    navController.navigate("product_detail")
+                onReorderClick = { prodId ->
+                    if (prodId != null && prodId > 0) {
+                        productDetailViewModel.loadProduct(productId = prodId)
+                    } else {
+                        productDetailViewModel.loadProduct(sku = "DAI-001")
+                    }
+                    navController.navigate("product_detail") {
+                        launchSingleTop = true
+                    }
                 },
-                onMarieBiscuitsClick = {
-                    navController.navigate("product_biscuits")
+                onInsightsClick = {
+                    navController.navigate("slow_moving_recommendation") {
+                        launchSingleTop = true
+                    }
+                },
+                onInventoryClick = {
+                    navController.popBackStack("main", inclusive = false)
                 },
                 onSalesAnalyticsClick = {
-                    navController.navigate("sales_analytics")
+                    navController.navigate("sales_analytics") {
+                        launchSingleTop = true
+                    }
+                },
+                onAmulMilkClick = {
+                    productDetailViewModel.loadProduct(sku = "DAI-001")
+                    navController.navigate("product_detail") {
+                        launchSingleTop = true
+                    }
+                },
+                onMarieBiscuitsClick = {
+                    navController.navigate("slow_moving_recommendation") {
+                        launchSingleTop = true
+                    }
+                },
+                onSessionExpired = {
+                    sessionManager.clearSession()
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -402,10 +433,14 @@ fun StockSenseAppNavigation() {
                     productDetailViewModel.uiState.value.lastPlacedOrder?.let {
                         reorderViewModel.setLastPlacedOrder(it)
                     }
-                    navController.navigate("reorder_placed")
+                    navController.navigate("reorder_placed") {
+                        launchSingleTop = true
+                    }
                 },
                 onSalesAnalyticsClick = {
-                    navController.navigate("sales_analytics")
+                    navController.navigate("sales_analytics") {
+                        launchSingleTop = true
+                    }
                 },
                 viewModel = productDetailViewModel
             )
@@ -416,10 +451,14 @@ fun StockSenseAppNavigation() {
                     navController.popBackStack()
                 },
                 onSalesAnalyticsClick = {
-                    navController.navigate("sales_analytics")
+                    navController.navigate("sales_analytics") {
+                        launchSingleTop = true
+                    }
                 },
                 onActionClick = {
-                    navController.navigate("slow_moving_recommendation")
+                    navController.navigate("slow_moving_recommendation") {
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -429,10 +468,14 @@ fun StockSenseAppNavigation() {
                     navController.popBackStack()
                 },
                 onReorderClick = {
-                    navController.navigate("reorder_placed")
+                    navController.navigate("reorder_placed") {
+                        launchSingleTop = true
+                    }
                 },
                 onSalesAnalyticsClick = {
-                    navController.navigate("sales_analytics")
+                    navController.navigate("sales_analytics") {
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -442,10 +485,14 @@ fun StockSenseAppNavigation() {
                     navController.popBackStack()
                 },
                 onReorderClick = {
-                    navController.navigate("reorder_placed")
+                    navController.navigate("reorder_placed") {
+                        launchSingleTop = true
+                    }
                 },
                 onSalesAnalyticsClick = {
-                    navController.navigate("sales_analytics")
+                    navController.navigate("sales_analytics") {
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -455,10 +502,14 @@ fun StockSenseAppNavigation() {
                     navController.popBackStack()
                 },
                 onReorderClick = {
-                    navController.navigate("reorder_placed")
+                    navController.navigate("reorder_placed") {
+                        launchSingleTop = true
+                    }
                 },
                 onSalesAnalyticsClick = {
-                    navController.navigate("sales_analytics")
+                    navController.navigate("sales_analytics") {
+                        launchSingleTop = true
+                    }
                 }
             )
         }
