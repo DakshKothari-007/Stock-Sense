@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,6 +36,7 @@ import com.simats.stocksense.feature.analytics.viewmodel.SalesAnalyticsViewModel
 @Composable
 fun SalesAnalyticsScreen(
     onBackClick: () -> Unit = {},
+    onRecordSaleClick: () -> Unit = {},
     viewModel: SalesAnalyticsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -154,7 +157,7 @@ fun SalesAnalyticsScreen(
 
                         Spacer(modifier = Modifier.width(14.dp))
 
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Sales analytics",
                                 style = MaterialTheme.typography.titleLarge,
@@ -168,6 +171,35 @@ fun SalesAnalyticsScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 12.sp
                             )
+                        }
+
+                        // "+ Record sale" button
+                        Surface(
+                            onClick = onRecordSaleClick,
+                            shape = RoundedCornerShape(12.dp),
+                            color = primaryColor,
+                            modifier = Modifier.height(38.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Record sale",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    fontSize = 13.sp
+                                )
+                            }
                         }
                     }
 

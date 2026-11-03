@@ -22,7 +22,10 @@ import com.simats.stocksense.core.network.NetworkClient
 import com.simats.stocksense.core.network.SessionManager
 import com.simats.stocksense.core.network.TokenStore
 import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.feature.analytics.ui.AddProductToBillScreen
+import com.simats.stocksense.feature.analytics.ui.RecordSaleScreen
 import com.simats.stocksense.feature.analytics.ui.SalesAnalyticsScreen
+import com.simats.stocksense.feature.analytics.viewmodel.RecordSaleViewModel
 import com.simats.stocksense.feature.auth.ui.ForgotPasswordScreen
 import com.simats.stocksense.feature.auth.ui.GoogleSignInScreen
 import com.simats.stocksense.feature.auth.ui.LoginScreen
@@ -85,6 +88,7 @@ fun StockSenseAppNavigation() {
     val reorderViewModel: ReorderViewModel = viewModel()
     val productDetailViewModel: ProductDetailViewModel = viewModel()
     val insightsViewModel: InsightsViewModel = viewModel()
+    val recordSaleViewModel: RecordSaleViewModel = viewModel()
 
     DisposableEffect(Unit) {
         NetworkClient.initialize(context) {
@@ -588,6 +592,49 @@ fun StockSenseAppNavigation() {
             SalesAnalyticsScreen(
                 onBackClick = {
                     navController.popBackStack()
+                },
+                onRecordSaleClick = {
+                    navController.navigate("record_sale") {
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+        composable("record_sale") {
+            RecordSaleScreen(
+                viewModel = recordSaleViewModel,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onAddProductClick = {
+                    navController.navigate("add_product_to_bill") {
+                        launchSingleTop = true
+                    }
+                },
+                onSessionExpired = {
+                    sessionManager.clearSession()
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+        composable("add_product_to_bill") {
+            AddProductToBillScreen(
+                viewModel = recordSaleViewModel,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onDoneClick = {
+                    navController.popBackStack()
+                },
+                onSessionExpired = {
+                    sessionManager.clearSession()
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 }
             )
         }
