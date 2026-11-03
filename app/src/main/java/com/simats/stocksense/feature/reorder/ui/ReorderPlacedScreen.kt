@@ -32,6 +32,7 @@ import com.simats.stocksense.feature.reorder.viewmodel.ReorderViewModel
 @Composable
 fun ReorderPlacedScreen(
     onDoneClick: () -> Unit = {},
+    onViewOrdersClick: () -> Unit = {},
     placedOrder: PurchaseOrderDto? = null,
     viewModel: ReorderViewModel = viewModel()
 ) {
@@ -162,24 +163,46 @@ fun ReorderPlacedScreen(
 
                     Spacer(modifier = Modifier.height(6.dp))
 
-                    // Back to Home Button
-                    Button(
-                        onClick = onDoneClick,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = primaryColor,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                    // Buttons: Back to Home & View orders
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(
-                            text = "Back to Home",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
-                        )
+                        OutlinedButton(
+                            onClick = onDoneClick,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                        ) {
+                            Text(
+                                text = "Back to Home",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 14.sp
+                            )
+                        }
+
+                        Button(
+                            onClick = onViewOrdersClick,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = primaryColor,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            Text(
+                                text = "View orders",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
                     }
                 }
             }

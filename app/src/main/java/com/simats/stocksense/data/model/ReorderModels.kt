@@ -42,6 +42,7 @@ data class ReorderPaginationDto(
     @SerializedName("page") val page: Int? = 1,
     @SerializedName("limit") val limit: Int? = 20,
     @SerializedName("total_matching") val totalMatching: Int? = 0,
+    @SerializedName("total_orders") val totalOrders: Int? = 0,
     @SerializedName("total_pages") val totalPages: Int? = 1
 )
 
@@ -105,13 +106,19 @@ data class PurchaseOrderDto(
 )
 
 data class PurchaseOrderItemDto(
+    @SerializedName("item_id") val itemId: Int? = null,
     @SerializedName("product_id") val productId: Int? = null,
+    @SerializedName("name") val name: String? = null,
     @SerializedName("product_name") val productName: String? = null,
     @SerializedName("sku") val sku: String? = null,
+    @SerializedName("category") val category: String? = null,
     @SerializedName("quantity") val quantity: Int? = 0,
     @SerializedName("cost_price") val costPrice: Double? = null,
-    @SerializedName("line_estimated_cost") val lineEstimatedCost: Double? = null
-)
+    @SerializedName("line_estimated_cost") val lineEstimatedCost: Double? = null,
+    @SerializedName("current_stock") val currentStock: Int? = null
+) {
+    val displayName: String get() = name ?: productName ?: "—"
+}
 
 // --- 3. GET /reorder/orders.php ---
 data class PurchaseOrdersListResponse(

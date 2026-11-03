@@ -43,6 +43,7 @@ fun ReorderRecommendationScreen(
     onBackClick: () -> Unit = {},
     onAcceptClick: () -> Unit = {},
     onDismissClick: () -> Unit = {},
+    onViewOrdersClick: () -> Unit = {},
     viewModel: ReorderViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -224,7 +225,7 @@ fun ReorderRecommendationScreen(
 
                         Spacer(modifier = Modifier.width(14.dp))
 
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Reorder recommendation",
                                 style = MaterialTheme.typography.titleLarge,
@@ -240,6 +241,28 @@ fun ReorderRecommendationScreen(
                                 fontWeight = FontWeight.SemiBold,
                                 letterSpacing = 0.5.sp
                             )
+                        }
+
+                        // "View orders" button in header
+                        Surface(
+                            onClick = onViewOrdersClick,
+                            shape = RoundedCornerShape(12.dp),
+                            color = primaryColor.copy(alpha = 0.12f),
+                            border = BorderStroke(1.dp, primaryColor.copy(alpha = 0.35f)),
+                            modifier = Modifier.height(36.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "View orders",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = primaryColor,
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
                     }
 

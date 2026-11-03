@@ -53,11 +53,14 @@ import com.simats.stocksense.feature.inventory.ui.ProductTeaScreen
 import com.simats.stocksense.feature.inventory.viewmodel.ProductDetailViewModel
 import com.simats.stocksense.feature.reorder.ui.AcceptedOverlayScreen
 import com.simats.stocksense.feature.reorder.ui.DismissedOverlayScreen
+import com.simats.stocksense.feature.reorder.ui.OrderDetailScreen
+import com.simats.stocksense.feature.reorder.ui.PurchaseOrdersScreen
 import com.simats.stocksense.feature.reorder.ui.RecommendationPairsScreen
 import com.simats.stocksense.feature.reorder.ui.ReorderPlacedScreen
 import com.simats.stocksense.feature.reorder.ui.ReorderRecommendationScreen
 import com.simats.stocksense.feature.reorder.ui.SlowMovingRecommendationScreen
 import com.simats.stocksense.feature.reorder.viewmodel.InsightsViewModel
+import com.simats.stocksense.feature.reorder.viewmodel.PurchaseOrdersViewModel
 import com.simats.stocksense.feature.reorder.viewmodel.ReorderViewModel
 
 class MainActivity : ComponentActivity() {
@@ -89,6 +92,7 @@ fun StockSenseAppNavigation() {
     val productDetailViewModel: ProductDetailViewModel = viewModel()
     val insightsViewModel: InsightsViewModel = viewModel()
     val recordSaleViewModel: RecordSaleViewModel = viewModel()
+    val purchaseOrdersViewModel: PurchaseOrdersViewModel = viewModel()
 
     DisposableEffect(Unit) {
         NetworkClient.initialize(context) {
@@ -549,6 +553,11 @@ fun StockSenseAppNavigation() {
                 onDismissClick = {
                     navController.navigate("dismissed_overlay")
                 },
+                onViewOrdersClick = {
+                    navController.navigate("purchase_orders") {
+                        launchSingleTop = true
+                    }
+                },
                 viewModel = reorderViewModel
             )
         }
@@ -585,7 +594,56 @@ fun StockSenseAppNavigation() {
                 onDoneClick = {
                     navController.popBackStack("main", inclusive = false)
                 },
+                onViewOrdersClick = {
+                    val placed = reorderViewModel.uiState.value.lastPlacedOrder
+                    if (placed != null) {
+                        purchaseOrdersViewModel.selectOrder(placed)
+                        navController.navigate("order_detail") {
+                            launchSingleTop = true
+                        }
+                    } else {
+                        navController.navigate("purchase_orders") {
+                            launchSingleTop = true
+                        }
+                    }
+                },
                 viewModel = reorderViewModel
+            )
+        }
+        composable("purchase_orders") {
+            PurchaseOrdersScreen(
+                viewModel = purchaseOrdersViewModel,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onOrderClick = { order ->
+                    purchaseOrdersViewModel.selectOrder(order)
+                    navController.navigate("order_detail") {
+                        launchSingleTop = true
+                    }
+                },
+                onSessionExpired = {
+                    sessionManager.clearSession()
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+        composable("order_detail") {
+            OrderDetailScreen(
+                viewModel = purchaseOrdersViewModel,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onSessionExpired = {
+                    sessionManager.clearSession()
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
         composable("sales_analytics") {

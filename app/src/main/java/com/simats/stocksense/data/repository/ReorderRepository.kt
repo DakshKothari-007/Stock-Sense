@@ -110,6 +110,29 @@ class ReorderRepository(
         }
     }
 
+    suspend fun fetchOrdersData(
+        status: String? = null,
+        page: Int = 1,
+        limit: Int = 20
+    ): Result<PurchaseOrdersListData> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.getPurchaseOrders(status = status, page = page, limit = limit)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.status == true && body.data != null) {
+                    Result.success(body.data)
+                } else {
+                    Result.failure(Exception(body?.message ?: "Failed to fetch orders."))
+                }
+            } else {
+                val errorMsg = extractErrorMessage(response.errorBody()?.string(), response.code())
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     /**
      * Receives a purchase order via POST /reorder/receive.php.
      */
