@@ -39,6 +39,7 @@ data class RecordSaleUiState(
     val items: List<BillItem> = emptyList(),
     val isSaving: Boolean = false,
     val errorMessage: String? = null,
+    val stockNoticeMessage: String? = null,
     val savedSaleData: CreateSaleData? = null,
     val isSessionExpired: Boolean = false,
 
@@ -85,8 +86,8 @@ class RecordSaleViewModel(
                 }
         }
 
-        // Initial fetch of products for the Add Product screen
-        loadProducts()
+        // Initial fetch of products
+        refreshStock()
     }
 
     private fun generateBillNumber(): String {
@@ -96,7 +97,7 @@ class RecordSaleViewModel(
     }
 
     fun loadProducts() {
-        executeSearch(_uiState.value.searchQuery, _uiState.value.selectedFilterIndex)
+        refreshStock()
     }
 
     fun updateSearchQuery(query: String) {
@@ -109,36 +110,87 @@ class RecordSaleViewModel(
         executeSearch(_uiState.value.searchQuery, filterIndex)
     }
 
-    private fun executeSearch(query: String, filterIndex: Int) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isSearching = true, searchErrorMessage = null) }
+    /**
+     * Re-queries inventory/get_products.php to fetch the latest stock numbers directly from the backend,
+     * updates search results, and synchronizes the active bill items so stock hints and limits are always live.
+     */
+    fun refreshStock(onComplete: () -> Unit = {}) {
+        val query = _uiState.value.searchQuery
+        val filterIndex = _uiState.value.selectedFilterIndex
+        executeSearch(query, filterIndex, onComplete = onComplete)
+    }
 
-            // Backend inventory/get_products.php filter param:
-            // 0: All (null), 1: Fast selling (backend does not have fast_selling flag, defaults to all), 2: Low stock ("low_stock")
+    private fun executeSearch(query: String, filterIndex: Int, onComplete: () -> Unit = {}) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSearching = it.searchResults.isEmpty(), searchErrorMessage = null) }
+
             val filterParam = when (filterIndex) {
                 2 -> "low_stock"
                 else -> null
             }
 
+            // 1. Fetch fresh products matching the current search & filter
             val result = inventoryRepository.fetchProducts(
                 search = query.trim().takeIf { it.isNotBlank() },
                 filter = filterParam
             )
 
+            // 2. If there are items in the bill, fetch unfiltered shop products to ensure every bill item's stock is updated
+            val billItems = _uiState.value.items
+            val allShopProductsResult = if (billItems.isNotEmpty() && (query.isNotBlank() || filterParam != null)) {
+                inventoryRepository.fetchProducts()
+            } else {
+                result
+            }
+
             result.fold(
                 onSuccess = { data ->
-                    val products = data.products ?: emptyList()
-                    val totalCount = data.totalCount ?: data.totalProducts ?: products.size
+                    val freshProducts = data.products ?: emptyList()
+                    val totalCount = data.totalCount ?: data.totalProducts ?: freshProducts.size
                     val returnedShopName = data.shopName?.takeIf { it.isNotBlank() }
+
+                    val allProducts = allShopProductsResult.getOrNull()?.products ?: freshProducts
+
+                    // Synchronize bill items with current backend stock
+                    val notices = mutableListOf<String>()
+                    val updatedBillItems = mutableListOf<BillItem>()
+
+                    for (billItem in billItems) {
+                        val matchingProduct = allProducts.find { extractProductId(it) == billItem.productId }
+                        if (matchingProduct != null) {
+                            val freshStock = extractProductUnits(matchingProduct)
+                            if (freshStock <= 0) {
+                                notices.add("${billItem.name} is now out of stock and was removed from the bill.")
+                            } else {
+                                val adjustedQty = minOf(billItem.quantity, freshStock)
+                                if (billItem.quantity > freshStock) {
+                                    notices.add("${billItem.name} stock fell to $freshStock. Quantity updated to $freshStock.")
+                                }
+                                updatedBillItems.add(
+                                    billItem.copy(
+                                        availableStock = freshStock,
+                                        quantity = adjustedQty,
+                                        unitPrice = extractProductPrice(matchingProduct)
+                                    )
+                                )
+                            }
+                        } else {
+                            updatedBillItems.add(billItem)
+                        }
+                    }
+
                     _uiState.update {
                         it.copy(
                             isSearching = false,
-                            searchResults = products,
+                            searchResults = freshProducts,
+                            items = updatedBillItems,
+                            stockNoticeMessage = notices.joinToString("\n").takeIf { n -> n.isNotBlank() } ?: it.stockNoticeMessage,
                             totalShopProductsCount = if (it.totalShopProductsCount == 0 || query.isBlank()) totalCount else it.totalShopProductsCount,
                             storeName = returnedShopName ?: it.storeName.takeIf { s -> s.isNotBlank() } ?: "",
                             searchErrorMessage = null
                         )
                     }
+                    onComplete()
                 },
                 onFailure = { err ->
                     val isExpired = err.message?.contains("Session expired", ignoreCase = true) == true
@@ -149,39 +201,30 @@ class RecordSaleViewModel(
                             isSessionExpired = isExpired
                         )
                     }
+                    onComplete()
                 }
             )
         }
     }
 
     fun addProductToBill(product: NetworkInventoryProduct) {
-        val prodId = when (val id = product.id) {
-            is Number -> id.toInt()
-            is String -> id.toDoubleOrNull()?.toInt() ?: return
-            else -> return
-        }
-
-        val availableStock = when (val u = product.units) {
-            is Number -> u.toInt()
-            is String -> u.toDoubleOrNull()?.toInt() ?: product.rawUnits ?: 0
-            else -> product.rawUnits ?: 0
-        }
+        val prodId = extractProductId(product) ?: return
+        val availableStock = extractProductUnits(product)
 
         if (availableStock <= 0) return // Out of stock items cannot be added
 
-        val unitPrice = when (val p = product.price) {
-            is Number -> p.toDouble()
-            is String -> p.replace("₹", "").trim().toDoubleOrNull() ?: product.rawPrice ?: 0.0
-            else -> product.rawPrice ?: 0.0
-        }
-
+        val unitPrice = extractProductPrice(product)
         val currentItems = _uiState.value.items.toMutableList()
         val existingIndex = currentItems.indexOfFirst { it.productId == prodId }
 
         if (existingIndex >= 0) {
             val existing = currentItems[existingIndex]
             if (existing.quantity < availableStock) {
-                currentItems[existingIndex] = existing.copy(quantity = existing.quantity + 1)
+                currentItems[existingIndex] = existing.copy(
+                    quantity = existing.quantity + 1,
+                    availableStock = availableStock,
+                    unitPrice = unitPrice
+                )
             }
         } else {
             currentItems.add(
@@ -237,7 +280,8 @@ class RecordSaleViewModel(
             it.copy(
                 items = emptyList(),
                 billNo = if (generateNewBillNo) generateBillNumber() else it.billNo,
-                errorMessage = null
+                errorMessage = null,
+                stockNoticeMessage = null
             )
         }
     }
@@ -250,7 +294,6 @@ class RecordSaleViewModel(
         _uiState.update { it.copy(isSaving = true, errorMessage = null, billNo = activeBillNo) }
 
         viewModelScope.launch {
-            // Note: sale_date is omitted per requirement 3 so server defaults to current server time in Asia/Kolkata
             val request = CreateSaleRequest(
                 billNo = activeBillNo,
                 saleDate = null,
@@ -274,6 +317,8 @@ class RecordSaleViewModel(
                             errorMessage = null
                         )
                     }
+                    // Requirement 2: After successful sale, reload products list so stock is updated for the next bill
+                    refreshStock()
                     onSuccess(data)
                 },
                 onFailure = { err ->
@@ -283,7 +328,6 @@ class RecordSaleViewModel(
                     val isExpired = errorMsg.contains("Session expired", ignoreCase = true)
 
                     if (isDuplicate) {
-                        // Requirement 3: If backend returns duplicate bill number for a retry, treat it as already saved!
                         val fallbackSavedData = CreateSaleData(
                             billNo = activeBillNo,
                             totalAmount = currentState.totalAmount,
@@ -298,6 +342,7 @@ class RecordSaleViewModel(
                                 errorMessage = null
                             )
                         }
+                        refreshStock()
                         onSuccess(fallbackSavedData)
                     } else if (isExpired) {
                         _uiState.update {
@@ -308,7 +353,6 @@ class RecordSaleViewModel(
                             )
                         }
                     } else {
-                        // Requirement 5: Keep the bill intact so user does not lose items, and show real backend message
                         _uiState.update {
                             it.copy(
                                 isSaving = false,
@@ -328,10 +372,33 @@ class RecordSaleViewModel(
                 billNo = generateBillNumber()
             )
         }
+        // Refresh stock when dismissing success state
+        refreshStock()
     }
 
     fun clearErrorMessage() {
         _uiState.update { it.copy(errorMessage = null) }
     }
-}
 
+    fun clearStockNoticeMessage() {
+        _uiState.update { it.copy(stockNoticeMessage = null) }
+    }
+
+    companion object {
+        fun extractProductUnits(item: NetworkInventoryProduct): Int {
+            return item.rawUnits ?: item.units?.toString()?.toDoubleOrNull()?.toInt() ?: 0
+        }
+
+        fun extractProductId(item: NetworkInventoryProduct): Int? {
+            return when (val id = item.id) {
+                is Number -> id.toInt()
+                is String -> id.toDoubleOrNull()?.toInt()
+                else -> null
+            }
+        }
+
+        fun extractProductPrice(item: NetworkInventoryProduct): Double {
+            return item.rawPrice ?: item.price?.toString()?.replace("₹", "")?.replace(",", "")?.trim()?.toDoubleOrNull() ?: 0.0
+        }
+    }
+}

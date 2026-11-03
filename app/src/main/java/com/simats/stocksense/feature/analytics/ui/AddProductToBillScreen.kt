@@ -1,5 +1,6 @@
 package com.simats.stocksense.feature.analytics.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -22,11 +23,15 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.util.NumberFormatUtil
@@ -43,6 +48,32 @@ fun AddProductToBillScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val primaryColor = MaterialTheme.colorScheme.primary
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Reload products from backend on resume so stock is never stale
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refreshStock()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshStock()
+    }
+
+    LaunchedEffect(uiState.stockNoticeMessage) {
+        uiState.stockNoticeMessage?.let { msg ->
+            Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+            viewModel.clearStockNoticeMessage()
+        }
+    }
 
     LaunchedEffect(uiState.isSessionExpired) {
         if (uiState.isSessionExpired) {
@@ -281,11 +312,7 @@ private fun AddProductRowCard(
     primaryColor: Color,
     onAddClick: () -> Unit
 ) {
-    val availableStock = when (val u = product.units) {
-        is Number -> u.toInt()
-        is String -> u.toDoubleOrNull()?.toInt() ?: product.rawUnits ?: 0
-        else -> product.rawUnits ?: 0
-    }
+    val availableStock = RecordSaleViewModel.extractProductUnits(product)
     val isOutOfStock = availableStock <= 0
     val isLowStock = !isOutOfStock && (
         (product.minStockThreshold != null && availableStock <= product.minStockThreshold) ||
