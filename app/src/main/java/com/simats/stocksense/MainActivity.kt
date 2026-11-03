@@ -39,12 +39,15 @@ import com.simats.stocksense.feature.auth.viewmodel.AuthViewModel
 import com.simats.stocksense.feature.dashboard.ui.MainScreen
 import com.simats.stocksense.feature.dashboard.ui.NotificationsScreen
 import com.simats.stocksense.feature.dashboard.ui.SettingsScreen
+import com.simats.stocksense.feature.inventory.ui.AddProductScreen
+import com.simats.stocksense.feature.inventory.ui.EditProductScreen
 import com.simats.stocksense.feature.inventory.ui.ImportInventoryPreviewScreen
 import com.simats.stocksense.feature.inventory.ui.ImportInventoryReadyScreen
 import com.simats.stocksense.feature.inventory.ui.ImportInventoryUploadScreen
 import com.simats.stocksense.feature.inventory.ui.ImportInventoryValidationScreen
 import com.simats.stocksense.feature.inventory.ui.InventoryImportedScreen
 import com.simats.stocksense.feature.inventory.viewmodel.ImportViewModel
+import com.simats.stocksense.feature.inventory.viewmodel.ProductFormViewModel
 import com.simats.stocksense.feature.inventory.ui.ProductAttaScreen
 import com.simats.stocksense.feature.inventory.ui.ProductBiscuitsScreen
 import com.simats.stocksense.feature.inventory.ui.ProductDetailScreen
@@ -93,6 +96,7 @@ fun StockSenseAppNavigation() {
     val insightsViewModel: InsightsViewModel = viewModel()
     val recordSaleViewModel: RecordSaleViewModel = viewModel()
     val purchaseOrdersViewModel: PurchaseOrdersViewModel = viewModel()
+    val productFormViewModel: ProductFormViewModel = viewModel()
 
     DisposableEffect(Unit) {
         NetworkClient.initialize(context) {
@@ -350,6 +354,12 @@ fun StockSenseAppNavigation() {
                         launchSingleTop = true
                     }
                 },
+                onAddProductClick = {
+                    productFormViewModel.initNewProduct()
+                    navController.navigate("add_product") {
+                        launchSingleTop = true
+                    }
+                },
                 onSettingsClick = {
                     navController.navigate("settings") {
                         launchSingleTop = true
@@ -443,6 +453,15 @@ fun StockSenseAppNavigation() {
             ProductDetailScreen(
                 onBackClick = {
                     navController.popBackStack()
+                },
+                onEditClick = {
+                    val prod = productDetailViewModel.uiState.value.product
+                    val id = prod.id.toIntOrNull()
+                    val sku = prod.sku.takeIf { it.isNotBlank() && it != "—" }
+                    productFormViewModel.initEditProduct(productId = id, sku = sku)
+                    navController.navigate("edit_product") {
+                        launchSingleTop = true
+                    }
                 },
                 onReorderClick = {
                     productDetailViewModel.uiState.value.lastPlacedOrder?.let {
@@ -757,6 +776,45 @@ fun StockSenseAppNavigation() {
                 },
                 onDoneClick = {
                     navController.popBackStack("main", inclusive = false)
+                }
+            )
+        }
+        composable("add_product") {
+            AddProductScreen(
+                viewModel = productFormViewModel,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onSuccess = {
+                    navController.popBackStack()
+                },
+                onSessionExpired = {
+                    sessionManager.clearSession()
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+        composable("edit_product") {
+            EditProductScreen(
+                viewModel = productFormViewModel,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onSuccess = {
+                    navController.popBackStack()
+                },
+                onDeleted = {
+                    navController.popBackStack("product_detail", inclusive = true)
+                },
+                onSessionExpired = {
+                    sessionManager.clearSession()
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 }
             )
         }

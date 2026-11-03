@@ -1,6 +1,7 @@
 package com.simats.stocksense.feature.inventory.ui
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,6 +11,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,6 +41,7 @@ import com.simats.stocksense.feature.inventory.viewmodel.ProductDetailViewModel
 @Composable
 fun ProductDetailScreen(
     onBackClick: () -> Unit = {},
+    onEditClick: () -> Unit = {},
     onReorderClick: () -> Unit = {},
     onSalesAnalyticsClick: () -> Unit = {},
     viewModel: ProductDetailViewModel = viewModel()
@@ -64,6 +68,7 @@ fun ProductDetailScreen(
         uiState = uiState,
         onRetryClick = { viewModel.loadProduct() },
         onBackClick = onBackClick,
+        onEditClick = onEditClick,
         onReorderClick = {
             viewModel.createReorder(
                 onSuccess = { onReorderClick() },
@@ -81,6 +86,7 @@ fun ProductDetailScreenContent(
     uiState: ProductDetailUiState,
     onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
+    onEditClick: () -> Unit = {},
     onReorderClick: () -> Unit = {},
     onSalesAnalyticsClick: () -> Unit = {}
 ) {
@@ -163,51 +169,80 @@ fun ProductDetailScreenContent(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // 1. Header with Back Button
+                        // 1. Header with Back Button and Edit Action
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 16.dp),
-                            horizontalArrangement = Arrangement.Start,
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            IconButton(
-                                onClick = onBackClick,
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
-                                    .background(MaterialTheme.colorScheme.surface)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
                             ) {
-                                Canvas(modifier = Modifier.size(16.dp)) {
-                                    val path = Path().apply {
-                                        moveTo(size.width * 0.7f, size.height * 0.2f)
-                                        lineTo(size.width * 0.3f, size.height * 0.5f)
-                                        lineTo(size.width * 0.7f, size.height * 0.8f)
+                                IconButton(
+                                    onClick = onBackClick,
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
+                                        .background(MaterialTheme.colorScheme.surface)
+                                ) {
+                                    Canvas(modifier = Modifier.size(16.dp)) {
+                                        val path = Path().apply {
+                                            moveTo(size.width * 0.7f, size.height * 0.2f)
+                                            lineTo(size.width * 0.3f, size.height * 0.5f)
+                                            lineTo(size.width * 0.7f, size.height * 0.8f)
+                                        }
+                                        drawPath(
+                                            path = path,
+                                            color = primaryColor,
+                                            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                        )
                                     }
-                                    drawPath(
-                                        path = path,
-                                        color = primaryColor,
-                                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                }
+
+                                Spacer(modifier = Modifier.width(16.dp))
+
+                                Column {
+                                    Text(
+                                        text = "Product details",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp
+                                    )
+                                    Text(
+                                        text = "${uiState.product.sku} · ${uiState.categoryName}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 12.sp
                                     )
                                 }
                             }
 
-                            Spacer(modifier = Modifier.width(16.dp))
-
-                            Column {
-                                Text(
-                                    text = "Product details",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp
+                            // Edit Button
+                            OutlinedButton(
+                                onClick = onEditClick,
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = primaryColor
                                 )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "${uiState.product.sku} · ${uiState.categoryName}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 12.sp
+                                    text = "Edit",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp
                                 )
                             }
                         }

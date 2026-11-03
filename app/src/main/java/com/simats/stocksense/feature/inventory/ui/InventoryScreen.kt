@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,6 +50,7 @@ import com.simats.stocksense.feature.inventory.viewmodel.InventoryViewModel
 fun InventoryScreen(
     viewModel: InventoryViewModel = viewModel(),
     onImportDataClick: () -> Unit = {},
+    onAddProductClick: () -> Unit = {},
     onProductClick: (InventoryProduct) -> Unit = {},
     onMilkProductClick: () -> Unit = {},
     onBiscuitsProductClick: () -> Unit = {},
@@ -79,6 +81,7 @@ fun InventoryScreen(
         onRetryClick = { viewModel.refresh() },
         onLoadMore = { viewModel.loadMore() },
         onImportDataClick = onImportDataClick,
+        onAddProductClick = onAddProductClick,
         onProductClick = onProductClick,
         onMilkProductClick = onMilkProductClick,
         onBiscuitsProductClick = onBiscuitsProductClick,
@@ -99,6 +102,7 @@ fun InventoryScreenContent(
     onRetryClick: () -> Unit = {},
     onLoadMore: () -> Unit = {},
     onImportDataClick: () -> Unit = {},
+    onAddProductClick: () -> Unit = {},
     onProductClick: (InventoryProduct) -> Unit = {},
     onMilkProductClick: () -> Unit = {},
     onBiscuitsProductClick: () -> Unit = {},
@@ -181,6 +185,7 @@ fun InventoryScreenContent(
                     isLoadingMore = uiState.isLoadingMore,
                     onLoadMore = onLoadMore,
                     onImportDataClick = onImportDataClick,
+                    onAddProductClick = onAddProductClick,
                     onProductClick = onProductClick,
                     onMilkProductClick = onMilkProductClick,
                     onBiscuitsProductClick = onBiscuitsProductClick,
@@ -210,6 +215,7 @@ fun InventoryContent(
     isLoadingMore: Boolean = false,
     onLoadMore: () -> Unit = {},
     onImportDataClick: () -> Unit = {},
+    onAddProductClick: () -> Unit = {},
     onProductClick: (InventoryProduct) -> Unit = {},
     onMilkProductClick: () -> Unit = {},
     onBiscuitsProductClick: () -> Unit = {},
@@ -407,12 +413,25 @@ fun InventoryContent(
                                 fontSize = 12.sp
                             )
                             Spacer(modifier = Modifier.height(14.dp))
-                            Button(
-                                onClick = onImportDataClick,
-                                shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Text("Import Stock", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                OutlinedButton(
+                                    onClick = onImportDataClick,
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                ) {
+                                    Text("Import Stock", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                }
+                                Button(
+                                    onClick = onAddProductClick,
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Add product", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
                     }
@@ -646,7 +665,7 @@ fun InventoryContent(
                 }
             }
 
-            // Fixed "Import Data" Button at bottom (above bottom navigation bar)
+            // Fixed Bottom Area (Import Data and Add product buttons side by side)
             if (showBottomImportButton) {
                 Box(
                     modifier = Modifier
@@ -655,23 +674,54 @@ fun InventoryContent(
                         .background(MaterialTheme.colorScheme.background)
                         .padding(bottom = 16.dp, top = 8.dp)
                 ) {
-                    Button(
-                        onClick = onImportDataClick,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = primaryColor,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Import Data",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
+                        OutlinedButton(
+                            onClick = onImportDataClick,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onBackground
+                            )
+                        ) {
+                            Text(
+                                text = "Import Data",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp
+                            )
+                        }
+
+                        Button(
+                            onClick = onAddProductClick,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = primaryColor,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Add product",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
+                            )
+                        }
                     }
                 }
             }

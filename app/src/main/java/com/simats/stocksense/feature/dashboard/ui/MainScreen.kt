@@ -41,6 +41,7 @@ fun MainScreen(
     onRecommendationPairsClick: () -> Unit = {},
     onSlowMovingRecommendationClick: () -> Unit = onProductBiscuitsClick,
     onInventoryImportedClick: () -> Unit = {},
+    onAddProductClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {},
     insightsViewModel: InsightsViewModel = viewModel(),
@@ -115,6 +116,7 @@ fun MainScreen(
                             1 -> InventoryScreen(
                                 viewModel = inventoryViewModel,
                                 onImportDataClick = onInventoryImportedClick,
+                                onAddProductClick = onAddProductClick,
                                 onProductClick = onProductDetailClick,
                                 onMilkProductClick = onProductMilkClick,
                                 onBiscuitsProductClick = onProductBiscuitsClick,
