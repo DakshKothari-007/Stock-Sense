@@ -76,6 +76,9 @@ class AuthRepository(
                             shopName = u.shopName.orEmpty()
                         )
                     }
+                    NetworkClient.getAppContext()?.let { ctx ->
+                        com.simats.stocksense.core.fcm.FcmTokenManager.registerDeviceTokenAsync(ctx)
+                    }
                     Result.success(body)
                 } else {
                     Result.failure(Exception(body?.message ?: "Login failed. Please try again."))
@@ -156,6 +159,9 @@ class AuthRepository(
                             currency = currency.trim().ifEmpty { "INR (₹)" }
                         )
                     )
+                    NetworkClient.getAppContext()?.let { ctx ->
+                        com.simats.stocksense.core.fcm.FcmTokenManager.registerDeviceTokenAsync(ctx)
+                    }
                     Result.success(body)
                 } else {
                     Result.failure(Exception(body?.message ?: "Sign up failed. Please try again."))
@@ -171,9 +177,18 @@ class AuthRepository(
 
     /**
      * Executes logout against auth/logout.php.
-     * Deletes the local session and token from SharedPreferences regardless of whether the network call succeeds.
+     * Calls unregister_device.php first, deletes local FCM token, and clears the session.
+     * Logout must still work even if network calls fail.
      */
     suspend fun logout(): Result<BaseResponse> = withContext(Dispatchers.IO) {
+        // 1. Best-effort unregister FCM token and delete local token
+        try {
+            NetworkClient.getAppContext()?.let { ctx ->
+                com.simats.stocksense.core.fcm.FcmTokenManager.unregisterAndClearToken(ctx)
+            }
+        } catch (_: Throwable) {}
+
+        // 2. Call backend logout and clear local session
         try {
             val response = apiService.logout()
             sessionManager?.clearSession()
@@ -226,6 +241,11 @@ class AuthRepository(
                     sessionManager?.clearSession()
                     tokenStore?.clearToken()
                     _currentUser.value = UserProfile()
+                    NetworkClient.getAppContext()?.let { ctx ->
+                        try {
+                            com.simats.stocksense.core.fcm.FcmTokenManager.clearLocalTokenOnly(ctx)
+                        } catch (_: Throwable) {}
+                    }
                     Result.success(body)
                 } else {
                     Result.failure(Exception(body?.message ?: "Failed to delete account."))

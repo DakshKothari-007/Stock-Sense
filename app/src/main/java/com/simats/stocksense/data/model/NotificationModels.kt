@@ -72,3 +72,24 @@ data class DismissNotificationData(
     @SerializedName("dismissed") val dismissed: Boolean? = false
 )
 
+data class RegisterDeviceRequest(
+    @SerializedName("fcm_token") val fcmToken: String,
+    @SerializedName("platform") val platform: String = "android"
+)
+
+data class RegisterDeviceResponse(
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = "",
+    @SerializedName("data") val data: Map<String, Any?>? = null
+)
+
+data class UnregisterDeviceRequest(
+    @SerializedName("fcm_token") val fcmToken: String
+)
+
+data class UnregisterDeviceResponse(
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = "",
+    @SerializedName("data") val data: Any? = null
+)
+

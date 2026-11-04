@@ -1,5 +1,6 @@
 package com.simats.stocksense
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -12,6 +13,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -19,10 +23,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.simats.stocksense.core.fcm.StockSenseMessagingService
 import com.simats.stocksense.core.network.NetworkClient
 import com.simats.stocksense.core.network.SessionManager
 import com.simats.stocksense.core.network.TokenStore
 import com.simats.stocksense.core.theme.StockSenseTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import com.simats.stocksense.feature.analytics.ui.AddProductToBillScreen
 import com.simats.stocksense.feature.analytics.ui.RecordSaleScreen
 import com.simats.stocksense.feature.analytics.ui.SalesAnalyticsScreen
@@ -68,10 +75,20 @@ import com.simats.stocksense.feature.reorder.viewmodel.InsightsViewModel
 import com.simats.stocksense.feature.reorder.viewmodel.PurchaseOrdersViewModel
 import com.simats.stocksense.feature.reorder.viewmodel.ReorderViewModel
 
+data class PushNotificationPayload(
+    val type: String,
+    val productId: Int?
+)
+
 class MainActivity : ComponentActivity() {
+
+    private val _pendingPushPayload = MutableStateFlow<PushNotificationPayload?>(null)
+    val pendingPushPayload: StateFlow<PushNotificationPayload?> = _pendingPushPayload
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         NetworkClient.initialize(applicationContext)
+        handlePushIntent(intent)
         enableEdgeToEdge()
         setContent {
             StockSenseTheme {
@@ -79,15 +96,52 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    StockSenseAppNavigation()
+                    StockSenseAppNavigation(
+                        pendingPushPayloadFlow = _pendingPushPayload,
+                        onClearPendingPush = { _pendingPushPayload.value = null }
+                    )
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handlePushIntent(intent)
+    }
+
+    private fun handlePushIntent(intent: Intent?) {
+        if (intent == null) return
+
+        // Read from extras (supports foreground service, background notification, and cold start)
+        val pushType = intent.getStringExtra(StockSenseMessagingService.EXTRA_PUSH_TYPE)
+            ?: intent.getStringExtra("type")
+        val productIdStr = intent.getStringExtra(StockSenseMessagingService.EXTRA_PRODUCT_ID)
+            ?: intent.getStringExtra("product_id")
+        val productId = productIdStr?.toIntOrNull()
+            ?: intent.getIntExtra("product_id", -1).takeIf { it > 0 }
+
+        if (!pushType.isNullOrBlank()) {
+            _pendingPushPayload.value = PushNotificationPayload(
+                type = pushType,
+                productId = productId
+            )
+
+            // Clear the extras from the launch intent so rotation or activity resume does not repeat navigation
+            intent.removeExtra(StockSenseMessagingService.EXTRA_PUSH_TYPE)
+            intent.removeExtra("type")
+            intent.removeExtra(StockSenseMessagingService.EXTRA_PRODUCT_ID)
+            intent.removeExtra("product_id")
         }
     }
 }
 
 @Composable
-fun StockSenseAppNavigation() {
+fun StockSenseAppNavigation(
+    pendingPushPayloadFlow: StateFlow<PushNotificationPayload?> = remember { MutableStateFlow(null) },
+    onClearPendingPush: () -> Unit = {}
+) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val sessionManager = remember { SessionManager.getInstance(context) }
@@ -99,6 +153,64 @@ fun StockSenseAppNavigation() {
     val recordSaleViewModel: RecordSaleViewModel = viewModel()
     val purchaseOrdersViewModel: PurchaseOrdersViewModel = viewModel()
     val productFormViewModel: ProductFormViewModel = viewModel()
+
+    val pendingPayload by pendingPushPayloadFlow.collectAsState()
+
+    // Handle deep-linking navigation from FCM Push Notification taps
+    LaunchedEffect(pendingPayload) {
+        val payload = pendingPayload ?: return@LaunchedEffect
+        val pushType = payload.type
+        val productId = payload.productId
+
+        // Consume immediately to avoid re-triggering across config changes
+        onClearPendingPush()
+
+        if (!sessionManager.isLoggedIn()) {
+            // User logged out: open Login. After login, user lands on Home.
+            navController.navigate("login") {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+            return@LaunchedEffect
+        }
+
+        when (pushType) {
+            "low_stock" -> {
+                if (productId != null && productId > 0) {
+                    productDetailViewModel.loadProduct(productId = productId)
+                    navController.popBackStack("main", inclusive = false)
+                    navController.navigate("product_detail") {
+                        launchSingleTop = true
+                    }
+                } else {
+                    // If data.product_id is missing or invalid, open Home
+                    navController.popBackStack("main", inclusive = false)
+                }
+            }
+            "reorder_suggestion" -> {
+                navController.popBackStack("main", inclusive = false)
+                navController.navigate("reorder_recommendation") {
+                    launchSingleTop = true
+                }
+            }
+            "ai_recommendation" -> {
+                navController.popBackStack("main", inclusive = false)
+                navController.navigate("slow_moving_recommendation") {
+                    launchSingleTop = true
+                }
+            }
+            "daily_summary" -> {
+                navController.popBackStack("main", inclusive = false)
+                navController.navigate("sales_analytics") {
+                    launchSingleTop = true
+                }
+            }
+            else -> {
+                // Unknown type: Home
+                navController.popBackStack("main", inclusive = false)
+            }
+        }
+    }
 
     DisposableEffect(Unit) {
         NetworkClient.initialize(context) {

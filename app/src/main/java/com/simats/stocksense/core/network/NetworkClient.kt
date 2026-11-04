@@ -18,16 +18,20 @@ object NetworkClient {
 
     private var tokenStore: TokenStore? = null
     private var sessionManager: SessionManager? = null
+    private var appContext: Context? = null
     private var onUnauthorizedCallback: (() -> Unit)? = null
 
     /**
      * Initializes NetworkClient with application context and optional 401 navigation listener.
      */
     fun initialize(context: Context, onUnauthorized: (() -> Unit)? = null) {
+        appContext = context.applicationContext
         tokenStore = TokenStore.getInstance(context)
         sessionManager = SessionManager.getInstance(context)
         onUnauthorizedCallback = onUnauthorized
     }
+
+    fun getAppContext(): Context? = appContext
 
     fun getTokenStore(): TokenStore? = tokenStore
 

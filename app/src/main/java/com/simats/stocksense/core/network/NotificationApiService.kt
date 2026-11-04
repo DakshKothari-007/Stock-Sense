@@ -37,5 +37,15 @@ interface NotificationApiService {
     suspend fun dismissNotification(
         @Body request: DismissNotificationRequest
     ): Response<DismissNotificationResponse>
+
+    @POST("notifications/register_device.php")
+    suspend fun registerDevice(
+        @Body request: RegisterDeviceRequest
+    ): Response<RegisterDeviceResponse>
+
+    @POST("notifications/unregister_device.php")
+    suspend fun unregisterDevice(
+        @Body request: UnregisterDeviceRequest
+    ): Response<UnregisterDeviceResponse>
 }
 

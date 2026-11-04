@@ -116,6 +116,34 @@ class NotificationRepository(
         }
     }
 
+    suspend fun registerDevice(token: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.registerDevice(RegisterDeviceRequest(fcmToken = token))
+            if (response.isSuccessful && response.body()?.status == true) {
+                Result.success(true)
+            } else {
+                val body = response.body()
+                Result.failure(Exception(body?.message?.ifBlank { "Failed to register device." } ?: "Failed to register device."))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun unregisterDevice(token: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.unregisterDevice(UnregisterDeviceRequest(fcmToken = token))
+            if (response.isSuccessful && response.body()?.status == true) {
+                Result.success(true)
+            } else {
+                val body = response.body()
+                Result.failure(Exception(body?.message?.ifBlank { "Failed to unregister device." } ?: "Failed to unregister device."))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     private fun <T> handleHttpError(code: Int, errorBody: String?): Result<T> {
         if (code == 401) {
             NetworkClient.getSessionManager()?.clearSession()
