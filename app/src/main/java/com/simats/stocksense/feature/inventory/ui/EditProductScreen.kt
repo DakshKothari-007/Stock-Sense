@@ -68,7 +68,7 @@ fun EditProductScreen(
         onMinStockChange = { viewModel.updateMinStock(it) },
         onDismissBanner = { viewModel.clearBannerError() },
         onSaveClick = {
-            viewModel.saveProduct { msg ->
+            viewModel.saveProduct { _, msg ->
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                 onSuccess()
             }

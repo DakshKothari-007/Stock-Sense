@@ -65,8 +65,13 @@ fun AddProductScreen(
         onMinStockChange = { viewModel.updateMinStock(it) },
         onDismissBanner = { viewModel.clearBannerError() },
         onSaveClick = {
-            viewModel.saveProduct { msg ->
-                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            viewModel.saveProduct { returnedSku, msg ->
+                val displayMsg = if (returnedSku.isNotBlank()) {
+                    "Product created with SKU: $returnedSku"
+                } else {
+                    msg
+                }
+                Toast.makeText(context, displayMsg, Toast.LENGTH_SHORT).show()
                 onSuccess()
             }
         }

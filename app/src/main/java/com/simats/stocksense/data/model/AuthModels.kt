@@ -127,6 +127,14 @@ data class ChangePasswordRequest(
 )
 
 /**
+ * Request payload for POST auth/delete_account.php
+ */
+data class DeleteAccountRequest(
+    @SerializedName("current_password") val currentPassword: String,
+    @SerializedName("confirm_text") val confirmText: String
+)
+
+/**
  * Standard generic response envelope (e.g. for logout or errors)
  */
 data class BaseResponse(

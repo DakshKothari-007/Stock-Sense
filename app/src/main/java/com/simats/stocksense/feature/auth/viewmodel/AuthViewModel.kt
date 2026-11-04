@@ -47,6 +47,15 @@ data class ForgotPasswordUiState(
     val errorMessage: String? = null
 )
 
+data class DeleteAccountUiState(
+    val password: String = "",
+    val confirmText: String = "",
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val isSessionExpired: Boolean = false,
+    val isSuccess: Boolean = false
+)
+
 class AuthViewModel(
     private val authRepository: AuthRepository = AuthRepository()
 ) : ViewModel() {
@@ -62,6 +71,9 @@ class AuthViewModel(
 
     private val _forgotPasswordState = MutableStateFlow(ForgotPasswordUiState())
     val forgotPasswordState: StateFlow<ForgotPasswordUiState> = _forgotPasswordState.asStateFlow()
+
+    private val _deleteAccountState = MutableStateFlow(DeleteAccountUiState())
+    val deleteAccountState: StateFlow<DeleteAccountUiState> = _deleteAccountState.asStateFlow()
 
     // -------------------------------------------------------------
     // Input State Modifiers
@@ -297,6 +309,57 @@ class AuthViewModel(
             _forgotPasswordState.update { it.copy(isSubmitted = true, errorMessage = null) }
         } else {
             _forgotPasswordState.update { it.copy(errorMessage = "Please enter a valid email address.") }
+        }
+    }
+
+    // -------------------------------------------------------------
+    // Delete Account Operations
+    // -------------------------------------------------------------
+
+    fun updateDeletePassword(password: String) {
+        _deleteAccountState.update { it.copy(password = password, errorMessage = null) }
+    }
+
+    fun updateDeleteConfirmText(confirmText: String) {
+        _deleteAccountState.update { it.copy(confirmText = confirmText, errorMessage = null) }
+    }
+
+    fun clearDeleteAccountState() {
+        _deleteAccountState.value = DeleteAccountUiState()
+    }
+
+    fun deleteAccount(
+        onSuccess: (String) -> Unit,
+        onSessionExpired: () -> Unit
+    ) {
+        val state = _deleteAccountState.value
+        if (state.password.isBlank() || state.confirmText != "DELETE") {
+            return
+        }
+
+        _deleteAccountState.update { it.copy(isLoading = true, errorMessage = null) }
+
+        viewModelScope.launch {
+            val result = authRepository.deleteAccount(
+                password = state.password,
+                confirmText = state.confirmText
+            )
+            result.fold(
+                onSuccess = { res ->
+                    _deleteAccountState.update { it.copy(isLoading = false, isSuccess = true, errorMessage = null) }
+                    val msg = res.message ?: "Your account has been deleted."
+                    onSuccess(msg)
+                },
+                onFailure = { err ->
+                    if (err is com.simats.stocksense.data.repository.UnauthorizedException) {
+                        _deleteAccountState.update { it.copy(isLoading = false, isSessionExpired = true) }
+                        onSessionExpired()
+                    } else {
+                        val errorMsg = err.message ?: "Failed to delete account."
+                        _deleteAccountState.update { it.copy(isLoading = false, errorMessage = errorMsg) }
+                    }
+                }
+            )
         }
     }
 

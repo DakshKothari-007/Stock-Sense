@@ -6,6 +6,7 @@ import com.simats.stocksense.core.network.SessionManager
 import com.simats.stocksense.core.network.TokenStore
 import com.simats.stocksense.data.model.AuthUser
 import com.simats.stocksense.data.model.BaseResponse
+import com.simats.stocksense.data.model.DeleteAccountRequest
 import com.simats.stocksense.data.model.LoginRequest
 import com.simats.stocksense.data.model.LoginResponse
 import com.simats.stocksense.data.model.SignUpRequest
@@ -206,6 +207,52 @@ class AuthRepository(
     }
 
     /**
+     * Executes account deletion against auth/delete_account.php.
+     * On 200, clears session and tokens.
+     * On 401, clears session/tokens and returns UnauthorizedException.
+     * On other errors, returns Exception with parsed server message.
+     */
+    suspend fun deleteAccount(password: String, confirmText: String): Result<BaseResponse> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.deleteAccount(
+                DeleteAccountRequest(
+                    currentPassword = password,
+                    confirmText = confirmText
+                )
+            )
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && (body.status == true || body.success == true)) {
+                    sessionManager?.clearSession()
+                    tokenStore?.clearToken()
+                    _currentUser.value = UserProfile()
+                    Result.success(body)
+                } else {
+                    Result.failure(Exception(body?.message ?: "Failed to delete account."))
+                }
+            } else {
+                val code = response.code()
+                val errorBody = response.errorBody()?.string()
+                if (code == 401) {
+                    sessionManager?.clearSession()
+                    tokenStore?.clearToken()
+                    _currentUser.value = UserProfile()
+                    Result.failure(UnauthorizedException(parseHttpError(code, errorBody)))
+                } else {
+                    val errorMsg = parseHttpError(code, errorBody)
+                    Result.failure(Exception(errorMsg))
+                }
+            }
+        } catch (e: Throwable) {
+            if (e is UnauthorizedException) {
+                Result.failure(e)
+            } else {
+                Result.failure(Exception(parseNetworkException(e)))
+            }
+        }
+    }
+
+    /**
      * Maps HTTP status codes and error JSON payloads to friendly user-facing messages.
      */
     private fun parseHttpError(code: Int, errorBody: String?): String {
@@ -220,10 +267,10 @@ class AuthRepository(
 
         return when (code) {
             400 -> serverMessage ?: "Invalid request details."
-            401 -> "Invalid email or password."
+            401 -> serverMessage ?: "Invalid email or password."
             409 -> serverMessage ?: "This email is already registered."
             422 -> serverMessage ?: "Please check the entered values."
-            429 -> "Too many attempts, try later."
+            429 -> serverMessage ?: "Too many attempts, try later."
             in 500..599 -> "An unexpected error occurred. Please try again later."
             else -> serverMessage ?: "Request failed with code $code."
         }
@@ -240,3 +287,5 @@ class AuthRepository(
         }
     }
 }
+
+class UnauthorizedException(message: String = "Session expired. Please log in again.") : Exception(message)

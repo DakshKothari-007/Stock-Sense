@@ -67,13 +67,15 @@ class InventoryRepository(
         }
     }
 
-    suspend fun addProduct(request: AddProductRequest): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun addProduct(request: AddProductRequest): Result<AddProductResult> = withContext(Dispatchers.IO) {
         try {
             val response = apiService.addProduct(request)
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.status == true) {
-                    Result.success(body.message?.ifBlank { "Product added successfully." } ?: "Product added successfully.")
+                if (body != null && body.status) {
+                    val returnedSku = body.data?.sku
+                    val message = body.message.ifBlank { "Product added to inventory successfully." }
+                    Result.success(AddProductResult(message = message, sku = returnedSku))
                 } else {
                     Result.failure(Exception(body?.message ?: "Failed to add product."))
                 }

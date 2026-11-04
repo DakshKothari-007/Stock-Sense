@@ -12,30 +12,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.security.MessageDigest
-
-/**
- * Utility for generating deterministic stable SKUs matching import/ColumnMatcher.php algorithm:
- * Prefix: First 3-4 alphanumeric characters of product name (padded with 'X' if < 3).
- * Hash: First 5 characters of MD5("$ownerId:${productName.trim().lowercase()}").
- * Output: SKU-{$cleanPrefix}-{$hash}
- */
-object SkuGenerator {
-    fun generateStableSku(ownerId: Int, productName: String): String {
-        val clean = productName.filter { it.isLetterOrDigit() }.uppercase()
-        val cleanPrefix = when {
-            clean.length < 3 -> clean.padEnd(3, 'X')
-            else -> clean.take(4)
-        }
-        val raw = "$ownerId:${productName.trim().lowercase()}"
-        val md5 = MessageDigest.getInstance("MD5")
-            .digest(raw.toByteArray(Charsets.UTF_8))
-            .joinToString("") { "%02x".format(it) }
-            .take(5)
-            .uppercase()
-        return "SKU-$cleanPrefix-$md5"
-    }
-}
 
 /**
  * UI State for New product and Edit product screens.
@@ -319,8 +295,9 @@ class ProductFormViewModel(
 
     /**
      * Saves the product by calling add_product.php or update_product.php.
+     * Returns the final SKU (server-generated or user-provided) and message on success.
      */
-    fun saveProduct(onSuccess: (String) -> Unit) {
+    fun saveProduct(onSuccess: (returnedSku: String, message: String) -> Unit) {
         if (!validate()) return
 
         val state = _uiState.value
@@ -333,17 +310,12 @@ class ProductFormViewModel(
             val parsedMinStock = state.minStock.toIntOrNull() ?: 10
 
             if (!state.isEditMode) {
-                // New Product
-                val ownerId = sessionManager?.getUserId() ?: 1
-                val effectiveSku = if (state.sku.trim().isBlank()) {
-                    SkuGenerator.generateStableSku(ownerId, state.name.trim())
-                } else {
-                    state.sku.trim().uppercase()
-                }
+                // New Product: leave sku empty/null if user left it blank so server auto-generates stable unique SKU
+                val userSku = state.sku.trim().uppercase().takeIf { it.isNotBlank() }
 
                 val request = AddProductRequest(
                     name = state.name.trim(),
-                    sku = effectiveSku,
+                    sku = userSku,
                     category = state.category.trim().ifBlank { "General" },
                     price = parsedPrice,
                     costPrice = parsedCost,
@@ -353,9 +325,10 @@ class ProductFormViewModel(
 
                 val result = repository.addProduct(request)
                 result.fold(
-                    onSuccess = { msg ->
-                        _uiState.update { it.copy(isSaving = false) }
-                        onSuccess(msg)
+                    onSuccess = { res ->
+                        val finalSku = res.sku ?: userSku ?: ""
+                        _uiState.update { it.copy(isSaving = false, sku = finalSku) }
+                        onSuccess(finalSku, res.message)
                     },
                     onFailure = { err ->
                         handleSaveError(err.message ?: "Failed to create product.")
@@ -383,7 +356,7 @@ class ProductFormViewModel(
                 result.fold(
                     onSuccess = { msg ->
                         _uiState.update { it.copy(isSaving = false) }
-                        onSuccess(msg)
+                        onSuccess(newSku ?: state.sku, msg)
                     },
                     onFailure = { err ->
                         handleSaveError(err.message ?: "Failed to update product.")

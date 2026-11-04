@@ -44,6 +44,7 @@ fun MainScreen(
     onAddProductClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {},
+    onDeleteAccountClick: () -> Unit = {},
     insightsViewModel: InsightsViewModel = viewModel(),
     dashboardViewModel: DashboardViewModel = viewModel(),
     inventoryViewModel: InventoryViewModel = viewModel(),
@@ -148,7 +149,8 @@ fun MainScreen(
                                     viewModel.changePassword(cur, new, conf, cb)
                                 },
                                 onSettingsClick = onSettingsClick,
-                                onSignOutClick = onSignOutClick
+                                onSignOutClick = onSignOutClick,
+                                onDeleteAccountClick = onDeleteAccountClick
                             )
                         }
                     }

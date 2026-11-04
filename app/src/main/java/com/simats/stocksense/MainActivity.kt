@@ -1,6 +1,7 @@
 package com.simats.stocksense
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -26,6 +27,7 @@ import com.simats.stocksense.feature.analytics.ui.AddProductToBillScreen
 import com.simats.stocksense.feature.analytics.ui.RecordSaleScreen
 import com.simats.stocksense.feature.analytics.ui.SalesAnalyticsScreen
 import com.simats.stocksense.feature.analytics.viewmodel.RecordSaleViewModel
+import com.simats.stocksense.feature.auth.ui.DeleteAccountScreen
 import com.simats.stocksense.feature.auth.ui.ForgotPasswordScreen
 import com.simats.stocksense.feature.auth.ui.GoogleSignInScreen
 import com.simats.stocksense.feature.auth.ui.LoginScreen
@@ -373,7 +375,37 @@ fun StockSenseAppNavigation() {
                         }
                     }
                 },
+                onDeleteAccountClick = {
+                    navController.navigate("delete_account") {
+                        launchSingleTop = true
+                    }
+                },
                 insightsViewModel = insightsViewModel
+            )
+        }
+        composable("delete_account") {
+            val shopName = sessionManager.getShopName()?.ifBlank { null }
+                ?: sessionManager.getStoreProfile().name.ifBlank { "Store" }
+            DeleteAccountScreen(
+                shopName = shopName,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onAccountDeleted = {
+                    Toast.makeText(context, "Your account has been deleted.", Toast.LENGTH_LONG).show()
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onSessionExpired = {
+                    Toast.makeText(context, "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                viewModel = authViewModel
             )
         }
         composable("settings") {

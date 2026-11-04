@@ -45,7 +45,7 @@ data class NetworkInventoryProduct(
 
 data class AddProductRequest(
     @SerializedName("name") val name: String,
-    @SerializedName("sku") val sku: String,
+    @SerializedName("sku") val sku: String? = null,
     @SerializedName("category") val category: String? = "General",
     @SerializedName("description") val description: String? = "",
     @SerializedName("price") val price: Double,
@@ -79,7 +79,18 @@ data class DeleteProductRequest(
 data class InventoryActionResponse(
     @SerializedName("status") val status: Boolean = false,
     @SerializedName("message") val message: String = "",
-    @SerializedName("data") val data: Any? = null
+    @SerializedName("data") val data: InventoryActionData? = null
+)
+
+data class InventoryActionData(
+    @SerializedName("id") val id: Any? = null,
+    @SerializedName("name") val name: String? = null,
+    @SerializedName("sku") val sku: String? = null
+)
+
+data class AddProductResult(
+    val message: String = "",
+    val sku: String? = null
 )
 
 data class ProductDetailResponse(

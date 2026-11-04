@@ -20,6 +20,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -47,7 +48,8 @@ fun ProfileContent(
     onUpdateProfile: (String, String, (Boolean, String?) -> Unit) -> Unit = { _, _, cb -> cb(true, null) },
     onChangePassword: (String, String, String, (Boolean, String) -> Unit) -> Unit = { _, _, _, cb -> cb(true, "Password changed successfully") },
     onSettingsClick: () -> Unit = {},
-    onSignOutClick: () -> Unit = {}
+    onSignOutClick: () -> Unit = {},
+    onDeleteAccountClick: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
     val iconTint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1298,6 +1300,94 @@ fun ProfileContent(
                         lineTo(size.width * 0.2f, size.height * 0.9f)
                     }
                     drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                }
+            }
+        }
+
+        // 8. Delete Account Option Card (Warning/Destructive Action)
+        val deleteWarningColor = Color(0xFFF28B82)
+        val deleteContainerColor = Color(0xFF382326)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .clickable { onDeleteAccountClick() },
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(14.dp),
+            border = BorderStroke(1.dp, deleteWarningColor.copy(alpha = 0.35f))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(deleteContainerColor),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Canvas(modifier = Modifier.size(18.dp)) {
+                            val w = size.width
+                            val h = size.height
+                            // Trash can body
+                            val body = Path().apply {
+                                moveTo(w * 0.25f, h * 0.35f)
+                                lineTo(w * 0.3f, h * 0.85f)
+                                lineTo(w * 0.7f, h * 0.85f)
+                                lineTo(w * 0.75f, h * 0.35f)
+                                close()
+                            }
+                            drawPath(
+                                path = body,
+                                color = deleteWarningColor,
+                                style = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                            )
+                            // Lid
+                            drawLine(
+                                color = deleteWarningColor,
+                                start = Offset(w * 0.15f, h * 0.35f),
+                                end = Offset(w * 0.85f, h * 0.35f),
+                                strokeWidth = 1.6.dp.toPx(),
+                                cap = StrokeCap.Round
+                            )
+                            // Handle
+                            drawArc(
+                                color = deleteWarningColor,
+                                startAngle = 180f,
+                                sweepAngle = 180f,
+                                useCenter = false,
+                                topLeft = Offset(w * 0.38f, h * 0.2f),
+                                size = Size(w * 0.24f, h * 0.24f),
+                                style = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Delete account",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = deleteWarningColor,
+                        fontSize = 15.sp
+                    )
+                }
+
+                Canvas(modifier = Modifier.size(10.dp)) {
+                    val path = Path().apply {
+                        moveTo(size.width * 0.2f, size.height * 0.1f)
+                        lineTo(size.width * 0.8f, size.height * 0.5f)
+                        lineTo(size.width * 0.2f, size.height * 0.9f)
+                    }
+                    drawPath(
+                        path = path,
+                        color = deleteWarningColor,
+                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                    )
                 }
             }
         }

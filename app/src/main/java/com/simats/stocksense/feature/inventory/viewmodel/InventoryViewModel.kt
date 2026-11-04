@@ -239,9 +239,9 @@ class InventoryViewModel(
         viewModelScope.launch {
             val result = repository.addProduct(request)
             result.fold(
-                onSuccess = { msg ->
+                onSuccess = { res ->
                     refresh()
-                    onResult(true, msg)
+                    onResult(true, res.message)
                 },
                 onFailure = { err ->
                     onResult(false, err.message ?: "Failed to add product.")
