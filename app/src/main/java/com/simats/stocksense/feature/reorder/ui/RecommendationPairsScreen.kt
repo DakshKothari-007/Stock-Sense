@@ -15,6 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +39,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.util.NumberFormatUtil
+import com.simats.stocksense.feature.ai.ui.AiExplainBottomSheet
 import com.simats.stocksense.feature.reorder.viewmodel.InsightsViewModel
 import java.util.Locale
 
@@ -49,6 +53,7 @@ fun RecommendationPairsScreen(
     val primaryColor = MaterialTheme.colorScheme.primary
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    var showWhyDialog by remember { mutableStateOf(false) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -64,6 +69,8 @@ fun RecommendationPairsScreen(
     }
 
     val pair = uiState.activePairItem
+    val prod1 = pair?.product1
+    val prod2 = pair?.product2
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -200,19 +207,40 @@ fun RecommendationPairsScreen(
                 val prod1 = pair.product1
                 val prod2 = pair.product2
 
-                // 2. Category Tag
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer
+                // 2. Category Tag & Why Button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Frequently bought together",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = primaryColor,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 10.sp,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Text(
+                            text = "Frequently bought together",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = primaryColor,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+
+                    Surface(
+                        onClick = { showWhyDialog = true },
+                        shape = RoundedCornerShape(16.dp),
+                        color = primaryColor.copy(alpha = 0.12f),
+                        border = BorderStroke(1.dp, primaryColor.copy(alpha = 0.35f))
+                    ) {
+                        Text(
+                            text = "Why?",
+                            color = primaryColor,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                        )
+                    }
                 }
 
                 // 3. Headline
@@ -630,6 +658,15 @@ fun RecommendationPairsScreen(
             }
 
             Spacer(modifier = Modifier.height(20.dp))
+
+            if (showWhyDialog && prod1 != null) {
+                AiExplainBottomSheet(
+                    type = "pair",
+                    productId = prod1.effectiveId ?: 0,
+                    productName = "${prod1.name ?: ""} + ${prod2?.name ?: ""}",
+                    onDismiss = { showWhyDialog = false }
+                )
+            }
         }
     }
 }

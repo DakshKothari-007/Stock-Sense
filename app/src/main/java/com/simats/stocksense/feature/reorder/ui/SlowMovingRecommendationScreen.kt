@@ -14,6 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +39,7 @@ import com.simats.stocksense.core.theme.Amber50
 import com.simats.stocksense.core.theme.Amber700
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.util.NumberFormatUtil
+import com.simats.stocksense.feature.ai.ui.AiExplainBottomSheet
 import com.simats.stocksense.feature.reorder.viewmodel.InsightsViewModel
 import java.util.Locale
 
@@ -49,6 +53,7 @@ fun SlowMovingRecommendationScreen(
     val primaryColor = MaterialTheme.colorScheme.primary
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    var showWhyDialog by remember { mutableStateOf(false) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -270,13 +275,34 @@ fun SlowMovingRecommendationScreen(
                             .padding(18.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(
-                            text = "What your sales tell us",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 15.sp
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "What your sales tell us",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 15.sp
+                            )
+
+                            Surface(
+                                onClick = { showWhyDialog = true },
+                                shape = RoundedCornerShape(16.dp),
+                                color = primaryColor.copy(alpha = 0.12f),
+                                border = BorderStroke(1.dp, primaryColor.copy(alpha = 0.35f))
+                            ) {
+                                Text(
+                                    text = "Why?",
+                                    color = primaryColor,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                                )
+                            }
+                        }
 
                         Spacer(modifier = Modifier.height(2.dp))
 
@@ -512,6 +538,15 @@ fun SlowMovingRecommendationScreen(
             }
 
             Spacer(modifier = Modifier.height(20.dp))
+
+            if (showWhyDialog && item != null) {
+                AiExplainBottomSheet(
+                    type = "slow_moving",
+                    productId = item.productId ?: 0,
+                    productName = item.name ?: "",
+                    onDismiss = { showWhyDialog = false }
+                )
+            }
         }
     }
 }

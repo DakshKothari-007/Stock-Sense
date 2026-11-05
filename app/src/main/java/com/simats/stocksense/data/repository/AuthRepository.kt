@@ -241,6 +241,9 @@ class AuthRepository(
                     sessionManager?.clearSession()
                     tokenStore?.clearToken()
                     _currentUser.value = UserProfile()
+                    try {
+                        com.simats.stocksense.feature.ai.AiChatStore.clear()
+                    } catch (_: Throwable) {}
                     NetworkClient.getAppContext()?.let { ctx ->
                         try {
                             com.simats.stocksense.core.fcm.FcmTokenManager.clearLocalTokenOnly(ctx)
@@ -257,6 +260,9 @@ class AuthRepository(
                     sessionManager?.clearSession()
                     tokenStore?.clearToken()
                     _currentUser.value = UserProfile()
+                    try {
+                        com.simats.stocksense.feature.ai.AiChatStore.clear()
+                    } catch (_: Throwable) {}
                     Result.failure(UnauthorizedException(parseHttpError(code, errorBody)))
                 } else {
                     val errorMsg = parseHttpError(code, errorBody)

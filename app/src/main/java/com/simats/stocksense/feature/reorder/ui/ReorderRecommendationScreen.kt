@@ -33,6 +33,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.*
+import com.simats.stocksense.feature.ai.ui.AiExplainBottomSheet
 import com.simats.stocksense.feature.reorder.viewmodel.ReorderViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -50,6 +51,7 @@ fun ReorderRecommendationScreen(
     val primaryColor = MaterialTheme.colorScheme.primary
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    var showWhyDialog by remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -266,19 +268,40 @@ fun ReorderRecommendationScreen(
                         }
                     }
 
-                    // 2. High Priority Badge
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = badgeBg
+                    // 2. High Priority Badge & Why Button
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = rec.priorityText,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = badgeText,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                        )
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = badgeBg
+                        ) {
+                            Text(
+                                text = rec.priorityText,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = badgeText,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
+
+                        Surface(
+                            onClick = { showWhyDialog = true },
+                            shape = RoundedCornerShape(16.dp),
+                            color = primaryColor.copy(alpha = 0.12f),
+                            border = BorderStroke(1.dp, primaryColor.copy(alpha = 0.35f))
+                        ) {
+                            Text(
+                                text = "Why?",
+                                color = primaryColor,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                            )
+                        }
                     }
 
                     // 3. Product Info Header Row
@@ -523,6 +546,15 @@ fun ReorderRecommendationScreen(
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
+
+                    if (showWhyDialog) {
+                        AiExplainBottomSheet(
+                            type = "reorder",
+                            productId = rec.productId ?: 0,
+                            productName = rec.productName,
+                            onDismiss = { showWhyDialog = false }
+                        )
+                    }
                 }
             }
         }

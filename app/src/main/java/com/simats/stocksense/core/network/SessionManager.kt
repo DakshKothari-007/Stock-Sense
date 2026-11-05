@@ -158,10 +158,14 @@ class SessionManager private constructor(context: Context) {
     fun hasValidToken(): Boolean = isLoggedIn()
 
     /**
-     * Wipes session data completely from SharedPreferences upon logout or session invalidation.
+     * Wipes session data completely from SharedPreferences upon logout or session invalidation,
+     * and clears any in-memory AI assistant chat history.
      */
     fun clearSession() {
         prefs.edit().clear().commit()
+        try {
+            com.simats.stocksense.feature.ai.AiChatStore.clear()
+        } catch (_: Throwable) { }
     }
 
     private fun isExpired(): Boolean {

@@ -15,11 +15,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.components.StockSenseBottomNavigation
 import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.feature.ai.ui.DukaanMitraFloatingButton
 import com.simats.stocksense.feature.dashboard.viewmodel.DashboardViewModel
 import com.simats.stocksense.feature.dashboard.viewmodel.MainViewModel
 import com.simats.stocksense.feature.inventory.ui.InventoryScreen
@@ -45,6 +48,7 @@ fun MainScreen(
     onSettingsClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {},
     onDeleteAccountClick: () -> Unit = {},
+    onAiChatClick: () -> Unit = {},
     insightsViewModel: InsightsViewModel = viewModel(),
     dashboardViewModel: DashboardViewModel = viewModel(),
     inventoryViewModel: InventoryViewModel = viewModel(),
@@ -154,6 +158,16 @@ fun MainScreen(
                             )
                         }
                     }
+                }
+
+                // Dukaan Mitra Floating Action Button (Home, Inventory, Insights only)
+                if (uiState.selectedTab in 0..2) {
+                    DukaanMitraFloatingButton(
+                        onClick = onAiChatClick,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 16.dp, bottom = 16.dp)
+                    )
                 }
             }
         }

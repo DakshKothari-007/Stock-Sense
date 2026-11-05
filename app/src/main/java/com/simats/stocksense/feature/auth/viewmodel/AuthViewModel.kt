@@ -296,6 +296,9 @@ class AuthViewModel(
 
     fun logout(onComplete: () -> Unit = {}) {
         viewModelScope.launch {
+            try {
+                com.simats.stocksense.feature.ai.AiChatStore.clear()
+            } catch (_: Throwable) {}
             authRepository.logout()
             _authUiState.update { AuthUiState() }
             _loginState.update { LoginUiState(email = "", password = "") }
@@ -346,6 +349,9 @@ class AuthViewModel(
             )
             result.fold(
                 onSuccess = { res ->
+                    try {
+                        com.simats.stocksense.feature.ai.AiChatStore.clear()
+                    } catch (_: Throwable) {}
                     _deleteAccountState.update { it.copy(isLoading = false, isSuccess = true, errorMessage = null) }
                     val msg = res.message ?: "Your account has been deleted."
                     onSuccess(msg)

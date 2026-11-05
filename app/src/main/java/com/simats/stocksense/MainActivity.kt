@@ -28,6 +28,8 @@ import com.simats.stocksense.core.network.NetworkClient
 import com.simats.stocksense.core.network.SessionManager
 import com.simats.stocksense.core.network.TokenStore
 import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.feature.ai.AiChatStore
+import com.simats.stocksense.feature.ai.ui.AiChatScreen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.simats.stocksense.feature.analytics.ui.AddProductToBillScreen
@@ -480,6 +482,7 @@ fun StockSenseAppNavigation(
                     }
                 },
                 onSignOutClick = {
+                    AiChatStore.clear()
                     authViewModel.logout {
                         navController.navigate("signout") {
                             popUpTo(0) { inclusive = true }
@@ -489,6 +492,11 @@ fun StockSenseAppNavigation(
                 },
                 onDeleteAccountClick = {
                     navController.navigate("delete_account") {
+                        launchSingleTop = true
+                    }
+                },
+                onAiChatClick = {
+                    navController.navigate("ai_chat") {
                         launchSingleTop = true
                     }
                 },
@@ -504,6 +512,7 @@ fun StockSenseAppNavigation(
                     navController.popBackStack()
                 },
                 onAccountDeleted = {
+                    AiChatStore.clear()
                     Toast.makeText(context, "Your account has been deleted.", Toast.LENGTH_LONG).show()
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
@@ -537,6 +546,7 @@ fun StockSenseAppNavigation(
         composable("signout") {
             SignOutScreen(
                 onBackToLoginClick = {
+                    AiChatStore.clear()
                     authViewModel.logout {
                         navController.navigate("login") {
                             popUpTo(0) { inclusive = true }
@@ -955,6 +965,39 @@ fun StockSenseAppNavigation(
                 },
                 onSessionExpired = {
                     sessionManager.clearSession()
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+        composable("ai_chat") {
+            AiChatScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onNavigate = { target, productId ->
+                    when (target.lowercase()) {
+                        "reorder" -> navController.navigate("reorder_recommendation") { launchSingleTop = true }
+                        "insights", "slow_moving" -> navController.navigate("slow_moving_recommendation") { launchSingleTop = true }
+                        "inventory" -> navController.popBackStack("main", inclusive = false)
+                        "sales", "sales_analytics" -> navController.navigate("sales_analytics") { launchSingleTop = true }
+                        "purchase_orders" -> navController.navigate("purchase_orders") { launchSingleTop = true }
+                        "product_detail" -> {
+                            if (productId != null && productId > 0) {
+                                productDetailViewModel.loadProduct(productId = productId)
+                                navController.navigate("product_detail") { launchSingleTop = true }
+                            } else {
+                                navController.popBackStack("main", inclusive = false)
+                            }
+                        }
+                        else -> { /* Unknown target ignored */ }
+                    }
+                },
+                onSessionExpired = {
+                    sessionManager.clearSession()
+                    Toast.makeText(context, "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                         launchSingleTop = true

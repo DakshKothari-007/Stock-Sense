@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.data.model.DashboardSummaryData
+import com.simats.stocksense.data.repository.AiRepository
 import com.simats.stocksense.data.repository.DashboardRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,14 +23,16 @@ data class DashboardUiState(
     val errorMessage: String? = null,
     val dashboardData: DashboardSummaryData? = null,
     val unreadCount: Int = 0,
-    val lastUpdatedText: String = ""
+    val lastUpdatedText: String = "",
+    val dailySummary: String? = null
 )
 
 /**
  * ViewModel responsible for loading Dashboard metrics and notifications unread count.
  */
 class DashboardViewModel(
-    private val repository: DashboardRepository = DashboardRepository()
+    private val repository: DashboardRepository = DashboardRepository(),
+    private val aiRepository: AiRepository = AiRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -37,6 +40,7 @@ class DashboardViewModel(
 
     init {
         loadDashboard(isInitialLoad = true)
+        refreshDailySummary()
     }
 
     /**
@@ -91,6 +95,19 @@ class DashboardViewModel(
      */
     fun refresh() {
         loadDashboard(isInitialLoad = false)
+        refreshDailySummary()
+    }
+
+    /**
+     * Refreshes the daily summary on resume.
+     */
+    fun refreshDailySummary() {
+        viewModelScope.launch {
+            val res = aiRepository.getDailySummary()
+            _uiState.update { current ->
+                current.copy(dailySummary = res.getOrNull())
+            }
+        }
     }
 }
 
