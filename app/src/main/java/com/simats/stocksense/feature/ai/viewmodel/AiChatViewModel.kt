@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.simats.stocksense.data.model.AiHistoryItem
 import com.simats.stocksense.data.model.ChatMessage
 import com.simats.stocksense.data.repository.AiRepository
 import com.simats.stocksense.feature.ai.AiChatStore
@@ -98,17 +99,33 @@ class AiChatViewModel(application: Application) : AndroidViewModel(application) 
     fun onSpeechSend(text: String) {
         hideListeningSheet()
         if (text.isNotBlank()) {
-            sendMessage(text)
+            val langHint = when (_uiState.value.selectedLanguage) {
+                "ta-IN" -> "Tamil"
+                "hi-IN" -> "Hindi"
+                else -> "English"
+            }
+            sendMessage(rawMessage = text, languageHint = langHint)
         }
     }
 
     fun retryQuestion(question: String) {
-        sendMessage(question)
+        sendMessage(rawMessage = question, languageHint = null)
     }
 
-    fun sendMessage(rawMessage: String) {
+    fun sendMessage(rawMessage: String, languageHint: String? = null) {
         val trimmed = rawMessage.trim()
         if (trimmed.isBlank() || _uiState.value.isTyping) return
+
+        // Take up to 6 non-error prior messages for history context (role + text only, no cards)
+        val priorHistory = _uiState.value.messages
+            .filter { !it.isError && it.text.isNotBlank() }
+            .takeLast(6)
+            .map { msg ->
+                AiHistoryItem(
+                    role = if (msg.isUser) "user" else "assistant",
+                    text = msg.text.take(300)
+                )
+            }
 
         val userMessage = ChatMessage(
             isUser = true,
@@ -125,20 +142,19 @@ class AiChatViewModel(application: Application) : AndroidViewModel(application) 
             )
         }
 
-        val langHint = when (_uiState.value.selectedLanguage) {
-            "ta-IN" -> "Tamil"
-            "hi-IN" -> "Hindi"
-            else -> "English"
-        }
-
         viewModelScope.launch {
-            val result = repository.chat(message = trimmed, languageHint = langHint)
+            val result = repository.chat(
+                message = trimmed,
+                languageHint = languageHint,
+                history = if (priorHistory.isEmpty()) null else priorHistory
+            )
             result.onSuccess { data ->
                 val assistantMessage = ChatMessage(
                     isUser = false,
                     text = data.answer,
                     cards = data.cards ?: emptyList(),
-                    actions = data.actions ?: emptyList()
+                    actions = data.actions ?: emptyList(),
+                    suggestions = data.suggestions ?: emptyList()
                 )
                 val updatedWithAssistant = _uiState.value.messages + assistantMessage
                 AiChatStore.setMessages(updatedWithAssistant)

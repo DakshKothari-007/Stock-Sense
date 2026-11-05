@@ -259,6 +259,7 @@ fun AiChatScreen(
                         speakingMessageId = uiState.speakingMessageId,
                         onSpeakClick = { id, text -> speakText(id, text) },
                         onActionClick = { act -> onNavigate(act.target, act.productId) },
+                        onSuggestionClick = { msg -> viewModel.sendMessage(msg) },
                         onRetryClick = { q -> viewModel.retryQuestion(q) }
                     )
                 }
@@ -583,6 +584,7 @@ private fun ConversationContent(
     speakingMessageId: String?,
     onSpeakClick: (String, String) -> Unit,
     onActionClick: (AiAction) -> Unit,
+    onSuggestionClick: (String) -> Unit,
     onRetryClick: (String) -> Unit
 ) {
     val listState = rememberLazyListState()
@@ -611,6 +613,7 @@ private fun ConversationContent(
                     isSpeaking = speakingMessageId == msg.id,
                     onSpeakClick = { onSpeakClick(msg.id, msg.text) },
                     onActionClick = onActionClick,
+                    onSuggestionClick = onSuggestionClick,
                     onRetryClick = onRetryClick
                 )
             }
@@ -654,6 +657,7 @@ private fun AssistantMessageRow(
     isSpeaking: Boolean,
     onSpeakClick: () -> Unit,
     onActionClick: (AiAction) -> Unit,
+    onSuggestionClick: (String) -> Unit,
     onRetryClick: (String) -> Unit
 ) {
     Row(
@@ -757,7 +761,7 @@ private fun AssistantMessageRow(
                 ProductCardsContainer(cards = message.cards)
             }
 
-            // Action Buttons
+            // Action Buttons (Open screen navigation only)
             if (message.actions.isNotEmpty()) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -776,6 +780,33 @@ private fun AssistantMessageRow(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = VibrantGreen
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Suggestion Chips (Send chat message, NEVER navigate)
+            if (message.suggestions.isNotEmpty()) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                ) {
+                    message.suggestions.forEach { suggestion ->
+                        Surface(
+                            onClick = { onSuggestionClick(suggestion.message) },
+                            shape = RoundedCornerShape(16.dp),
+                            color = CardNavyBg,
+                            border = BorderStroke(1.dp, CardBorderColor)
+                        ) {
+                            Text(
+                                text = suggestion.label,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                             )
                         }
                     }

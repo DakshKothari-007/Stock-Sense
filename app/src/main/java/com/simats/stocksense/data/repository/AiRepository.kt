@@ -6,6 +6,7 @@ import com.simats.stocksense.core.network.NetworkClient
 import com.simats.stocksense.data.model.AiChatData
 import com.simats.stocksense.data.model.AiChatRequest
 import com.simats.stocksense.data.model.AiExplainRequest
+import com.simats.stocksense.data.model.AiHistoryItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -20,9 +21,18 @@ class AiRepository(
     /**
      * Send chat query to Dukaan Mitra.
      */
-    suspend fun chat(message: String, languageHint: String? = null): Result<AiChatData> = withContext(Dispatchers.IO) {
+    suspend fun chat(
+        message: String,
+        languageHint: String? = null,
+        history: List<AiHistoryItem>? = null
+    ): Result<AiChatData> = withContext(Dispatchers.IO) {
         try {
-            val response = apiService.chat(AiChatRequest(message = message, languageHint = languageHint))
+            val request = AiChatRequest(
+                message = message,
+                languageHint = languageHint,
+                history = history
+            )
+            val response = apiService.chat(request)
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.status && body.data != null) {

@@ -7,9 +7,15 @@ import java.util.UUID
  * Data models for StockSense AI Assistant (Dukaan Mitra).
  */
 
+data class AiHistoryItem(
+    @SerializedName("role") val role: String,
+    @SerializedName("text") val text: String
+)
+
 data class AiChatRequest(
     @SerializedName("message") val message: String,
-    @SerializedName("language_hint") val languageHint: String? = null
+    @SerializedName("language_hint") val languageHint: String? = null,
+    @SerializedName("history") val history: List<AiHistoryItem>? = null
 )
 
 data class AiChatResponse(
@@ -21,7 +27,8 @@ data class AiChatResponse(
 data class AiChatData(
     @SerializedName("answer") val answer: String,
     @SerializedName("cards") val cards: List<AiProductCard>? = null,
-    @SerializedName("actions") val actions: List<AiAction>? = null
+    @SerializedName("actions") val actions: List<AiAction>? = null,
+    @SerializedName("suggestions") val suggestions: List<AiSuggestion>? = null
 )
 
 data class AiProductCard(
@@ -39,6 +46,11 @@ data class AiAction(
     @SerializedName("label") val label: String,
     @SerializedName("target") val target: String,
     @SerializedName("product_id") val productId: Int? = null
+)
+
+data class AiSuggestion(
+    @SerializedName("label") val label: String,
+    @SerializedName("message") val message: String
 )
 
 data class AiExplainRequest(
@@ -75,6 +87,7 @@ data class ChatMessage(
     val text: String,
     val cards: List<AiProductCard> = emptyList(),
     val actions: List<AiAction> = emptyList(),
+    val suggestions: List<AiSuggestion> = emptyList(),
     val isError: Boolean = false,
     val isTyping: Boolean = false,
     val retryQuestion: String? = null,
