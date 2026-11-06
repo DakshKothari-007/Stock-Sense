@@ -12,11 +12,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 data class AiChatUiState(
     val messages: List<ChatMessage> = emptyList(),
     val isTyping: Boolean = false,
+    val showStillThinking: Boolean = false,
     val inputText: String = "",
     val autoSpeak: Boolean = false,
     val isListeningSheetVisible: Boolean = false,
@@ -54,13 +57,18 @@ class AiChatViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    private var thinkingJob: Job? = null
+
     fun clearChat() {
+        thinkingJob?.cancel()
+        thinkingJob = null
         AiChatStore.clear()
         _uiState.update {
             it.copy(
                 messages = emptyList(),
                 inputText = "",
                 isTyping = false,
+                showStillThinking = false,
                 speakingMessageId = null
             )
         }
@@ -138,8 +146,17 @@ class AiChatViewModel(application: Application) : AndroidViewModel(application) 
             current.copy(
                 messages = updatedWithUser,
                 inputText = "",
-                isTyping = true
+                isTyping = true,
+                showStillThinking = false
             )
+        }
+
+        thinkingJob?.cancel()
+        thinkingJob = viewModelScope.launch {
+            delay(8000L)
+            if (_uiState.value.isTyping) {
+                _uiState.update { it.copy(showStillThinking = true) }
+            }
         }
 
         viewModelScope.launch {
@@ -148,6 +165,9 @@ class AiChatViewModel(application: Application) : AndroidViewModel(application) 
                 languageHint = languageHint,
                 history = if (priorHistory.isEmpty()) null else priorHistory
             )
+            thinkingJob?.cancel()
+            thinkingJob = null
+
             result.onSuccess { data ->
                 val assistantMessage = ChatMessage(
                     isUser = false,
@@ -161,15 +181,31 @@ class AiChatViewModel(application: Application) : AndroidViewModel(application) 
                 _uiState.update { current ->
                     current.copy(
                         messages = updatedWithAssistant,
-                        isTyping = false
+                        isTyping = false,
+                        showStillThinking = false
                     )
                 }
             }.onFailure { error ->
-                val errorMsg = error.message ?: "Could not get an answer right now."
+                val isTimeout = error is java.net.SocketTimeoutException ||
+                    error is java.io.InterruptedIOException ||
+                    error.message?.contains("timeout", ignoreCase = true) == true ||
+                    error.message?.contains("timed out", ignoreCase = true) == true
+
+                val errorMsg = when {
+                    isTimeout -> "Dukaan Mitra took too long to answer. Please check your connection and tap Retry."
+                    error.message?.contains("Session expired", ignoreCase = true) == true -> "Session expired. Please log in again."
+                    else -> error.message ?: "Could not get an answer right now."
+                }
                 val is401 = errorMsg.contains("Session expired", ignoreCase = true)
 
                 if (is401) {
-                    _uiState.update { it.copy(isSessionExpired = true, isTyping = false) }
+                    _uiState.update {
+                        it.copy(
+                            isSessionExpired = true,
+                            isTyping = false,
+                            showStillThinking = false
+                        )
+                    }
                 } else {
                     val errorMessage = ChatMessage(
                         isUser = false,
@@ -182,7 +218,8 @@ class AiChatViewModel(application: Application) : AndroidViewModel(application) 
                     _uiState.update { current ->
                         current.copy(
                             messages = updatedWithError,
-                            isTyping = false
+                            isTyping = false,
+                            showStillThinking = false
                         )
                     }
                 }

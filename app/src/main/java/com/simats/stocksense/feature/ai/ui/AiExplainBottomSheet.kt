@@ -1,5 +1,6 @@
 package com.simats.stocksense.feature.ai.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -7,6 +8,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +26,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.simats.stocksense.R
 import com.simats.stocksense.data.repository.AiRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private val DarkNavyBg = Color(0xFF0F172A)
@@ -40,21 +44,45 @@ fun AiExplainBottomSheet(
     repository: AiRepository = remember { AiRepository() }
 ) {
     var isLoading by remember { mutableStateOf(true) }
+    var showStillThinking by remember { mutableStateOf(false) }
     var explanationText by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(type, productId) {
+    fun loadExplanation() {
         isLoading = true
         errorMessage = null
-        val result = repository.explain(type = type, productId = productId)
-        result.onSuccess { text ->
-            explanationText = text
-            isLoading = false
-        }.onFailure {
-            errorMessage = "Could not explain right now."
-            isLoading = false
+        showStillThinking = false
+        coroutineScope.launch {
+            val thinkingJob = launch {
+                delay(8000L)
+                if (isLoading) {
+                    showStillThinking = true
+                }
+            }
+            val result = repository.explain(type = type, productId = productId)
+            thinkingJob.cancel()
+            showStillThinking = false
+            result.onSuccess { text ->
+                explanationText = text
+                isLoading = false
+            }.onFailure { err ->
+                val isTimeout = err is java.net.SocketTimeoutException ||
+                    err is java.io.InterruptedIOException ||
+                    err.message?.contains("timeout", ignoreCase = true) == true ||
+                    err.message?.contains("timed out", ignoreCase = true) == true
+                errorMessage = if (isTimeout) {
+                    "Dukaan Mitra took too long to generate an explanation. Please check your connection and tap Retry."
+                } else {
+                    err.message ?: "Could not explain right now."
+                }
+                isLoading = false
+            }
         }
+    }
+
+    LaunchedEffect(type, productId) {
+        loadExplanation()
     }
 
     Dialog(
@@ -133,7 +161,7 @@ fun AiExplainBottomSheet(
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 CircularProgressIndicator(
                                     color = VibrantGreen,
@@ -145,6 +173,13 @@ fun AiExplainBottomSheet(
                                     color = MutedText,
                                     fontSize = 13.sp
                                 )
+                                if (showStillThinking) {
+                                    Text(
+                                        text = "Still thinking...",
+                                        color = MutedText.copy(alpha = 0.8f),
+                                        fontSize = 11.sp
+                                    )
+                                }
                             }
                         }
                     }
@@ -157,13 +192,34 @@ fun AiExplainBottomSheet(
                                 .background(CardNavyBg)
                                 .padding(18.dp)
                         ) {
-                            Text(
-                                text = errorMessage ?: "Could not explain right now.",
-                                color = Color(0xFFFCA5A5),
-                                fontSize = 14.sp,
-                                textAlign = TextAlign.Center,
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.fillMaxWidth()
-                            )
+                            ) {
+                                Text(
+                                    text = errorMessage ?: "Could not explain right now.",
+                                    color = Color(0xFFFCA5A5),
+                                    fontSize = 14.sp,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                OutlinedButton(
+                                    onClick = { loadExplanation() },
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = VibrantGreen),
+                                    border = BorderStroke(1.dp, VibrantGreen),
+                                    shape = RoundedCornerShape(12.dp),
+                                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Retry", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
                         }
                     }
 

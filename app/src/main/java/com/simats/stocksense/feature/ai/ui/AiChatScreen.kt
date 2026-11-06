@@ -256,6 +256,7 @@ fun AiChatScreen(
                     ConversationContent(
                         messages = uiState.messages,
                         isTyping = uiState.isTyping,
+                        showStillThinking = uiState.showStillThinking,
                         speakingMessageId = uiState.speakingMessageId,
                         onSpeakClick = { id, text -> speakText(id, text) },
                         onActionClick = { act -> onNavigate(act.target, act.productId) },
@@ -581,6 +582,7 @@ private fun QuickQuestionCard(
 private fun ConversationContent(
     messages: List<ChatMessage>,
     isTyping: Boolean,
+    showStillThinking: Boolean,
     speakingMessageId: String?,
     onSpeakClick: (String, String) -> Unit,
     onActionClick: (AiAction) -> Unit,
@@ -621,7 +623,7 @@ private fun ConversationContent(
 
         if (isTyping) {
             item(key = "typing_indicator") {
-                TypingIndicatorRow()
+                TypingIndicatorRow(showStillThinking = showStillThinking)
             }
         }
     }
@@ -879,10 +881,10 @@ private fun ProductCardsContainer(cards: List<AiProductCard>) {
 }
 
 // -----------------------------------------------------------------------------
-// TYPING INDICATOR (3-dot pulsation)
+// TYPING INDICATOR (3-dot pulsation & "Still thinking...")
 // -----------------------------------------------------------------------------
 @Composable
-private fun TypingIndicatorRow() {
+private fun TypingIndicatorRow(showStillThinking: Boolean = false) {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val avatarScale by infiniteTransition.animateFloat(
         initialValue = 0.96f,
@@ -897,7 +899,7 @@ private fun TypingIndicatorRow() {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top
     ) {
         Image(
             painter = painterResource(id = R.drawable.dukaan_mitra),
@@ -912,13 +914,25 @@ private fun TypingIndicatorRow() {
 
         Spacer(modifier = Modifier.width(10.dp))
 
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-                .background(CardNavyBg)
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-        ) {
-            ThreeDotsTypingIndicator()
+        Column {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(CardNavyBg)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                ThreeDotsTypingIndicator()
+            }
+
+            if (showStillThinking) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Still thinking...",
+                    color = MutedText,
+                    fontSize = 11.sp,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+            }
         }
     }
 }

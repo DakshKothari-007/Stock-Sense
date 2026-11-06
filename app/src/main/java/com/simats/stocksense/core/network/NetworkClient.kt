@@ -92,6 +92,19 @@ object NetworkClient {
             .build()
     }
 
+    // Dedicated timeouts for Dukaan Mitra AI endpoints (/ai/chat.php, /ai/explain.php):
+    // connectTimeout 10 s, readTimeout 100 s, callTimeout 110 s.
+    private val aiOkHttpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(100, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .callTimeout(110, TimeUnit.SECONDS)
+            .addInterceptor(authInterceptor)
+            .addInterceptor(loggingInterceptor)
+            .build()
+    }
+
     val gson: Gson by lazy {
         GsonBuilder()
             .setLenient()
@@ -114,11 +127,20 @@ object NetworkClient {
             .build()
     }
 
+    val aiRetrofit: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(ApiConstants.BASE_URL)
+            .client(aiOkHttpClient)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+    }
+
     inline fun <reified T> createService(): T {
-        return if (T::class.java.name.contains("ImportApiService")) {
-            importRetrofit.create(T::class.java)
-        } else {
-            retrofit.create(T::class.java)
+        val className = T::class.java.name
+        return when {
+            className.contains("AiApiService") -> aiRetrofit.create(T::class.java)
+            className.contains("ImportApiService") -> importRetrofit.create(T::class.java)
+            else -> retrofit.create(T::class.java)
         }
     }
 }
