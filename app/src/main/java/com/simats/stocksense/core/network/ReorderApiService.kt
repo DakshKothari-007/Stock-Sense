@@ -16,8 +16,8 @@ interface ReorderApiService {
     suspend fun getReorderList(
         @Query("priority") priority: String? = null,
         @Query("category") category: String? = null,
-        @Query("page") page: Int? = 1,
-        @Query("limit") limit: Int? = 20
+        @Query("page") page: Int? = null,
+        @Query("limit") limit: Int? = null
     ): Response<ReorderListResponse>
 
     /**

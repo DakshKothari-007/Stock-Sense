@@ -130,6 +130,7 @@ fun MainScreen(
                                 onParleGProductClick = onProductParleGClick
                             )
                             2 -> InsightsContent(
+                                storeName = uiState.storeProfile.name.takeIf { it.isNotBlank() },
                                 onReorderMilkClick = onReorderRecommendationClick,
                                 onMoveBiscuitsClick = onSlowMovingRecommendationClick,
                                 onTeaPairClick = onRecommendationPairsClick,

@@ -34,9 +34,11 @@ import androidx.compose.ui.res.painterResource
 import com.simats.stocksense.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.util.Locale
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -329,14 +331,16 @@ fun DashboardHomeContent(
                     color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Bold,
                     fontSize = 22.sp,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = if (todayHeaderDate.isNotEmpty()) "$storeLocation · $todayHeaderDate" else storeLocation,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
@@ -438,7 +442,9 @@ fun DashboardHomeContent(
                         text = "Today's sales",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -446,7 +452,9 @@ fun DashboardHomeContent(
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
+                        fontSize = 20.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     val bills = data.sales?.todayBillsCount ?: 0
@@ -455,7 +463,9 @@ fun DashboardHomeContent(
                         style = MaterialTheme.typography.bodySmall,
                         color = primaryColor,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 11.sp
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -471,7 +481,9 @@ fun DashboardHomeContent(
                         text = "Inventory value",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -479,7 +491,9 @@ fun DashboardHomeContent(
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
+                        fontSize = 20.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -487,7 +501,9 @@ fun DashboardHomeContent(
                         style = MaterialTheme.typography.bodySmall,
                         color = primaryColor,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 11.sp
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -559,10 +575,12 @@ fun DashboardHomeContent(
                     Text(
                         text = "LOW STOCK",
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (isLowStockActive) Amber700 else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (isLowStockActive) Amber800 else MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Bold,
                         fontSize = 10.sp,
-                        letterSpacing = 1.sp
+                        letterSpacing = 1.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     if (isLowStockActive) {
@@ -572,18 +590,20 @@ fun DashboardHomeContent(
                         Text(
                             text = "$lowName · $lowUnits left ›",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = if (isLowStockActive) Amber900 else MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp,
-                            maxLines = 1
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "Below $lowMin-unit minimum",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (isLowStockActive) Amber800 else MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 11.sp,
-                            maxLines = 1
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     } else {
                         Text(
@@ -592,7 +612,8 @@ fun DashboardHomeContent(
                             color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp,
-                            maxLines = 1
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
@@ -600,7 +621,8 @@ fun DashboardHomeContent(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 11.sp,
-                            maxLines = 1
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -620,10 +642,12 @@ fun DashboardHomeContent(
                     Text(
                         text = "SLOW MOVING",
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (isSlowMovingActive) Amber700 else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (isSlowMovingActive) Amber800 else MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Bold,
                         fontSize = 10.sp,
-                        letterSpacing = 1.sp
+                        letterSpacing = 1.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     when {
@@ -634,7 +658,8 @@ fun DashboardHomeContent(
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
@@ -642,7 +667,8 @@ fun DashboardHomeContent(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 11.sp,
-                                maxLines = 2
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                         isSlowMovingActive -> {
@@ -655,7 +681,8 @@ fun DashboardHomeContent(
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
@@ -663,7 +690,8 @@ fun DashboardHomeContent(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 11.sp,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                         else -> {
@@ -673,7 +701,8 @@ fun DashboardHomeContent(
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
@@ -681,7 +710,8 @@ fun DashboardHomeContent(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 11.sp,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -691,12 +721,12 @@ fun DashboardHomeContent(
 
         // 4. Sales This Week Card (Chart)
         val rawPoints = data.sales?.dailySalesPoints ?: emptyList()
-        // Take last 7 days points
+        // Take maximum of 7 days points
         val chartPoints = if (rawPoints.size > 7) rawPoints.takeLast(7) else rawPoints
         val maxAmount = chartPoints.maxOfOrNull { it.amount ?: 0.0 } ?: 0.0
 
-        val firstLabel = chartPoints.firstOrNull()?.dayLabel ?: ""
-        val lastLabel = chartPoints.lastOrNull()?.dayLabel ?: ""
+        val firstLabel = chartPoints.firstOrNull()?.let { formatChartDayLabel(it.dayLabel, it.date) } ?: ""
+        val lastLabel = chartPoints.lastOrNull()?.let { formatChartDayLabel(it.dayLabel, it.date) } ?: ""
         val weekDateRangeTag = if (firstLabel.isNotEmpty() && lastLabel.isNotEmpty()) {
             val firstDay = firstLabel.split(" ").firstOrNull() ?: firstLabel
             "$firstDay–$lastLabel"
@@ -727,8 +757,12 @@ fun DashboardHomeContent(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 15.sp
+                        fontSize = 15.sp,
+                        modifier = Modifier.weight(1f, fill = false),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.clickable { onAnalyticsClick() }
@@ -750,7 +784,8 @@ fun DashboardHomeContent(
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 fontSize = 10.sp,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                maxLines = 1
                             )
                         }
                     }
@@ -763,51 +798,89 @@ fun DashboardHomeContent(
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 24.sp
+                    fontSize = 24.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Bar Chart dynamically rendered from dailySalesPoints
+                // Bar Chart dynamically rendered from dailySalesPoints (max 7 points)
                 if (chartPoints.isNotEmpty()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(85.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        chartPoints.forEach { point ->
-                            val amount = point.amount ?: 0.0
-                            val ratio = if (maxAmount > 0.0) {
-                                (amount / maxAmount).toFloat().coerceIn(0.08f, 1.0f)
-                            } else {
-                                0.08f
-                            }
-                            val isCurrent = point.isCurrentDay == true
-                            val dayNumber = point.dayLabel?.split(" ")?.firstOrNull()
-                                ?: point.date?.split("-")?.lastOrNull()
-                                ?: ""
+                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                        val availableWidth = maxWidth
+                        val pointCount = chartPoints.size
+                        val columnWidth = if (pointCount > 0) availableWidth / pointCount else availableWidth
 
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Bottom,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Box(
+                        // Format all labels from data
+                        val formattedLabels = remember(chartPoints) {
+                            chartPoints.map { point ->
+                                formatChartDayLabel(point.dayLabel, point.date)
+                            }
+                        }
+
+                        // Avoid overlap on small phones (360dp / large font):
+                        // If column width is narrow (< 45dp) and labels are long (> 3 chars), or width is < 36dp, skip alternating labels
+                        val hasLongLabels = formattedLabels.any { it.length > 3 }
+                        val shouldSkipLabels = (columnWidth < 45.dp && hasLongLabels) || columnWidth < 36.dp
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(88.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            chartPoints.forEachIndexed { index, point ->
+                                val amount = point.amount ?: 0.0
+                                val ratio = if (maxAmount > 0.0) {
+                                    (amount / maxAmount).toFloat().coerceIn(0.08f, 1.0f)
+                                } else {
+                                    0.08f
+                                }
+                                val isCurrent = point.isCurrentDay == true
+                                val rawAbbr = formattedLabels.getOrElse(index) { "" }
+
+                                val displayLabel = if (shouldSkipLabels) {
+                                    if (index % 2 == 0 || index == pointCount - 1) rawAbbr else ""
+                                } else {
+                                    rawAbbr
+                                }
+
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Bottom,
                                     modifier = Modifier
-                                        .width(18.dp)
-                                        .fillMaxHeight(ratio)
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(if (isCurrent) primaryColor else accentColor)
-                                )
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = dayNumber,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 10.sp
-                                )
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(60.dp),
+                                        contentAlignment = Alignment.BottomCenter
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .width(18.dp)
+                                                .height((60.dp * ratio).coerceAtLeast(6.dp))
+                                                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 2.dp, bottomEnd = 2.dp))
+                                                .background(if (isCurrent) primaryColor else accentColor)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = displayLabel,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = if (isCurrent) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
+                                        fontSize = 11.sp,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Clip
+                                    )
+                                }
                             }
                         }
                     }
@@ -833,7 +906,9 @@ fun DashboardHomeContent(
                     text = "$weekDateRangeTag · Daily sales in ₹",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 10.sp
+                    fontSize = 10.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -1088,9 +1163,85 @@ private fun SparkleIcon(primaryColor: Color) {
     }
 }
 
+/**
+ * Abbreviates chart labels from the data (e.g., "Monday" -> "Mon", "05 November" -> "5 Nov", "2026-11-05" -> "5 Nov").
+ * Does not hardcode dates; formats dynamically from backend data.
+ */
+private fun formatChartDayLabel(rawLabel: String?, rawDate: String?): String {
+    val text = rawLabel?.trim().orEmpty()
+    if (text.isNotEmpty()) {
+        val lower = text.lowercase(Locale.ENGLISH)
+        val dayOfWeekMap = mapOf(
+            "monday" to "Mon", "tuesday" to "Tue", "wednesday" to "Wed",
+            "thursday" to "Thu", "friday" to "Fri", "saturday" to "Sat", "sunday" to "Sun",
+            "mon" to "Mon", "tue" to "Tue", "wed" to "Wed",
+            "thu" to "Thu", "fri" to "Fri", "sat" to "Sat", "sun" to "Sun"
+        )
+        dayOfWeekMap[lower]?.let { return it }
+
+        val monthMap = mapOf(
+            "january" to "Jan", "february" to "Feb", "march" to "Mar", "april" to "Apr",
+            "may" to "May", "june" to "Jun", "july" to "Jul", "august" to "Aug",
+            "september" to "Sep", "october" to "Oct", "november" to "Nov", "december" to "Dec",
+            "jan" to "Jan", "feb" to "Feb", "mar" to "Mar", "apr" to "Apr",
+            "jun" to "Jun", "jul" to "Jul", "aug" to "Aug", "sep" to "Sep",
+            "oct" to "Oct", "nov" to "Nov", "dec" to "Dec"
+        )
+
+        val parts = text.split("\\s+".toRegex())
+        if (parts.size >= 2) {
+            val p0 = parts[0]
+            val p1 = parts[1]
+            val p0Num = p0.toIntOrNull()
+            val p1Num = p1.toIntOrNull()
+            val m0 = monthMap[p0.lowercase(Locale.ENGLISH)]
+            val m1 = monthMap[p1.lowercase(Locale.ENGLISH)]
+
+            if (p0Num != null && m1 != null) {
+                return "$p0Num $m1"
+            } else if (p1Num != null && m0 != null) {
+                return "$p1Num $m0"
+            }
+        }
+
+        if (text.length <= 6) {
+            return text
+        }
+    }
+
+    // Fallback: parse rawDate (e.g. "2026-11-05")
+    if (!rawDate.isNullOrBlank()) {
+        try {
+            val dateParts = rawDate.trim().split("-")
+            if (dateParts.size == 3) {
+                val day = dateParts[2].toIntOrNull()
+                val monthIdx = dateParts[1].toIntOrNull()
+                val months = arrayOf("", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+                if (day != null && monthIdx != null && monthIdx in 1..12) {
+                    return "$day ${months[monthIdx]}"
+                }
+            }
+        } catch (_: Throwable) {}
+    }
+
+    return text.take(6)
+}
+
 @Preview(showBackground = true)
 @Composable
 fun DashboardHomeScreenPreview() {
+    StockSenseTheme {
+        DashboardHomeContent(
+            data = DashboardSummaryData(),
+            unreadCount = 2,
+            lastUpdatedText = "30 Oct, 1:30 pm"
+        )
+    }
+}
+
+@Preview(name = "Small Screen 360dp Large Font", showBackground = true, widthDp = 360, fontScale = 1.3f)
+@Composable
+fun DashboardHomeScreenSmallDevicePreview() {
     StockSenseTheme {
         DashboardHomeContent(
             data = DashboardSummaryData(),

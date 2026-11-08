@@ -13,7 +13,10 @@ val BorderGray = Color(0xFFDEE6E0)
 val InkPrimary = Color(0xFF172D25)
 val InkSecondary = Color(0xFF66766E)
 val Amber700 = Color(0xFF98621A)      // warning text
+val Amber800 = Color(0xFF8A5A12)      // high-contrast warning text (contrast >= 4.5:1 on light amber #FDE9C8)
+val Amber900 = Color(0xFF78350F)      // dark amber text for maximum contrast on amber chips/cards (contrast >= 7:1)
 val Amber50 = Color(0xFFFFF3DE)       // warning background
+val Amber100 = Color(0xFFFDE9C8)      // light amber chip background
 val Neutral100 = Color(0xFFEDF1ED)    // badge background
 
 // Dark Colors

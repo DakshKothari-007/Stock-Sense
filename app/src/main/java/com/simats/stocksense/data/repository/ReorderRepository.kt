@@ -21,8 +21,8 @@ class ReorderRepository(
     suspend fun fetchRecommendations(
         priority: String? = null,
         category: String? = null,
-        page: Int = 1,
-        limit: Int = 20
+        page: Int? = null,
+        limit: Int? = null
     ): Result<ReorderListData> = withContext(Dispatchers.IO) {
         try {
             val response = apiService.getReorderList(
