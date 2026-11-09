@@ -6,6 +6,7 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 /**
  * Utility for Indian numbering system formatting and date formatting.
@@ -75,6 +76,60 @@ object NumberFormatUtil {
             sdf.format(date).lowercase(Locale.ENGLISH)
         } catch (e: Exception) {
             ""
+        }
+    }
+
+    /**
+     * Formats product last-updated date from backend data (e.g. "Mon, 9 Nov 2026").
+     * Uses device timezone / IST (Asia/Kolkata) and never hardcodes dates.
+     */
+    fun formatProductDetailLastUpdated(rawDateStr: String?): String {
+        val istZone = TimeZone.getTimeZone("Asia/Kolkata")
+        val outFormat = SimpleDateFormat("EEE, d MMM yyyy", Locale.ENGLISH).apply {
+            timeZone = istZone
+        }
+
+        if (!rawDateStr.isNullOrBlank()) {
+            val patterns = listOf(
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd"
+            )
+            for (pattern in patterns) {
+                try {
+                    val parser = SimpleDateFormat(pattern, Locale.ENGLISH).apply {
+                        timeZone = istZone
+                    }
+                    val parsed = parser.parse(rawDateStr.trim())
+                    if (parsed != null) {
+                        return outFormat.format(parsed)
+                    }
+                } catch (_: Exception) { }
+            }
+        }
+
+        return outFormat.format(Date())
+    }
+
+    /**
+     * Formats compact currency for chart y-axis (e.g. ₹1k, ₹2k, ₹500, ₹0).
+     */
+    fun formatCompactRupees(amount: Double): String {
+        if (amount <= 0.0) return "₹0"
+        return when {
+            amount >= 100_000.0 -> {
+                val l = amount / 100_000.0
+                if (l >= 10.0 || amount % 100_000.0 == 0.0) "₹%.0fL".format(Locale.US, l)
+                else "₹%.1fL".format(Locale.US, l)
+            }
+            amount >= 1_000.0 -> {
+                val k = amount / 1_000.0
+                if (k >= 10.0 || amount % 1_000.0 == 0.0) "₹%.0fk".format(Locale.US, k)
+                else "₹%.1fk".format(Locale.US, k)
+            }
+            else -> "₹%.0f".format(Locale.US, amount)
         }
     }
 }

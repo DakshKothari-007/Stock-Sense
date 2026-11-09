@@ -122,6 +122,8 @@ data class ProductDetailData(
     @SerializedName("suggested_reorder_units") val suggestedReorderUnits: Int? = null,
     @SerializedName("on_order_units") val onOrderUnits: Int? = null,
     @SerializedName("estimatedCost") val estimatedCost: Any? = null,
+    @SerializedName("created_at") val createdAt: String? = null,
+    @SerializedName("updated_at") val updatedAt: String? = null,
     @SerializedName("product") val product: ProductDetailData? = null
 )
 

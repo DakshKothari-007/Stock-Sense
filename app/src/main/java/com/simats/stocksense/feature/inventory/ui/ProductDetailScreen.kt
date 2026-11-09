@@ -20,11 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,8 +37,10 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.*
+import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.feature.inventory.viewmodel.ProductDetailUiState
 import com.simats.stocksense.feature.inventory.viewmodel.ProductDetailViewModel
+import java.util.Locale
 
 @Composable
 fun ProductDetailScreen(
@@ -345,14 +349,24 @@ fun ProductDetailScreenContent(
                                         fontSize = 13.sp
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
+                                    val statusText = uiState.product.status?.takeIf { it.isNotBlank() } ?: "In stock"
+                                    val isLowStock = statusText.contains("low", ignoreCase = true)
+                                    val isOutOfStock = statusText.contains("out of stock", ignoreCase = true)
+
+                                    val (chipBg, chipTextColor) = when {
+                                        isOutOfStock -> Color(0xFFFFEBEE) to Color(0xFFB71C1C)
+                                        isLowStock -> Amber100 to Amber900
+                                        else -> Green50 to Green700
+                                    }
+
                                     Surface(
                                         shape = RoundedCornerShape(8.dp),
-                                        color = Amber50
+                                        color = chipBg
                                     ) {
                                         Text(
-                                            text = uiState.product.status ?: "In stock",
+                                            text = statusText,
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = Amber700,
+                                            color = chipTextColor,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 11.sp,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
@@ -475,59 +489,216 @@ fun ProductDetailScreenContent(
 
                                 Spacer(modifier = Modifier.height(16.dp))
 
-                                if (!uiState.has7DaySales || uiState.salesHistory.isEmpty()) {
+                                val chartPoints = if (uiState.salesHistory.size > 7) {
+                                    uiState.salesHistory.takeLast(7)
+                                } else {
+                                    uiState.salesHistory
+                                }
+
+                                val hasSalesData = uiState.has7DaySales && chartPoints.isNotEmpty() && chartPoints.any { it.unitsSold > 0 || it.revenue > 0.0 }
+
+                                if (!hasSalesData) {
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .height(85.dp),
+                                            .height(100.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
-                                            text = "No sales in the last 7 days",
+                                            text = "No sales yet",
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontSize = 13.sp
                                         )
                                     }
                                 } else {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(85.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.Bottom
-                                    ) {
-                                        uiState.salesHistory.forEachIndexed { index, point ->
-                                            val isLast = point.isToday || index == uiState.salesHistory.lastIndex
-                                            val ratio = point.heightRatio.coerceIn(0.18f, 1.0f)
+                                    val unitPrice = uiState.product.rawPrice.takeIf { it > 0.0 } ?: 1.0
+                                    val maxDailyRevenue = chartPoints.maxOfOrNull {
+                                        if (it.revenue > 0.0) it.revenue else (it.unitsSold * unitPrice)
+                                    } ?: 0.0
+
+                                    val ceilingY = calculateChartYCeiling(maxDailyRevenue)
+                                    val topYLabel = NumberFormatUtil.formatCompactRupees(ceilingY)
+                                    val midYLabel = NumberFormatUtil.formatCompactRupees(ceilingY / 2.0)
+                                    val zeroYLabel = "₹0"
+
+                                    val formattedLabels = remember(chartPoints) {
+                                        chartPoints.map { point ->
+                                            formatChartDayLabel(point.dayLabel, point.date)
+                                        }
+                                    }
+
+                                    Column(modifier = Modifier.fillMaxWidth()) {
+                                        // Y-Axis + Bars
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(96.dp)
+                                        ) {
+                                            // Y-Axis Labels Column
                                             Column(
-                                                horizontalAlignment = Alignment.CenterHorizontally,
-                                                verticalArrangement = Arrangement.Bottom,
-                                                modifier = Modifier.weight(1f)
+                                                modifier = Modifier
+                                                    .width(42.dp)
+                                                    .fillMaxHeight(),
+                                                verticalArrangement = Arrangement.SpaceBetween,
+                                                horizontalAlignment = Alignment.End
                                             ) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .width(18.dp)
-                                                        .fillMaxHeight(ratio)
-                                                        .clip(RoundedCornerShape(4.dp))
-                                                        .background(if (isLast) primaryColor else accentColor)
-                                                )
-                                                Spacer(modifier = Modifier.height(6.dp))
                                                 Text(
-                                                    text = point.dayNumber.ifEmpty { (index + 1).toString() },
-                                                    style = MaterialTheme.typography.bodySmall,
+                                                    text = topYLabel,
+                                                    style = MaterialTheme.typography.labelSmall,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    fontSize = 10.sp
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    maxLines = 1,
+                                                    softWrap = false,
+                                                    textAlign = TextAlign.End
                                                 )
+                                                Text(
+                                                    text = midYLabel,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    maxLines = 1,
+                                                    softWrap = false,
+                                                    textAlign = TextAlign.End
+                                                )
+                                                Text(
+                                                    text = zeroYLabel,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    maxLines = 1,
+                                                    softWrap = false,
+                                                    textAlign = TextAlign.End
+                                                )
+                                            }
+
+                                            Spacer(modifier = Modifier.width(8.dp))
+
+                                            // Bars with horizontal gridlines
+                                            Box(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .fillMaxHeight()
+                                            ) {
+                                                val gridColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                                Canvas(modifier = Modifier.fillMaxSize()) {
+                                                    val strokeW = 0.8.dp.toPx()
+                                                    // Top line
+                                                    drawLine(
+                                                        color = gridColor,
+                                                        start = Offset(0f, 6.dp.toPx()),
+                                                        end = Offset(size.width, 6.dp.toPx()),
+                                                        strokeWidth = strokeW
+                                                    )
+                                                    // Mid line
+                                                    drawLine(
+                                                        color = gridColor,
+                                                        start = Offset(0f, size.height / 2f),
+                                                        end = Offset(size.width, size.height / 2f),
+                                                        strokeWidth = strokeW
+                                                    )
+                                                    // Baseline
+                                                    drawLine(
+                                                        color = gridColor,
+                                                        start = Offset(0f, size.height - 1.dp.toPx()),
+                                                        end = Offset(size.width, size.height - 1.dp.toPx()),
+                                                        strokeWidth = strokeW
+                                                    )
+                                                }
+
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .padding(bottom = 2.dp),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.Bottom
+                                                ) {
+                                                    chartPoints.forEachIndexed { index, point ->
+                                                        val isLast = point.isToday || index == chartPoints.lastIndex
+                                                        val dayRev = if (point.revenue > 0.0) point.revenue else (point.unitsSold * unitPrice)
+                                                        val ratio = if (ceilingY > 0.0) {
+                                                            (dayRev / ceilingY).toFloat().coerceIn(if (dayRev > 0.0) 0.08f else 0.02f, 1.0f)
+                                                        } else {
+                                                            0.02f
+                                                        }
+
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .weight(1f)
+                                                                .fillMaxHeight(),
+                                                            contentAlignment = Alignment.BottomCenter
+                                                        ) {
+                                                            Box(
+                                                                modifier = Modifier
+                                                                    .width(18.dp)
+                                                                    .fillMaxHeight(ratio)
+                                                                    .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                                                    .background(if (isLast) primaryColor else accentColor)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(6.dp))
+
+                                        // X-Axis Labels Row (Aligned with bars)
+                                        Row(modifier = Modifier.fillMaxWidth()) {
+                                            Spacer(modifier = Modifier.width(50.dp)) // 42.dp y-axis + 8.dp spacer
+
+                                            BoxWithConstraints(modifier = Modifier.weight(1f)) {
+                                                val availableWidth = maxWidth
+                                                val pointCount = chartPoints.size
+                                                val columnWidth = if (pointCount > 0) availableWidth / pointCount else availableWidth
+
+                                                // Dynamic overlap prevention: 360dp screens and large font scales
+                                                val fontScale = LocalDensity.current.fontScale
+                                                val hasLongLabels = formattedLabels.any { it.length > 3 }
+                                                val shouldSkipLabels = (columnWidth < 45.dp && hasLongLabels) || columnWidth < 36.dp || fontScale > 1.05f || pointCount > 7
+
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    chartPoints.forEachIndexed { index, point ->
+                                                        val rawAbbr = formattedLabels.getOrElse(index) { "" }
+                                                        val displayLabel = if (shouldSkipLabels) {
+                                                            val step = if (pointCount > 7) ((pointCount + 5) / 6).coerceAtLeast(2) else 2
+                                                            if (index % step == 0 || index == pointCount - 1) rawAbbr else ""
+                                                        } else {
+                                                            rawAbbr
+                                                        }
+
+                                                        Box(
+                                                            modifier = Modifier.weight(1f),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Text(
+                                                                text = displayLabel,
+                                                                style = MaterialTheme.typography.bodySmall,
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                fontSize = 10.sp,
+                                                                maxLines = 1,
+                                                                softWrap = false,
+                                                                textAlign = TextAlign.Center
+                                                            )
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(10.dp))
 
                                 Text(
-                                    text = "Daily units sold · Tap for detailed analytics",
+                                    text = "Daily sales · Tap for detailed analytics",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 10.sp
@@ -711,10 +882,109 @@ fun ProductDetailScreenContent(
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // 8. Footer Date (Formatted as "Mon, 9 Nov 2026", device timezone / IST, never hardcoded)
+                    val footerDate = uiState.lastUpdatedDateText.ifBlank {
+                        NumberFormatUtil.formatProductDetailLastUpdated(null)
+                    }
+                    Text(
+                        text = "Last updated · $footerDate",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp)
+                    )
                 }
             }
         }
     }
+}
+
+/**
+ * Calculates a clean, rounded ceiling value for chart y-axis (e.g. 50, 100, 500, 1000, 2000, 5000).
+ */
+private fun calculateChartYCeiling(maxVal: Double): Double {
+    if (maxVal <= 0.0) return 100.0
+    return when {
+        maxVal <= 20.0 -> 20.0
+        maxVal <= 50.0 -> 50.0
+        maxVal <= 100.0 -> 100.0
+        maxVal <= 200.0 -> 200.0
+        maxVal <= 500.0 -> 500.0
+        maxVal <= 1000.0 -> 1000.0
+        maxVal <= 2000.0 -> 2000.0
+        maxVal <= 3000.0 -> 3000.0
+        maxVal <= 5000.0 -> 5000.0
+        maxVal <= 10000.0 -> 10000.0
+        maxVal <= 20000.0 -> 20000.0
+        maxVal <= 50000.0 -> 50000.0
+        else -> {
+            val magnitude = Math.pow(10.0, Math.floor(Math.log10(maxVal)))
+            val normalized = maxVal / magnitude
+            val roundedNormalized = when {
+                normalized <= 1.0 -> 1.0
+                normalized <= 2.0 -> 2.0
+                normalized <= 5.0 -> 5.0
+                else -> 10.0
+            }
+            roundedNormalized * magnitude
+        }
+    }
+}
+
+/**
+ * Abbreviates chart labels from backend data dates into short format (e.g. "5 Nov").
+ */
+private fun formatChartDayLabel(rawLabel: String?, rawDate: String?): String {
+    val text = rawLabel?.trim().orEmpty()
+    if (text.isNotEmpty()) {
+        val monthMap = mapOf(
+            "january" to "Jan", "february" to "Feb", "march" to "Mar", "april" to "Apr",
+            "may" to "May", "june" to "Jun", "july" to "Jul", "august" to "Aug",
+            "september" to "Sep", "october" to "Oct", "november" to "Nov", "december" to "Dec",
+            "jan" to "Jan", "feb" to "Feb", "mar" to "Mar", "apr" to "Apr",
+            "jun" to "Jun", "jul" to "Jul", "aug" to "Aug", "sep" to "Sep",
+            "oct" to "Oct", "nov" to "Nov", "dec" to "Dec"
+        )
+
+        val parts = text.split("\\s+".toRegex())
+        if (parts.size >= 2) {
+            val p0Num = parts[0].toIntOrNull()
+            val p1Num = parts[1].toIntOrNull()
+            val m0 = monthMap[parts[0].lowercase(Locale.ENGLISH)]
+            val m1 = monthMap[parts[1].lowercase(Locale.ENGLISH)]
+
+            if (p0Num != null && m1 != null) {
+                return "$p0Num $m1"
+            } else if (p1Num != null && m0 != null) {
+                return "$p1Num $m0"
+            }
+        }
+        if (text.matches(Regex("\\d+\\s+[A-Za-z]+"))) {
+            return text
+        }
+    }
+
+    if (!rawDate.isNullOrBlank()) {
+        try {
+            val parts = rawDate.trim().split("-")
+            if (parts.size == 3) {
+                val day = parts[2].toIntOrNull()
+                val monthIdx = parts[1].toIntOrNull()
+                val months = arrayOf("", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+                if (day != null && monthIdx != null && monthIdx in 1..12) {
+                    return "$day ${months[monthIdx]}"
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
+    return text.take(6)
 }
 
 @Preview(showBackground = true)
@@ -722,7 +992,9 @@ fun ProductDetailScreenContent(
 fun ProductDetailScreenPreview() {
     StockSenseTheme {
         ProductDetailScreenContent(
-            uiState = ProductDetailUiState()
+            uiState = ProductDetailUiState(
+                lastUpdatedDateText = "Mon, 9 Nov 2026"
+            )
         )
     }
 }

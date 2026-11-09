@@ -21,7 +21,9 @@ import kotlinx.coroutines.launch
 data class SalesBarPoint(
     val dayNumber: String = "",
     val dayLabel: String = "",
+    val date: String = "",
     val unitsSold: Int = 0,
+    val revenue: Double = 0.0,
     val heightRatio: Float = 0.0f,
     val isToday: Boolean = false
 )
@@ -46,7 +48,8 @@ data class ProductDetailUiState(
     val lastPlacedOrder: PurchaseOrderDto? = null,
     val salesHistory: List<SalesBarPoint> = emptyList(),
     val has7DaySales: Boolean = false,
-    val total7DayUnits: Int = 0
+    val total7DayUnits: Int = 0,
+    val lastUpdatedDateText: String = ""
 )
 
 /**
@@ -137,19 +140,27 @@ class ProductDetailViewModel(
                     if (historyResult.isSuccess) {
                         val histData = historyResult.getOrNull()
                         if (histData != null) {
-                            has7DaySales = histData.hasSales == true
-                            total7DayUnits = histData.totalUnitsSold ?: 0
-                            salesPoints = (histData.history ?: emptyList()).map { pt ->
+                            val mappedPoints = (histData.history ?: emptyList()).map { pt ->
                                 SalesBarPoint(
                                     dayNumber = pt.dayNumber ?: "",
                                     dayLabel = pt.dayLabel ?: "",
+                                    date = pt.date ?: "",
                                     unitsSold = pt.unitsSold ?: 0,
+                                    revenue = pt.revenue ?: 0.0,
                                     heightRatio = pt.heightRatio ?: 0.0f,
                                     isToday = pt.isToday == true
                                 )
                             }
+                            salesPoints = mappedPoints
+                            total7DayUnits = histData.totalUnitsSold ?: 0
+                            has7DaySales = histData.hasSales == true && mappedPoints.any { it.unitsSold > 0 || it.revenue > 0.0 }
                         }
                     }
+
+                    val rawUpdatedStr = data.updatedAt?.takeIf { it.isNotBlank() }
+                        ?: data.createdAt?.takeIf { it.isNotBlank() }
+                        ?: salesPoints.lastOrNull { it.date.isNotBlank() }?.date
+                    val lastUpdatedDateText = NumberFormatUtil.formatProductDetailLastUpdated(rawUpdatedStr)
 
                     val coverText = when {
                         coverDays != null && coverDays > 0 -> "$coverDays days"
@@ -221,7 +232,8 @@ class ProductDetailViewModel(
                             estimatedCost = estCostFormatted,
                             salesHistory = salesPoints,
                             has7DaySales = has7DaySales,
-                            total7DayUnits = total7DayUnits
+                            total7DayUnits = total7DayUnits,
+                            lastUpdatedDateText = lastUpdatedDateText
                         )
                     }
                 },
