@@ -8,7 +8,8 @@ Powered by the Dukaan Mitra AI assistant and automated spreadsheet ingestion, St
 
 ---
 
-## Features
+##
+Features
 
 - **Authentication & Security**: Owner registration, secure password hashing, 64-character hexadecimal Bearer token session management, password recovery, and profile configuration.
 - **Home Dashboard**: Real-time overview of total inventory valuation, active low-stock alerts, category distribution, daily revenue metrics, and quick operational shortcuts.
