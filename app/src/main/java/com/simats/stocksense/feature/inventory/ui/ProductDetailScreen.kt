@@ -348,6 +348,16 @@ fun ProductDetailScreenContent(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 13.sp
                                     )
+                                    if (uiState.product.sku.isNotBlank() && uiState.product.sku != "—") {
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = "SKU: ${uiState.product.sku}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
                                     Spacer(modifier = Modifier.height(4.dp))
                                     val statusText = uiState.product.status?.takeIf { it.isNotBlank() } ?: "In stock"
                                     val isLowStock = statusText.contains("low", ignoreCase = true)

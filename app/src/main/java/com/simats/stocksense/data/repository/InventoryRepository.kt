@@ -77,11 +77,11 @@ class InventoryRepository(
                     val message = body.message.ifBlank { "Product added to inventory successfully." }
                     Result.success(AddProductResult(message = message, sku = returnedSku))
                 } else {
-                    Result.failure(Exception(body?.message ?: "Failed to add product."))
+                    Result.failure(ApiException(response.code(), body?.message ?: "Failed to add product."))
                 }
             } else {
                 val errorMsg = extractErrorMessage(response.errorBody()?.string(), response.code())
-                Result.failure(Exception(errorMsg))
+                Result.failure(ApiException(response.code(), errorMsg))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -96,11 +96,11 @@ class InventoryRepository(
                 if (body != null && body.status == true) {
                     Result.success(body.message?.ifBlank { "Product updated successfully." } ?: "Product updated successfully.")
                 } else {
-                    Result.failure(Exception(body?.message ?: "Failed to update product."))
+                    Result.failure(ApiException(response.code(), body?.message ?: "Failed to update product."))
                 }
             } else {
                 val errorMsg = extractErrorMessage(response.errorBody()?.string(), response.code())
-                Result.failure(Exception(errorMsg))
+                Result.failure(ApiException(response.code(), errorMsg))
             }
         } catch (e: Exception) {
             Result.failure(e)

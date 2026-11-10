@@ -88,10 +88,41 @@ data class InventoryActionData(
     @SerializedName("sku") val sku: String? = null
 )
 
+/**
+ * DTO for POST /inventory/add_product.php response according to API_DOCUMENT.md Module 3.3.
+ * Captures data.sku returned by the backend (both user-supplied and server-generated SKU).
+ */
+data class AddProductResponse(
+    @SerializedName("status") val status: Boolean = false,
+    @SerializedName("message") val message: String = "",
+    @SerializedName("data") val data: AddProductData? = null
+)
+
+data class AddProductData(
+    @SerializedName("id") val id: Any? = null,
+    @SerializedName("name") val name: String? = null,
+    @SerializedName("sku") val sku: String? = null,
+    @SerializedName("category") val category: String? = null,
+    @SerializedName("description") val description: String? = null,
+    @SerializedName("price") val price: Any? = null,
+    @SerializedName("raw_price") val rawPrice: Double? = null,
+    @SerializedName("cost_price") val costPrice: Any? = null,
+    @SerializedName("raw_cost_price") val rawCostPrice: Double? = null,
+    @SerializedName("units") val units: Any? = null,
+    @SerializedName("min_stock_threshold") val minStockThreshold: Int? = null,
+    @SerializedName("status") val status: String? = null,
+    @SerializedName("iconType") val iconType: Int? = null
+)
+
 data class AddProductResult(
     val message: String = "",
     val sku: String? = null
 )
+
+/**
+ * Exception carrying the HTTP status code (e.g. 409 Conflict) and message for clean UI handling.
+ */
+class ApiException(val code: Int, message: String) : Exception(message)
 
 data class ProductDetailResponse(
     @SerializedName("status") val status: Boolean? = false,

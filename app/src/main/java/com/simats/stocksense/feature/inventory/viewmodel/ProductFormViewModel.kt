@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.simats.stocksense.core.network.NetworkClient
 import com.simats.stocksense.core.network.SessionManager
 import com.simats.stocksense.data.model.AddProductRequest
+import com.simats.stocksense.data.model.ApiException
 import com.simats.stocksense.data.model.UpdateProductRequest
 import com.simats.stocksense.data.repository.InventoryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -310,8 +311,8 @@ class ProductFormViewModel(
             val parsedMinStock = state.minStock.toIntOrNull() ?: 10
 
             if (!state.isEditMode) {
-                // New Product: leave sku empty/null if user left it blank so server auto-generates stable unique SKU
-                val userSku = state.sku.trim().uppercase().takeIf { it.isNotBlank() }
+                // When adding a product, send SKU empty if the user did not type one. Do not send a fake or local one.
+                val userSku = state.sku.trim()
 
                 val request = AddProductRequest(
                     name = state.name.trim(),
@@ -326,18 +327,25 @@ class ProductFormViewModel(
                 val result = repository.addProduct(request)
                 result.fold(
                     onSuccess = { res ->
-                        val finalSku = res.sku ?: userSku ?: ""
+                        val finalSku = res.sku?.takeIf { it.isNotBlank() } ?: userSku
                         _uiState.update { it.copy(isSaving = false, sku = finalSku) }
-                        onSuccess(finalSku, res.message)
+                        val successMessage = if (finalSku.isNotBlank()) {
+                            "Product added. SKU: $finalSku"
+                        } else {
+                            res.message.ifBlank { "Product added." }
+                        }
+                        onSuccess(finalSku, successMessage)
                     },
                     onFailure = { err ->
-                        handleSaveError(err.message ?: "Failed to create product.")
+                        val code = (err as? ApiException)?.code
+                        val errMsg = err.message ?: "Failed to create product."
+                        handleSaveError(errMsg, code)
                     }
                 )
             } else {
-                // Edit Product
+                // Edit Product: show the SKU, do not regenerate it
                 val newSku = if (state.sku.trim().isNotBlank() && !state.sku.trim().equals(state.originalSku.trim(), ignoreCase = true)) {
-                    state.sku.trim().uppercase()
+                    state.sku.trim()
                 } else null
 
                 val request = UpdateProductRequest(
@@ -359,7 +367,9 @@ class ProductFormViewModel(
                         onSuccess(newSku ?: state.sku, msg)
                     },
                     onFailure = { err ->
-                        handleSaveError(err.message ?: "Failed to update product.")
+                        val code = (err as? ApiException)?.code
+                        val errMsg = err.message ?: "Failed to update product."
+                        handleSaveError(errMsg, code)
                     }
                 )
             }
@@ -400,15 +410,23 @@ class ProductFormViewModel(
         }
     }
 
-    private fun handleSaveError(errMsg: String) {
-        val is401 = errMsg.contains("401", ignoreCase = true) || errMsg.contains("unauthorized", ignoreCase = true)
+    private fun handleSaveError(errMsg: String, statusCode: Int? = null) {
+        val is401 = statusCode == 401 || errMsg.contains("401", ignoreCase = true) || errMsg.contains("unauthorized", ignoreCase = true)
         if (is401) {
             _uiState.update { it.copy(isSaving = false, isSessionExpired = true) }
             return
         }
 
-        if (errMsg.contains("SKU", ignoreCase = true) || errMsg.contains("already exists", ignoreCase = true) || errMsg.contains("assigned", ignoreCase = true)) {
-            _uiState.update { it.copy(isSaving = false, skuError = errMsg, bannerError = null) }
+        // On 409 or duplicate SKU error, show exact server message under SKU field and keep other fields filled
+        val is409 = statusCode == 409 || errMsg.contains("already exists", ignoreCase = true) || errMsg.contains("SKU", ignoreCase = true)
+        if (is409) {
+            _uiState.update { current ->
+                current.copy(
+                    isSaving = false,
+                    skuError = errMsg,
+                    bannerError = null
+                )
+            }
         } else if (errMsg.contains("name", ignoreCase = true)) {
             _uiState.update { it.copy(isSaving = false, nameError = errMsg, bannerError = null) }
         } else {

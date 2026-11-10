@@ -67,9 +67,9 @@ fun AddProductScreen(
         onSaveClick = {
             viewModel.saveProduct { returnedSku, msg ->
                 val displayMsg = if (returnedSku.isNotBlank()) {
-                    "Product created with SKU: $returnedSku"
+                    "Product added. SKU: $returnedSku"
                 } else {
-                    msg
+                    msg.ifBlank { "Product added." }
                 }
                 Toast.makeText(context, displayMsg, Toast.LENGTH_SHORT).show()
                 onSuccess()
@@ -230,10 +230,10 @@ fun AddProductScreenContent(
                     )
                 }
 
-                // 2. SKU or barcode
+                // 2. SKU (optional) - Server auto-generates if omitted or empty
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
-                        text = "SKU or barcode",
+                        text = "SKU (optional)",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onBackground,
@@ -245,7 +245,7 @@ fun AddProductScreenContent(
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = {
                             Text(
-                                text = "Leave empty to create one",
+                                text = "Leave empty to auto-generate",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                 fontSize = 14.sp
                             )
@@ -253,8 +253,20 @@ fun AddProductScreenContent(
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true,
                         isError = uiState.skuError != null,
-                        supportingText = uiState.skuError?.let {
-                            { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 11.sp) }
+                        supportingText = {
+                            if (uiState.skuError != null) {
+                                Text(
+                                    text = uiState.skuError,
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontSize = 11.sp
+                                )
+                            } else {
+                                Text(
+                                    text = "Leave empty to auto-generate",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 11.sp
+                                )
+                            }
                         },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = MaterialTheme.colorScheme.surface,

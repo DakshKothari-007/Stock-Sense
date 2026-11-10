@@ -30,7 +30,7 @@ interface InventoryApiService {
     @POST("inventory/add_product.php")
     suspend fun addProduct(
         @Body request: AddProductRequest
-    ): Response<InventoryActionResponse>
+    ): Response<AddProductResponse>
 
     @POST("inventory/update_product.php")
     suspend fun updateProduct(

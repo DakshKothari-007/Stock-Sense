@@ -241,7 +241,8 @@ class InventoryViewModel(
             result.fold(
                 onSuccess = { res ->
                     refresh()
-                    onResult(true, res.message)
+                    val displayMsg = if (!res.sku.isNullOrBlank()) "Product added. SKU: ${res.sku}" else res.message
+                    onResult(true, displayMsg)
                 },
                 onFailure = { err ->
                     onResult(false, err.message ?: "Failed to add product.")

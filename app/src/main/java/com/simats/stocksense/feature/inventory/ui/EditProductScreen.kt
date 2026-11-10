@@ -253,10 +253,10 @@ fun EditProductScreenContent(
                         )
                     }
 
-                    // 2. SKU or barcode
+                    // 2. SKU (Displays existing SKU, does not regenerate)
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            text = "SKU or barcode",
+                            text = "SKU",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onBackground,
@@ -268,7 +268,7 @@ fun EditProductScreenContent(
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = {
                                 Text(
-                                    text = "SKU or barcode",
+                                    text = "SKU",
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                     fontSize = 14.sp
                                 )
