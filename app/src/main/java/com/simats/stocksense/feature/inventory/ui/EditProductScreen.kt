@@ -67,6 +67,7 @@ fun EditProductScreen(
         onStockChange = { viewModel.updateStock(it) },
         onMinStockChange = { viewModel.updateMinStock(it) },
         onDismissBanner = { viewModel.clearBannerError() },
+        onDismissDeleteConflict = { viewModel.clearDeleteConflictMessage() },
         onSaveClick = {
             viewModel.saveProduct { _, msg ->
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
@@ -75,7 +76,8 @@ fun EditProductScreen(
         },
         onDeleteClick = {
             viewModel.deleteProduct { msg ->
-                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                val displayMsg = if (msg.isNotBlank()) msg else "Product deleted"
+                Toast.makeText(context, displayMsg, Toast.LENGTH_SHORT).show()
                 onDeleted()
             }
         }
@@ -95,12 +97,19 @@ fun EditProductScreenContent(
     onStockChange: (String) -> Unit,
     onMinStockChange: (String) -> Unit,
     onDismissBanner: () -> Unit,
+    onDismissDeleteConflict: () -> Unit,
     onSaveClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
     var categoryDropdownExpanded by remember { mutableStateOf(false) }
-    var showDeleteConfirmSheet by remember { mutableStateOf(false) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.deleteConflictMessage) {
+        if (uiState.deleteConflictMessage != null) {
+            showDeleteConfirmDialog = false
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -616,142 +625,156 @@ fun EditProductScreenContent(
 
                     // Button 2: Delete product
                     OutlinedButton(
-                        onClick = { showDeleteConfirmSheet = true },
+                        onClick = { showDeleteConfirmDialog = true },
                         enabled = !uiState.isSaving && !uiState.isDeleting,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
                         shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.dp, Color(0xFFF28B82).copy(alpha = 0.5f)),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
                         colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color(0xFFF28B82)
+                            contentColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        Text(
-                            text = "Delete product",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp,
-                            color = Color(0xFFF28B82)
-                        )
+                        if (uiState.isDeleting) {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Deleting...",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        } else {
+                            Text(
+                                text = "Delete product",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
             }
         }
     }
 
-    // Screen 7: Delete Product Confirmation Bottom Sheet
-    if (showDeleteConfirmSheet) {
-        ModalBottomSheet(
+    // Confirmation dialog (Requirement 7 & 10)
+    if (showDeleteConfirmDialog) {
+        val productName = uiState.deleteProductName.ifBlank { uiState.name }
+        AlertDialog(
             onDismissRequest = {
                 if (!uiState.isDeleting) {
-                    showDeleteConfirmSheet = false
+                    showDeleteConfirmDialog = false
                 }
             },
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            containerColor = MaterialTheme.colorScheme.surface,
-            dragHandle = null
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp)
-                    .navigationBarsPadding(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Red Trash Icon in container
-                Box(
-                    modifier = Modifier
-                        .size(46.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF382326)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DeleteOutline,
-                        contentDescription = null,
-                        tint = Color(0xFFF28B82),
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-
-                val titleName = uiState.deleteProductName.ifBlank { uiState.name }
-                val unitsCount = uiState.deleteProductUnits.ifBlank { uiState.stock.ifBlank { "0" } }
-
+            title = {
                 Text(
-                    text = "Delete $titleName?",
+                    text = "Delete product?",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 20.sp
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-
+            },
+            text = {
                 Text(
-                    text = "The product and its $unitsCount units of stock are removed from your shop. A product that already appears in sales bills cannot be deleted.",
+                    text = "This will remove $productName from your inventory. This cannot be undone.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Delete Product Button (Salmon/Red filled button)
+            },
+            confirmButton = {
                 Button(
                     onClick = {
-                        showDeleteConfirmSheet = false
                         onDeleteClick()
                     },
                     enabled = !uiState.isDeleting,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFF28B82),
-                        contentColor = Color(0xFF1A1A1A)
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
                     )
                 ) {
                     if (uiState.isDeleting) {
                         CircularProgressIndicator(
-                            color = Color(0xFF1A1A1A),
-                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onError,
+                            modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Deleting...",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
                         )
                     } else {
                         Text(
-                            text = "Delete product",
+                            text = "Delete",
                             style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            color = Color(0xFF1A1A1A)
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteConfirmDialog = false },
+                    enabled = !uiState.isDeleting
+                ) {
+                    Text(
+                        text = "Cancel",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
 
-                // Keep Product Button (Dark surface/container button)
+    // 409 Conflict Dialog (Requirement 9)
+    if (uiState.deleteConflictMessage != null) {
+        AlertDialog(
+            onDismissRequest = onDismissDeleteConflict,
+            title = {
+                Text(
+                    text = "Cannot delete product",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Text(
+                    text = uiState.deleteConflictMessage,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
                 Button(
-                    onClick = { showDeleteConfirmSheet = false },
-                    enabled = !uiState.isDeleting,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(14.dp),
+                    onClick = onDismissDeleteConflict,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurface
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Text(
-                        text = "Keep product",
+                        text = "OK",
                         style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.onSurface
+                        fontWeight = FontWeight.Bold
                     )
                 }
-            }
-        }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(16.dp)
+        )
     }
 }
 

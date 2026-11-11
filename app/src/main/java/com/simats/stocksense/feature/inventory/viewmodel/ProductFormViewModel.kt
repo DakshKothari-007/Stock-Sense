@@ -49,9 +49,10 @@ data class ProductFormUiState(
     val bannerError: String? = null,
     val isSessionExpired: Boolean = false,
 
-    // Dynamic product info for delete confirmation bottom sheet
+    // Dynamic product info for delete confirmation dialog
     val deleteProductName: String = "",
-    val deleteProductUnits: String = "0"
+    val deleteProductUnits: String = "0",
+    val deleteConflictMessage: String? = null
 )
 
 /**
@@ -234,6 +235,10 @@ class ProductFormViewModel(
         _uiState.update { it.copy(bannerError = null) }
     }
 
+    fun clearDeleteConflictMessage() {
+        _uiState.update { it.copy(deleteConflictMessage = null) }
+    }
+
     /**
      * Validates form inputs before dispatching save request to backend.
      */
@@ -378,12 +383,12 @@ class ProductFormViewModel(
 
     /**
      * Deletes the product via delete_product.php.
-     * If product is linked to sales, the backend 400 Bad Request message is displayed
-     * and the product is preserved without navigating away.
+     * If product has sales history or is in an open purchase order, the backend 409 Conflict message is displayed
+     * in a dialog and the product is preserved without navigating away.
      */
     fun deleteProduct(onSuccess: (String) -> Unit) {
         val state = _uiState.value
-        _uiState.update { it.copy(isDeleting = true, bannerError = null) }
+        _uiState.update { it.copy(isDeleting = true, bannerError = null, deleteConflictMessage = null) }
 
         viewModelScope.launch {
             val result = repository.deleteProduct(
@@ -393,15 +398,19 @@ class ProductFormViewModel(
             result.fold(
                 onSuccess = { msg ->
                     _uiState.update { it.copy(isDeleting = false) }
-                    onSuccess(msg)
+                    val displayMsg = if (msg.isNotBlank()) msg else "Product deleted"
+                    onSuccess(displayMsg)
                 },
                 onFailure = { err ->
+                    val code = (err as? ApiException)?.code
                     val errMsg = err.message ?: "Failed to delete product."
-                    val is401 = errMsg.contains("401", ignoreCase = true) || errMsg.contains("unauthorized", ignoreCase = true)
+                    val is401 = code == 401 || errMsg.contains("401", ignoreCase = true) || errMsg.contains("unauthorized", ignoreCase = true)
+                    val is409 = code == 409 || errMsg.contains("sales history", ignoreCase = true) || errMsg.contains("purchase order", ignoreCase = true)
                     _uiState.update {
                         it.copy(
                             isDeleting = false,
-                            bannerError = errMsg,
+                            bannerError = if (is409) null else errMsg,
+                            deleteConflictMessage = if (is409) errMsg else null,
                             isSessionExpired = is401
                         )
                     }

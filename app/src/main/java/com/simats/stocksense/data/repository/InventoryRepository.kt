@@ -113,13 +113,13 @@ class InventoryRepository(
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.status == true) {
-                    Result.success(body.message?.ifBlank { "Product deleted successfully." } ?: "Product deleted successfully.")
+                    Result.success(body.message?.ifBlank { "Product deleted." } ?: "Product deleted.")
                 } else {
-                    Result.failure(Exception(body?.message ?: "Failed to delete product."))
+                    Result.failure(ApiException(response.code(), body?.message ?: "Failed to delete product."))
                 }
             } else {
                 val errorMsg = extractErrorMessage(response.errorBody()?.string(), response.code())
-                Result.failure(Exception(errorMsg))
+                Result.failure(ApiException(response.code(), errorMsg))
             }
         } catch (e: Exception) {
             Result.failure(e)
