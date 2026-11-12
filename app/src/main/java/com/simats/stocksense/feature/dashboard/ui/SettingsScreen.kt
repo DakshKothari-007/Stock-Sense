@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,6 +31,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.simats.stocksense.core.theme.Amber100
+import com.simats.stocksense.core.theme.Amber900
+import com.simats.stocksense.core.theme.DarkAmber50
+import com.simats.stocksense.core.theme.DarkAmber700
+import com.simats.stocksense.core.theme.DarkSurface
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.theme.ThemeMode
 import com.simats.stocksense.core.theme.ThemeState
@@ -430,13 +437,16 @@ fun SettingsScreen(
 
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
 
-                            // Toggle 4: Weekly email digest
+                            // Toggle 4: Weekly email digest (Disabled: backend has no email sender yet)
                             TogglePreferenceRow(
                                 title = "Weekly email digest",
-                                subtitle = "A weekly overview sent to your email",
-                                checked = notifications?.weeklyEmailDigest ?: false,
-                                onCheckedChange = { viewModel.updateNotificationSetting("weekly_email_digest", it) },
-                                primaryColor = primaryColor
+                                subtitle = "Weekly summary by email. Available in a future update.",
+                                checked = false,
+                                onCheckedChange = null,
+                                primaryColor = primaryColor,
+                                enabled = false,
+                                badgeText = "Coming soon",
+                                accessibilityDescription = "Weekly email digest, coming soon, unavailable"
                             )
                         }
                     }
@@ -548,33 +558,74 @@ fun SettingsScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TogglePreferenceRow(
     title: String,
     subtitle: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    primaryColor: Color
+    onCheckedChange: ((Boolean) -> Unit)?,
+    primaryColor: Color,
+    enabled: Boolean = true,
+    badgeText: String? = null,
+    accessibilityDescription: String? = null
 ) {
+    val rowModifier = Modifier
+        .fillMaxWidth()
+        .then(
+            if (accessibilityDescription != null) {
+                Modifier.semantics(mergeDescendants = true) {
+                    contentDescription = accessibilityDescription
+                }
+            } else {
+                Modifier
+            }
+        )
+
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = rowModifier,
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 13.sp
-            )
+            FlowRow(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    fontSize = 13.sp
+                )
+                if (badgeText != null) {
+                    val isDark = MaterialTheme.colorScheme.surface == DarkSurface
+                    val badgeBg = if (isDark) DarkAmber50 else Amber100
+                    val badgeTextCol = if (isDark) DarkAmber700 else Amber900
+
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = badgeBg
+                    ) {
+                        Text(
+                            text = badgeText,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = badgeTextCol,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp
+                fontSize = 11.sp,
+                lineHeight = 15.sp
             )
         }
 
@@ -582,12 +633,15 @@ private fun TogglePreferenceRow(
 
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = if (enabled) onCheckedChange else null,
+            enabled = enabled,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
                 checkedTrackColor = primaryColor,
                 uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = MaterialTheme.colorScheme.outlineVariant
+                uncheckedTrackColor = MaterialTheme.colorScheme.outlineVariant,
+                disabledUncheckedThumbColor = Color.White.copy(alpha = 0.6f),
+                disabledUncheckedTrackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
             )
         )
     }

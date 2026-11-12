@@ -41,7 +41,7 @@ import com.simats.stocksense.feature.inventory.viewmodel.ProductFormViewModel
 fun AddProductScreen(
     viewModel: ProductFormViewModel,
     onBackClick: () -> Unit = {},
-    onSuccess: () -> Unit = {},
+    onSuccess: (returnedSku: String) -> Unit = {},
     onSessionExpired: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -72,7 +72,7 @@ fun AddProductScreen(
                     msg.ifBlank { "Product added." }
                 }
                 Toast.makeText(context, displayMsg, Toast.LENGTH_SHORT).show()
-                onSuccess()
+                onSuccess(returnedSku)
             }
         }
     )
@@ -224,7 +224,9 @@ fun AddProductScreenContent(
                             focusedContainerColor = MaterialTheme.colorScheme.surface,
                             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                             focusedBorderColor = primaryColor,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            errorBorderColor = MaterialTheme.colorScheme.error,
+                            errorSupportingTextColor = MaterialTheme.colorScheme.error
                         ),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                     )
@@ -272,7 +274,9 @@ fun AddProductScreenContent(
                             focusedContainerColor = MaterialTheme.colorScheme.surface,
                             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                             focusedBorderColor = primaryColor,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            errorBorderColor = MaterialTheme.colorScheme.error,
+                            errorSupportingTextColor = MaterialTheme.colorScheme.error
                         ),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                     )

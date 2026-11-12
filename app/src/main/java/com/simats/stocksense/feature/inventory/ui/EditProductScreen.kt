@@ -43,7 +43,7 @@ import com.simats.stocksense.feature.inventory.viewmodel.ProductFormViewModel
 fun EditProductScreen(
     viewModel: ProductFormViewModel,
     onBackClick: () -> Unit = {},
-    onSuccess: () -> Unit = {},
+    onSuccess: (returnedSku: String) -> Unit = {},
     onDeleted: () -> Unit = {},
     onSessionExpired: () -> Unit = {}
 ) {
@@ -69,9 +69,9 @@ fun EditProductScreen(
         onDismissBanner = { viewModel.clearBannerError() },
         onDismissDeleteConflict = { viewModel.clearDeleteConflictMessage() },
         onSaveClick = {
-            viewModel.saveProduct { _, msg ->
+            viewModel.saveProduct { savedSku, msg ->
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                onSuccess()
+                onSuccess(savedSku)
             }
         },
         onDeleteClick = {
@@ -256,7 +256,9 @@ fun EditProductScreenContent(
                                 focusedContainerColor = MaterialTheme.colorScheme.surface,
                                 unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                                 focusedBorderColor = primaryColor,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                                errorBorderColor = MaterialTheme.colorScheme.error,
+                                errorSupportingTextColor = MaterialTheme.colorScheme.error
                             ),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                         )
@@ -292,7 +294,9 @@ fun EditProductScreenContent(
                                 focusedContainerColor = MaterialTheme.colorScheme.surface,
                                 unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                                 focusedBorderColor = primaryColor,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                                errorBorderColor = MaterialTheme.colorScheme.error,
+                                errorSupportingTextColor = MaterialTheme.colorScheme.error
                             ),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                         )

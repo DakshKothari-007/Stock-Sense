@@ -58,6 +58,7 @@ import com.simats.stocksense.feature.inventory.ui.ImportInventoryUploadScreen
 import com.simats.stocksense.feature.inventory.ui.ImportInventoryValidationScreen
 import com.simats.stocksense.feature.inventory.ui.InventoryImportedScreen
 import com.simats.stocksense.feature.inventory.viewmodel.ImportViewModel
+import com.simats.stocksense.feature.inventory.viewmodel.InventoryViewModel
 import com.simats.stocksense.feature.inventory.viewmodel.ProductFormViewModel
 import com.simats.stocksense.feature.inventory.ui.ProductAttaScreen
 import com.simats.stocksense.feature.inventory.ui.ProductBiscuitsScreen
@@ -154,6 +155,7 @@ fun StockSenseAppNavigation(
     val insightsViewModel: InsightsViewModel = viewModel()
     val recordSaleViewModel: RecordSaleViewModel = viewModel()
     val purchaseOrdersViewModel: PurchaseOrdersViewModel = viewModel()
+    val inventoryViewModel: InventoryViewModel = viewModel()
     val productFormViewModel: ProductFormViewModel = viewModel()
 
     val pendingPayload by pendingPushPayloadFlow.collectAsState()
@@ -420,7 +422,12 @@ fun StockSenseAppNavigation(
                     )
                 },
                 onProductMilkClick = {
-                    productDetailViewModel.loadProduct(sku = "DAI-001")
+                    val currentProd = productDetailViewModel.uiState.value.product
+                    val sku = currentProd.sku.takeIf { it.isNotBlank() && it != "—" }
+                    val id = currentProd.id.toIntOrNull()
+                    if (sku == null && id == null) {
+                        productDetailViewModel.loadProduct(sku = "DAI-001")
+                    }
                     navController.navigate("product_detail") {
                         launchSingleTop = true
                     }
@@ -500,7 +507,8 @@ fun StockSenseAppNavigation(
                         launchSingleTop = true
                     }
                 },
-                insightsViewModel = insightsViewModel
+                insightsViewModel = insightsViewModel,
+                inventoryViewModel = inventoryViewModel
             )
         }
         composable("delete_account") {
@@ -939,7 +947,11 @@ fun StockSenseAppNavigation(
                 onBackClick = {
                     navController.popBackStack()
                 },
-                onSuccess = {
+                onSuccess = { returnedSku ->
+                    inventoryViewModel.refresh()
+                    if (returnedSku.isNotBlank()) {
+                        productDetailViewModel.loadProduct(sku = returnedSku)
+                    }
                     navController.popBackStack()
                 },
                 onSessionExpired = {
@@ -957,7 +969,11 @@ fun StockSenseAppNavigation(
                 onBackClick = {
                     navController.popBackStack()
                 },
-                onSuccess = {
+                onSuccess = { returnedSku ->
+                    inventoryViewModel.refresh()
+                    if (returnedSku.isNotBlank()) {
+                        productDetailViewModel.loadProduct(sku = returnedSku)
+                    }
                     navController.popBackStack()
                 },
                 onDeleted = {

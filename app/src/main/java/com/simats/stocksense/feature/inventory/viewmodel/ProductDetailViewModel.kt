@@ -76,17 +76,27 @@ class ProductDetailViewModel(
      * Loads product details from GET /inventory/get_product_detail.php
      * and 7-day sales history from GET /sales/product_history.php.
      */
-    fun loadProduct(productId: Int? = currentProductId, sku: String? = currentProductSku) {
-        currentProductId = productId
-        currentProductSku = sku ?: currentProductSku
+    fun loadProduct(productId: Int? = null, sku: String? = null) {
+        val targetId = when {
+            productId != null -> productId
+            sku != null -> null
+            else -> currentProductId
+        }
+        val targetSku = when {
+            sku != null -> sku
+            productId != null -> null
+            else -> currentProductSku
+        }
+        currentProductId = targetId
+        currentProductSku = targetSku
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val result = repository.fetchProductDetail(id = productId, sku = sku)
+            val result = repository.fetchProductDetail(id = targetId, sku = targetSku)
             result.fold(
                 onSuccess = { data ->
-                    val resolvedId = data.id?.toString()?.toIntOrNull() ?: productId ?: 0
-                    val resolvedSku = data.sku?.takeIf { it.isNotBlank() } ?: sku ?: ""
+                    val resolvedId = data.id?.toString()?.toIntOrNull() ?: targetId ?: 0
+                    val resolvedSku = data.sku?.takeIf { it.isNotBlank() } ?: targetSku ?: ""
                     currentProductId = if (resolvedId > 0) resolvedId else null
                     currentProductSku = resolvedSku.takeIf { it.isNotBlank() }
 
