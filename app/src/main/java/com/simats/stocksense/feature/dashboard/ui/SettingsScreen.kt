@@ -437,16 +437,14 @@ fun SettingsScreen(
 
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
 
-                            // Toggle 4: Weekly email digest (Disabled: backend has no email sender yet)
+                            // Toggle 4: Weekly email digest
                             TogglePreferenceRow(
                                 title = "Weekly email digest",
-                                subtitle = "Weekly summary by email. Available in a future update.",
-                                checked = false,
-                                onCheckedChange = null,
+                                subtitle = "Weekly report sent to your email on Sundays at 8:00 pm IST",
+                                checked = notifications?.weeklyEmailDigest ?: false,
+                                onCheckedChange = { viewModel.updateNotificationSetting("weekly_email_digest", it) },
                                 primaryColor = primaryColor,
-                                enabled = false,
-                                badgeText = "Coming soon",
-                                accessibilityDescription = "Weekly email digest, coming soon, unavailable"
+                                enabled = true
                             )
                         }
                     }

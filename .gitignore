@@ -16,3 +16,6 @@ local.properties
 
 app/google-services.json
 *firebase-service-account*.json
+vendor/
+mail.json
+*.sql
