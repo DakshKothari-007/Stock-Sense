@@ -32,6 +32,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.data.model.PurchaseOrderDto
+import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.feature.reorder.viewmodel.PurchaseOrdersUiState
 import com.simats.stocksense.feature.reorder.viewmodel.PurchaseOrdersViewModel
 
@@ -405,24 +406,38 @@ private fun PurchaseOrderCard(
                 }
             }
 
-            // Row 2: Product Name (+ N more)
-            Text(
-                text = productTitle,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 14.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            // Row 2: Product Avatar + Info
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ProductAvatar(
+                    name = firstItem?.displayName,
+                    category = firstItem?.category,
+                    size = 40.dp
+                )
 
-            // Row 3: Meta details (items · units · date)
-            Text(
-                text = metaText,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 12.sp
-            )
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = productTitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 14.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Text(
+                        text = metaText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(2.dp))
 

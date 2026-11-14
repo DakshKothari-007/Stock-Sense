@@ -36,6 +36,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.data.model.NetworkInventoryProduct
+import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.feature.analytics.viewmodel.RecordSaleViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -341,33 +342,12 @@ private fun AddProductRowCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Product Icon Box
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(primaryColor.copy(alpha = 0.12f))
-                    .border(1.dp, primaryColor.copy(alpha = 0.35f), RoundedCornerShape(10.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Canvas(modifier = Modifier.size(18.dp)) {
-                    val stroke = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                    drawRoundRect(
-                        color = primaryColor,
-                        topLeft = Offset(size.width * 0.1f, size.height * 0.15f),
-                        size = androidx.compose.ui.geometry.Size(size.width * 0.8f, size.height * 0.7f),
-                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx(), 3.dp.toPx()),
-                        style = stroke
-                    )
-                    drawLine(
-                        color = primaryColor,
-                        start = Offset(size.width * 0.1f, size.height * 0.5f),
-                        end = Offset(size.width * 0.9f, size.height * 0.5f),
-                        strokeWidth = 1.6.dp.toPx(),
-                        cap = StrokeCap.Round
-                    )
-                }
-            }
+            // Product Avatar
+            ProductAvatar(
+                name = product.name,
+                category = product.category,
+                size = 40.dp
+            )
 
             Spacer(modifier = Modifier.width(12.dp))
 

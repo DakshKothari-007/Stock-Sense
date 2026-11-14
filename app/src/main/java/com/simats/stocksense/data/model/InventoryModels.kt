@@ -39,6 +39,7 @@ data class NetworkInventoryProduct(
     @SerializedName("status") val status: String? = null,
     @SerializedName("statusColorHex") val statusColorHex: Long? = null,
     @SerializedName("iconType") val iconType: Int? = null,
+    @SerializedName("icon_key") val iconKey: String? = null,
     @SerializedName("created_at") val createdAt: String? = null,
     @SerializedName("updated_at") val updatedAt: String? = null
 )
@@ -53,7 +54,8 @@ data class AddProductRequest(
     @SerializedName("units") val units: Int,
     @SerializedName("min_stock_threshold") val minStockThreshold: Int = 10,
     @SerializedName("status") val status: String? = null,
-    @SerializedName("icon_type") val iconType: Int = 2
+    @SerializedName("icon_type") val iconType: Int = 2,
+    @SerializedName("icon_key") val iconKey: String? = null
 )
 
 data class UpdateProductRequest(
@@ -68,7 +70,8 @@ data class UpdateProductRequest(
     @SerializedName("units") val units: Int? = null,
     @SerializedName("min_stock_threshold") val minStockThreshold: Int? = null,
     @SerializedName("status") val status: String? = null,
-    @SerializedName("icon_type") val iconType: Int? = null
+    @SerializedName("icon_type") val iconType: Int? = null,
+    @SerializedName("icon_key") val iconKey: String? = null
 )
 
 data class DeleteProductRequest(
@@ -111,7 +114,8 @@ data class AddProductData(
     @SerializedName("units") val units: Any? = null,
     @SerializedName("min_stock_threshold") val minStockThreshold: Int? = null,
     @SerializedName("status") val status: String? = null,
-    @SerializedName("iconType") val iconType: Int? = null
+    @SerializedName("iconType") val iconType: Int? = null,
+    @SerializedName("icon_key") val iconKey: String? = null
 )
 
 data class AddProductResult(
@@ -148,6 +152,7 @@ data class ProductDetailData(
     @SerializedName("status") val status: String? = null,
     @SerializedName("statusColorHex") val statusColorHex: Long? = null,
     @SerializedName("iconType") val iconType: Int? = null,
+    @SerializedName("icon_key") val iconKey: String? = null,
     @SerializedName("stock_cover_days") val stockCoverDays: Double? = null,
     @SerializedName("unitsToReorder") val unitsToReorder: Int? = null,
     @SerializedName("suggested_reorder_units") val suggestedReorderUnits: Int? = null,

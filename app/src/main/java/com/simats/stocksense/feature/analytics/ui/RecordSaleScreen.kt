@@ -40,6 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.feature.analytics.viewmodel.BillItem
+import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.feature.analytics.viewmodel.RecordSaleViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -618,39 +619,54 @@ private fun BillItemCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Top Row: Product Name & Line Total
+            // Top Row: Product Avatar, Name & Line Total
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = item.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 15.sp,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                ProductAvatar(
+                    name = item.name,
+                    category = null,
+                    size = 40.dp
                 )
 
-                Text(
-                    text = NumberFormatUtil.formatIndianRupees(item.lineTotal),
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 16.sp
-                )
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = item.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 15.sp,
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Text(
+                            text = NumberFormatUtil.formatIndianRupees(item.lineTotal),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 16.sp
+                        )
+                    }
+
+                    // SKU · ₹Price each
+                    Text(
+                        text = "${item.sku} · ${NumberFormatUtil.formatIndianRupees(item.unitPrice)} each",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp
+                    )
+                }
             }
-
-            // Middle Row: SKU · ₹Price each
-            Text(
-                text = "${item.sku} · ${NumberFormatUtil.formatIndianRupees(item.unitPrice)} each",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 12.sp
-            )
 
             // Bottom Row: Stepper [-] Qty [+] and Stock Hint
             Row(

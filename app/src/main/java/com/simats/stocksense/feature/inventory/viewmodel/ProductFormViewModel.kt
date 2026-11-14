@@ -29,6 +29,7 @@ data class ProductFormUiState(
     val purchaseCost: String = "",
     val stock: String = "",
     val minStock: String = "10",
+    val iconKey: String? = null,
 
     // Field-level error messages
     val nameError: String? = null,
@@ -79,7 +80,8 @@ class ProductFormViewModel(
             sellingPrice = "",
             purchaseCost = "",
             stock = "",
-            minStock = "10"
+            minStock = "10",
+            iconKey = null
         )
         loadCategories()
     }
@@ -120,6 +122,7 @@ class ProductFormViewModel(
                             purchaseCost = costStr,
                             stock = pUnits.toString(),
                             minStock = pMin.toString(),
+                            iconKey = data.iconKey,
                             deleteProductName = data.name.orEmpty(),
                             deleteProductUnits = pUnits.toString(),
                             isCostHigherThanPrice = pCost > pPrice && pPrice > 0.0
@@ -182,6 +185,10 @@ class ProductFormViewModel(
 
     fun updateCategory(value: String) {
         _uiState.update { it.copy(category = value) }
+    }
+
+    fun updateIconKey(value: String?) {
+        _uiState.update { it.copy(iconKey = value) }
     }
 
     fun updateSellingPrice(value: String) {
@@ -326,7 +333,8 @@ class ProductFormViewModel(
                     price = parsedPrice,
                     costPrice = parsedCost,
                     units = parsedStock,
-                    minStockThreshold = parsedMinStock
+                    minStockThreshold = parsedMinStock,
+                    iconKey = state.iconKey?.takeIf { it.isNotBlank() }
                 )
 
                 val result = repository.addProduct(request)
@@ -362,7 +370,8 @@ class ProductFormViewModel(
                     price = parsedPrice,
                     costPrice = parsedCost,
                     units = parsedStock,
-                    minStockThreshold = parsedMinStock
+                    minStockThreshold = parsedMinStock,
+                    iconKey = state.iconKey?.takeIf { it.isNotBlank() }
                 )
 
                 val result = repository.updateProduct(request)

@@ -14,3 +14,4 @@ object ApiConstants {
      */
     const val BASE_URL = "https://gossip-renderer-void.ngrok-free.dev/StockSense_backend/"
 }
+

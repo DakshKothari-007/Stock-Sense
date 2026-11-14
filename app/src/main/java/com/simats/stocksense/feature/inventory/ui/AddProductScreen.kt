@@ -30,6 +30,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.simats.stocksense.feature.inventory.icon.ProductAvatar
+import com.simats.stocksense.feature.inventory.icon.ProductIconCatalog
+import com.simats.stocksense.feature.inventory.icon.ProductIconPickerDialog
 import com.simats.stocksense.feature.inventory.viewmodel.ProductFormUiState
 import com.simats.stocksense.feature.inventory.viewmodel.ProductFormViewModel
 
@@ -63,6 +66,7 @@ fun AddProductScreen(
         onPurchaseCostChange = { viewModel.updatePurchaseCost(it) },
         onStockChange = { viewModel.updateStock(it) },
         onMinStockChange = { viewModel.updateMinStock(it) },
+        onIconKeyChange = { viewModel.updateIconKey(it) },
         onDismissBanner = { viewModel.clearBannerError() },
         onSaveClick = {
             viewModel.saveProduct { returnedSku, msg ->
@@ -90,11 +94,13 @@ fun AddProductScreenContent(
     onPurchaseCostChange: (String) -> Unit,
     onStockChange: (String) -> Unit,
     onMinStockChange: (String) -> Unit,
+    onIconKeyChange: (String?) -> Unit = {},
     onDismissBanner: () -> Unit,
     onSaveClick: () -> Unit
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
     var categoryDropdownExpanded by remember { mutableStateOf(false) }
+    var showIconPicker by remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -194,6 +200,63 @@ fun AddProductScreenContent(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // 0. Product icon selector
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ProductAvatar(
+                        name = uiState.name,
+                        category = uiState.category,
+                        iconKey = uiState.iconKey,
+                        size = 56.dp,
+                        modifier = Modifier.clickable { showIconPicker = true }
+                    )
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        val iconLabel = if (uiState.iconKey != null) {
+                            ProductIconCatalog.get(uiState.iconKey)?.nameEn ?: "Custom icon"
+                        } else {
+                            "Auto (matches from name)"
+                        }
+                        Text(
+                            text = "Product icon",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 13.sp
+                        )
+                        Text(
+                            text = iconLabel,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { showIconPicker = true },
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text("Change", fontSize = 12.sp, color = primaryColor)
+                    }
+                }
+
+                if (showIconPicker) {
+                    ProductIconPickerDialog(
+                        currentIconKey = uiState.iconKey,
+                        productName = uiState.name,
+                        productCategory = uiState.category,
+                        onIconSelected = onIconKeyChange,
+                        onDismissRequest = { showIconPicker = false }
+                    )
+                }
+
                 // 1. Product name
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(

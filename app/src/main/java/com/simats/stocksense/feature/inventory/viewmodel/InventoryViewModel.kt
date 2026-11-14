@@ -349,6 +349,7 @@ class InventoryViewModel(
             statusColorHex = calculatedColorHex,
             units = rawUnits.toString(),
             iconType = iconType,
+            iconKey = item.iconKey,
             category = item.category?.takeIf { it.isNotBlank() } ?: "—",
             minStockThreshold = threshold,
             costPrice = item.costPrice?.toString(),

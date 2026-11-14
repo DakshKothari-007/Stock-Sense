@@ -40,6 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.data.model.InventoryProduct
+import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.feature.inventory.viewmodel.InventoryUiState
 import com.simats.stocksense.feature.inventory.viewmodel.InventoryViewModel
 
@@ -505,72 +506,12 @@ fun InventoryContent(
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.weight(1f)
                                     ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(40.dp)
-                                                .clip(CircleShape)
-                                                .background(MaterialTheme.colorScheme.primaryContainer),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Canvas(modifier = Modifier.size(20.dp)) {
-                                                when (item.iconType) {
-                                                    0 -> { // Milk Bottle
-                                                        drawRect(
-                                                            color = primaryColor,
-                                                            topLeft = Offset(size.width * 0.35f, 0f),
-                                                            size = Size(size.width * 0.3f, size.height * 0.3f)
-                                                        )
-                                                        drawRect(
-                                                            color = primaryColor,
-                                                            topLeft = Offset(size.width * 0.2f, size.height * 0.3f),
-                                                            size = Size(size.width * 0.6f, size.height * 0.7f)
-                                                        )
-                                                    }
-                                                    1 -> { // Cookie / Biscuit
-                                                        drawCircle(
-                                                            color = primaryColor,
-                                                            radius = size.width * 0.45f,
-                                                            center = Offset(size.width / 2f, size.height / 2f),
-                                                            style = Stroke(width = 1.5.dp.toPx())
-                                                        )
-                                                        drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.35f, size.height * 0.35f))
-                                                        drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.65f, size.height * 0.45f))
-                                                        drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.45f, size.height * 0.65f))
-                                                    }
-                                                    2 -> { // Box / Package
-                                                        drawRect(
-                                                            color = primaryColor,
-                                                            topLeft = Offset(size.width * 0.1f, size.height * 0.15f),
-                                                            size = Size(size.width * 0.8f, size.height * 0.75f),
-                                                            style = Stroke(width = 1.5.dp.toPx())
-                                                        )
-                                                        drawLine(
-                                                            color = primaryColor,
-                                                            start = Offset(size.width * 0.1f, size.height * 0.4f),
-                                                            end = Offset(size.width * 0.9f, size.height * 0.4f),
-                                                            strokeWidth = 1.5.dp.toPx()
-                                                        )
-                                                    }
-                                                    3 -> { // Tea Cup
-                                                        drawArc(
-                                                            color = primaryColor,
-                                                            startAngle = 0f,
-                                                            sweepAngle = 180f,
-                                                            useCenter = false,
-                                                            topLeft = Offset(size.width * 0.15f, size.height * 0.3f),
-                                                            size = Size(size.width * 0.7f, size.height * 0.6f),
-                                                            style = Stroke(width = 1.5.dp.toPx())
-                                                        )
-                                                        drawLine(
-                                                            color = primaryColor,
-                                                            start = Offset(size.width * 0.15f, size.height * 0.3f),
-                                                            end = Offset(size.width * 0.85f, size.height * 0.3f),
-                                                            strokeWidth = 1.5.dp.toPx()
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
+                                        ProductAvatar(
+                                            name = item.name,
+                                            category = item.category,
+                                            iconKey = item.iconKey,
+                                            size = 40.dp
+                                        )
                                         Spacer(modifier = Modifier.width(12.dp))
                                         Column {
                                             Text(

@@ -47,6 +47,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.fcm.FcmTokenManager
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
+import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.data.model.DashboardAiPriority
 import com.simats.stocksense.data.model.DashboardSummaryData
 import com.simats.stocksense.feature.dashboard.viewmodel.DashboardUiState
@@ -587,24 +588,37 @@ fun DashboardHomeContent(
                         val lowName = topLowItem?.name?.takeIf { it.isNotBlank() } ?: "Item"
                         val lowUnits = topLowItem?.units ?: 0
                         val lowMin = topLowItem?.minStockThreshold ?: 0
-                        Text(
-                            text = "$lowName · $lowUnits left ›",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = if (isLowStockActive) Amber900 else MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Below $lowMin-unit minimum",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (isLowStockActive) Amber800 else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 11.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            ProductAvatar(
+                                name = topLowItem?.name,
+                                category = null,
+                                size = 28.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "$lowName · $lowUnits left ›",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = if (isLowStockActive) Amber900 else MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "Below $lowMin-unit minimum",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (isLowStockActive) Amber800 else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
                     } else {
                         Text(
                             text = "Nothing needs attention",
@@ -675,24 +689,37 @@ fun DashboardHomeContent(
                             val slowName = topSlowItem?.name?.takeIf { it.isNotBlank() } ?: "Item"
                             val slowUnits = topSlowItem?.units ?: 0
                             val slowSold = topSlowItem?.soldLast30Days ?: 0
-                            Text(
-                                text = "$slowName ›",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "$slowUnits left · $slowSold sold / 30 days",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 11.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                ProductAvatar(
+                                    name = topSlowItem?.name,
+                                    category = null,
+                                    size = 28.dp
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "$slowName ›",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "$slowUnits left · $slowSold sold / 30 days",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 11.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
                         }
                         else -> {
                             Text(

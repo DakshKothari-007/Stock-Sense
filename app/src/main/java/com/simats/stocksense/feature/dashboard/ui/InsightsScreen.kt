@@ -37,6 +37,7 @@ import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.data.model.ProductPairItemDto
 import com.simats.stocksense.data.model.ReorderItemDto
 import com.simats.stocksense.data.model.SlowMovingItemDto
+import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.feature.reorder.viewmodel.InsightsViewModel
 import java.util.Locale
 
@@ -160,7 +161,7 @@ fun InsightsContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 20.dp),
-        contentPadding = PaddingValues(top = 8.dp, bottom = 96.dp),
+        contentPadding = PaddingValues(top = 8.dp, bottom = 112.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Top section: Header, Opportunities Banner, and Filter Chips
@@ -437,34 +438,11 @@ fun ReorderInsightCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Canvas(modifier = Modifier.size(20.dp)) {
-                            drawRect(
-                                color = primaryColor,
-                                topLeft = Offset(size.width * 0.15f, size.height * 0.2f),
-                                size = Size(size.width * 0.7f, size.height * 0.7f),
-                                style = Stroke(width = 1.5.dp.toPx())
-                            )
-                            drawLine(
-                                color = primaryColor,
-                                start = Offset(size.width * 0.5f, size.height * 0.35f),
-                                end = Offset(size.width * 0.5f, size.height * 0.75f),
-                                strokeWidth = 1.5.dp.toPx()
-                            )
-                            drawLine(
-                                color = primaryColor,
-                                start = Offset(size.width * 0.3f, size.height * 0.55f),
-                                end = Offset(size.width * 0.7f, size.height * 0.55f),
-                                strokeWidth = 1.5.dp.toPx()
-                            )
-                        }
-                    }
+                    ProductAvatar(
+                        name = reorder.product?.name,
+                        category = reorder.product?.category,
+                        size = 40.dp
+                    )
 
                     Spacer(modifier = Modifier.width(12.dp))
 
@@ -552,25 +530,11 @@ fun SlowMovingInsightCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Canvas(modifier = Modifier.size(20.dp)) {
-                            drawCircle(
-                                color = primaryColor,
-                                radius = size.width * 0.45f,
-                                center = Offset(size.width / 2f, size.height / 2f),
-                                style = Stroke(width = 1.5.dp.toPx())
-                            )
-                            drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.35f, size.height * 0.35f))
-                            drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.65f, size.height * 0.45f))
-                            drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.45f, size.height * 0.65f))
-                        }
-                    }
+                    ProductAvatar(
+                        name = item.name,
+                        category = null,
+                        size = 40.dp
+                    )
 
                     Spacer(modifier = Modifier.width(12.dp))
 
@@ -650,19 +614,11 @@ fun ProductPairInsightCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Canvas(modifier = Modifier.size(20.dp)) {
-                            drawLine(color = primaryColor, start = Offset(size.width * 0.2f, size.height * 0.3f), end = Offset(size.width * 0.8f, size.height * 0.3f), strokeWidth = 1.8.dp.toPx())
-                            drawLine(color = primaryColor, start = Offset(size.width * 0.2f, size.height * 0.5f), end = Offset(size.width * 0.8f, size.height * 0.5f), strokeWidth = 1.8.dp.toPx())
-                            drawLine(color = primaryColor, start = Offset(size.width * 0.2f, size.height * 0.7f), end = Offset(size.width * 0.8f, size.height * 0.7f), strokeWidth = 1.8.dp.toPx())
-                        }
-                    }
+                    ProductAvatar(
+                        name = pair.product1?.name ?: pair.product2?.name,
+                        category = null,
+                        size = 40.dp
+                    )
 
                     Spacer(modifier = Modifier.width(12.dp))
 

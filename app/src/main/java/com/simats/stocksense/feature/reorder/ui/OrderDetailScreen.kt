@@ -35,6 +35,7 @@ import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.data.model.PurchaseOrderDto
 import com.simats.stocksense.data.model.PurchaseOrderItemDto
+import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.feature.reorder.viewmodel.PurchaseOrdersViewModel
 
 @Composable
@@ -572,40 +573,55 @@ private fun OrderDetailItemCard(item: PurchaseOrderItemDto) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // Row 1: Product Name & Line Total
+            // Row 1: Product Avatar, Name & Line Total
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = item.displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 15.sp,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                ProductAvatar(
+                    name = item.displayName,
+                    category = item.category,
+                    size = 40.dp
                 )
 
-                Text(
-                    text = lineCostFormatted,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 16.sp
-                )
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = item.displayName,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 15.sp,
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Text(
+                            text = lineCostFormatted,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 16.sp
+                        )
+                    }
+
+                    // SKU · Category
+                    val skuCategory = "${item.sku ?: "—"} · ${item.category ?: "—"}"
+                    Text(
+                        text = skuCategory,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp
+                    )
+                }
             }
-
-            // Row 2: SKU · Category
-            val skuCategory = "${item.sku ?: "—"} · ${item.category ?: "—"}"
-            Text(
-                text = skuCategory,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 12.sp
-            )
 
             // Row 3: Units × Cost & Current Stock
             Row(

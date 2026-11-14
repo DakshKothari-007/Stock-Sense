@@ -47,6 +47,7 @@ fun SettingsScreen(
     onBackClick: () -> Unit = {},
     onSessionExpired: () -> Unit = {}
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val primaryColor = MaterialTheme.colorScheme.primary
     val uiState by viewModel.uiState.collectAsState()
     val currentThemeMode by ThemeState.themeMode.collectAsState()
@@ -544,6 +545,119 @@ fun SettingsScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+
+                    // 6. About Section
+                    Text(
+                        text = "ABOUT",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = primaryColor,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp,
+                        letterSpacing = 1.sp
+                    )
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("StockSense Version", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                                Text(
+                                    "1.0.0",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 12.sp
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Icon Library", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                                Text(
+                                    "Icons: Google Noto Emoji, Apache 2.0",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+
+                    if (com.simats.stocksense.BuildConfig.DEBUG) {
+                        Text(
+                            text = "DEVELOPER / DEBUG",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = primaryColor,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            letterSpacing = 1.sp
+                        )
+
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    try {
+                                        val intent = android.content.Intent(
+                                            context,
+                                            Class.forName("com.simats.stocksense.feature.debug.DebugIconGalleryActivity")
+                                        )
+                                        context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("SettingsScreen", "Failed to launch icon gallery", e)
+                                    }
+                                },
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            shape = RoundedCornerShape(16.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(18.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        "Product Icon Gallery",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        "Debug inspector for all 304 vector drawables",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                                Text(
+                                    "View →",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = primaryColor,
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }

@@ -218,6 +218,7 @@ class ProductDetailViewModel(
                         statusColorHex = calculatedColorHex,
                         units = rawUnits.toString(),
                         iconType = iconType,
+                        iconKey = data.iconKey,
                         category = (data.category ?: data.categoryName)?.takeIf { it.isNotBlank() } ?: "—",
                         minStockThreshold = threshold,
                         costPrice = formattedCostPrice,

@@ -40,6 +40,7 @@ import com.simats.stocksense.core.theme.Amber700
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.feature.ai.ui.AiExplainBottomSheet
+import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.feature.reorder.viewmodel.InsightsViewModel
 import java.util.Locale
 
@@ -222,25 +223,11 @@ fun SlowMovingRecommendationScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Canvas(modifier = Modifier.size(22.dp)) {
-                            drawCircle(
-                                color = primaryColor,
-                                radius = size.width * 0.45f,
-                                center = Offset(size.width / 2f, size.height / 2f),
-                                style = Stroke(width = 1.8.dp.toPx())
-                            )
-                            drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.35f, size.height * 0.35f))
-                            drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.65f, size.height * 0.45f))
-                            drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.45f, size.height * 0.65f))
-                        }
-                    }
+                    ProductAvatar(
+                        name = item.name,
+                        category = item.category,
+                        size = 48.dp
+                    )
 
                     Spacer(modifier = Modifier.width(14.dp))
 

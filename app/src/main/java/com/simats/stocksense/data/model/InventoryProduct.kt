@@ -12,6 +12,7 @@ data class InventoryProduct(
     val statusColorHex: Long = 0xFF98621A,
     val units: String = "0",
     val iconType: Int = 2, // 0: Milk, 1: Cookie, 2: Box, 3: Tea
+    val iconKey: String? = null,
     val category: String? = null,
     val minStockThreshold: Int = 10,
     val costPrice: String? = null,

@@ -40,6 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.feature.ai.ui.AiExplainBottomSheet
+import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.feature.reorder.viewmodel.InsightsViewModel
 import java.util.Locale
 
@@ -270,31 +271,11 @@ fun RecommendationPairsScreen(
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primaryContainer),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Canvas(modifier = Modifier.size(20.dp)) {
-                                    drawArc(
-                                        color = primaryColor,
-                                        startAngle = 0f,
-                                        sweepAngle = 180f,
-                                        useCenter = false,
-                                        topLeft = Offset(size.width * 0.15f, size.height * 0.3f),
-                                        size = Size(size.width * 0.7f, size.height * 0.6f),
-                                        style = Stroke(width = 1.5.dp.toPx())
-                                    )
-                                    drawLine(
-                                        color = primaryColor,
-                                        start = Offset(size.width * 0.15f, size.height * 0.3f),
-                                        end = Offset(size.width * 0.85f, size.height * 0.3f),
-                                        strokeWidth = 1.5.dp.toPx()
-                                    )
-                                }
-                            }
+                            ProductAvatar(
+                                name = prod1?.name,
+                                category = prod1?.category,
+                                size = 40.dp
+                            )
 
                             Spacer(modifier = Modifier.width(12.dp))
 
@@ -322,25 +303,11 @@ fun RecommendationPairsScreen(
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primaryContainer),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Canvas(modifier = Modifier.size(20.dp)) {
-                                    drawCircle(
-                                        color = primaryColor,
-                                        radius = size.width * 0.45f,
-                                        center = Offset(size.width / 2f, size.height / 2f),
-                                        style = Stroke(width = 1.5.dp.toPx())
-                                    )
-                                    drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.35f, size.height * 0.35f))
-                                    drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.65f, size.height * 0.45f))
-                                    drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.45f, size.height * 0.65f))
-                                }
-                            }
+                            ProductAvatar(
+                                name = prod2?.name,
+                                category = prod2?.category,
+                                size = 40.dp
+                            )
 
                             Spacer(modifier = Modifier.width(12.dp))
 

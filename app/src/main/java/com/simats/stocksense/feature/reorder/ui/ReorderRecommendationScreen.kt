@@ -34,6 +34,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.feature.ai.ui.AiExplainBottomSheet
+import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.feature.reorder.viewmodel.ReorderViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -309,28 +310,11 @@ fun ReorderRecommendationScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Canvas(modifier = Modifier.size(24.dp)) {
-                                drawRect(
-                                    color = primaryColor,
-                                    topLeft = Offset(size.width * 0.35f, 0f),
-                                    size = Size(size.width * 0.3f, size.height * 0.25f),
-                                    style = Stroke(width = 1.8.dp.toPx())
-                                )
-                                drawRect(
-                                    color = primaryColor,
-                                    topLeft = Offset(size.width * 0.2f, size.height * 0.25f),
-                                    size = Size(size.width * 0.6f, size.height * 0.75f),
-                                    style = Stroke(width = 1.8.dp.toPx())
-                                )
-                            }
-                        }
+                        ProductAvatar(
+                            name = rec.title,
+                            category = "General",
+                            size = 48.dp
+                        )
 
                         Spacer(modifier = Modifier.width(14.dp))
 

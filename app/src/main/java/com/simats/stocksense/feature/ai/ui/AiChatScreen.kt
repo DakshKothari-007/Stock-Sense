@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
+import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.R
 import com.simats.stocksense.data.model.AiAction
@@ -835,24 +836,39 @@ private fun ProductCardsContainer(cards: List<AiProductCard>) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = card.name,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ProductAvatar(
+                            name = card.name,
+                            category = null,
+                            size = 36.dp
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        val salesText = if (card.avgDailySales > 0) {
-                            "${card.unitsLeft} units left · sells ${card.avgDailySales.toInt()} a day"
-                        } else {
-                            "${card.unitsLeft} units left"
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = card.name,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                maxLines = 1
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            val salesText = if (card.avgDailySales > 0) {
+                                "${card.unitsLeft} units left · sells ${card.avgDailySales.toInt()} a day"
+                            } else {
+                                "${card.unitsLeft} units left"
+                            }
+                            Text(
+                                text = salesText,
+                                color = MutedText,
+                                fontSize = 12.sp,
+                                maxLines = 1
+                            )
                         }
-                        Text(
-                            text = salesText,
-                            color = MutedText,
-                            fontSize = 12.sp
-                        )
                     }
 
                     val statusText = card.status ?: "In stock"
