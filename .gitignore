@@ -19,3 +19,7 @@ app/google-services.json
 vendor/
 mail.json
 *.sql
+/tools/
+node_modules/
+svg_repo/
+sample_out/

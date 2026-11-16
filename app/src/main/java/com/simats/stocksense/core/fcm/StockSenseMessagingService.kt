@@ -29,8 +29,7 @@ class StockSenseMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(remoteMessage)
 
         if (BuildConfig.DEBUG) {
-            Log.d(TAG, "FCM Message received from: ${remoteMessage.from}")
-            Log.d(TAG, "FCM Message data: ${remoteMessage.data}")
+            Log.d(TAG, "FCM Message received (type: ${remoteMessage.data["type"]})")
         }
 
         // Title and body from notification payload or data payload fallback

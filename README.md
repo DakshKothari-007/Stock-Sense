@@ -65,33 +65,33 @@ cd Stock-Sense
 1. Go to the [Firebase Console](https://console.firebase.google.com/) and create or open your StockSense project.
 2. Register an Android app with the package name: `com.simats.stocksense`.
 3. Download the `google-services.json` file.
-4. Place `google-services.json` in the `app/` directory:
+4. Place `google-services.json` in the `app/` directory (a template is available at `app/google-services.json.example`):
    ```
    Stock-Sense/
    └── app/
-       └── google-services.json
+       ├── google-services.json.example  (committed template with dummy values)
+       └── google-services.json          (git-ignored, your real configuration)
    ```
 
 ### 5. Configure the Backend Base URL
-Open [ApiConstants.kt](file:///c:/Users/DESKTOP/StudioProjects/Stock-Sense/app/src/main/java/com/simats/stocksense/core/network/ApiConstants.kt) located at:
-`app/src/main/java/com/simats/stocksense/core/network/ApiConstants.kt`
+Backend URLs are separated by build type in `app/build.gradle.kts` via `BuildConfig.BASE_URL`:
+- **Debug**: Development / tunneling URL (e.g., ngrok or local server)
+- **Release**: Production HTTPS URL (`https://api.stocksense.com/StockSense_backend/`)
 
-Set `BASE_URL` to match your backend server address (the trailing slash `/` is mandatory):
+To change the debug backend URL, update `buildTypes.debug.buildConfigField` in `app/build.gradle.kts`:
 
 ```kotlin
-package com.simats.stocksense.core.network
-
-object ApiConstants {
-    // For physical phone testing on the same Wi-Fi network:
-    const val BASE_URL = "http://<YOUR_LOCAL_IP>/StockSense_backend/"
-
-    // For Android Emulator running on the host machine:
-    // const val BASE_URL = "http://10.0.2.2/StockSense_backend/"
-
-    // For secure tunneling (e.g. ngrok / cloud domain):
-    // const val BASE_URL = "https://<YOUR_TUNNEL_DOMAIN>/StockSense_backend/"
+buildTypes {
+    debug {
+        buildConfigField("String", "BASE_URL", "\"https://your-ngrok-or-server.dev/StockSense_backend/\"")
+    }
+    release {
+        buildConfigField("String", "BASE_URL", "\"https://api.stocksense.com/StockSense_backend/\"")
+    }
 }
 ```
+
+`ApiConstants.BASE_URL` automatically references `BuildConfig.BASE_URL`. Cleartext HTTP is strictly prohibited in release builds and allowed only for local development in debug builds via debug network security configuration.
 
 > [!TIP]
 > To find your local IP address on Windows, open PowerShell or Command Prompt and run `ipconfig`. Look for the **IPv4 Address** (e.g., `192.168.x.x`). Ensure your phone and development PC are connected to the same Wi-Fi network.

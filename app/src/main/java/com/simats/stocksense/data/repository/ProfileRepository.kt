@@ -44,7 +44,9 @@ class ProfileRepository(
         val email = sessionManager?.getUserEmail()
         val hasToken = !sessionManager?.getToken().isNullOrBlank()
 
-        Log.d("StockSenseProfile", "Profile request: GET auth/profile.php (userId=$userId, email=$email, hasToken=$hasToken)")
+        if (com.simats.stocksense.BuildConfig.DEBUG) {
+            Log.d("StockSenseProfile", "Profile request: GET auth/profile.php (hasToken=$hasToken)")
+        }
 
         if (sessionManager?.isLoggedIn() != true && !hasToken && userId == null && email.isNullOrBlank()) {
             return@withContext Result.failure(Exception("User is not logged in."))

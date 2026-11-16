@@ -1,17 +1,18 @@
 package com.simats.stocksense.core.network
 
+import com.simats.stocksense.BuildConfig
+
 /**
  * Single source of truth for backend API configuration.
  */
 object ApiConstants {
     /**
-     * Common Base URL accessible from:
-     * - Android Emulator
-     * - Physical Android Phones (via Wi-Fi or Mobile Data)
-     * - Postman & Web Browsers
+     * Base URL provided by build configuration via BuildConfig.
+     * Debug: Local, development, or tunneling URL (e.g. ngrok)
+     * Release: Production HTTPS URL (strictly no debug IPs)
      *
      * Note: Must end with a trailing slash ('/') for Retrofit endpoint resolution.
      */
-    const val BASE_URL = "https://gossip-renderer-void.ngrok-free.dev/StockSense_backend/"
+    val BASE_URL: String = BuildConfig.BASE_URL
 }
 

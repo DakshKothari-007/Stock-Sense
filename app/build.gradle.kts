@@ -21,10 +21,14 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "BASE_URL", "\"https://gossip-renderer-void.ngrok-free.dev/StockSense_backend/\"")
+        }
         release {
             optimization {
                 enable = false
             }
+            buildConfigField("String", "BASE_URL", "\"https://api.stocksense.com/StockSense_backend/\"")
         }
     }
     compileOptions {

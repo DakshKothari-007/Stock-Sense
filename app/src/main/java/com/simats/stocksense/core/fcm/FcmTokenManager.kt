@@ -59,7 +59,8 @@ object FcmTokenManager {
 
     fun logTokenIfDebug(token: String) {
         if (BuildConfig.DEBUG) {
-            Log.d(TAG, "FCM Device Token: $token")
+            val masked = if (token.length > 10) "${token.take(4)}...${token.takeLast(4)}" else "***"
+            Log.d(TAG, "FCM Device Token received: $masked")
         }
     }
 

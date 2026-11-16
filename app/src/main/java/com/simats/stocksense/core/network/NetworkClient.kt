@@ -1,6 +1,7 @@
 package com.simats.stocksense.core.network
 
 import android.content.Context
+import com.simats.stocksense.BuildConfig
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import okhttp3.Interceptor
@@ -66,9 +67,10 @@ object NetworkClient {
         response
     }
 
-    // Never log request/response bodies to avoid leaking passwords or sensitive tokens
+    // Never log request/response bodies to avoid leaking passwords or sensitive tokens.
+    // In release builds, disable logging completely.
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.HEADERS
+        level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.HEADERS else HttpLoggingInterceptor.Level.NONE
     }
 
     private val okHttpClient: OkHttpClient by lazy {
