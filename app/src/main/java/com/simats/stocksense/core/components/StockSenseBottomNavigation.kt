@@ -103,11 +103,18 @@ fun StockSenseBottomNavigation(
         }
     )
 
-    // Outer Glass Capsule (Padded 16 dp horizontally from screen edges so edge back gestures are never blocked)
+    // Outer Glass Capsule centered on wide screens with navigation bars insets
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .navigationBarsPadding(),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = 600.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
             .shadow(
                 elevation = 12.dp,
                 shape = RoundedCornerShape(26.dp),
@@ -625,7 +632,9 @@ fun StockSenseBottomNavigation(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = iconColor,
                                 fontWeight = if (isHighlighted) FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 11.sp
+                                fontSize = 11.sp,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -633,4 +642,5 @@ fun StockSenseBottomNavigation(
             }
         }
     }
+}
 }

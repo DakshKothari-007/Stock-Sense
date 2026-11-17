@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -34,6 +35,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.util.NumberFormatUtil
+import com.simats.stocksense.core.util.ResponsiveContainer
+import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.data.model.ProductPairItemDto
 import com.simats.stocksense.data.model.ReorderItemDto
 import com.simats.stocksense.data.model.SlowMovingItemDto
@@ -156,112 +159,122 @@ fun InsightsContent(
         1 -> "1 opportunity for your shop"
         else -> "$displayedCount opportunities for your shop"
     }
+    val windowInfo = rememberWindowSizeInfo()
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 20.dp),
-        contentPadding = PaddingValues(top = 8.dp, bottom = 112.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ResponsiveContainer(
+        modifier = Modifier.fillMaxSize(),
+        maxWidth = 720.dp
     ) {
-        // Top section: Header, Opportunities Banner, and Filter Chips
-        item(key = "header_section") {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Spacer(modifier = Modifier.height(4.dp))
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = windowInfo.horizontalPadding),
+            contentPadding = PaddingValues(top = 8.dp, bottom = 112.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Top section: Header, Opportunities Banner, and Filter Chips
+            item(key = "header_section") {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Spacer(modifier = Modifier.height(4.dp))
 
-                // Header
-                Column {
-                    Text(
-                        text = "AI recommendations",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp
-                    )
-                    val storeDisplay = storeName?.takeIf { it.isNotBlank() } ?: "Store"
-                    Text(
-                        text = "$storeDisplay · ${NumberFormatUtil.formatCurrentHeaderDate()}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
-                    )
-                }
+                    // Header
+                    Column {
+                        Text(
+                            text = "AI recommendations",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 22.sp
+                        )
+                        val storeDisplay = storeName?.takeIf { it.isNotBlank() } ?: "Store"
+                        Text(
+                            text = "$storeDisplay · ${NumberFormatUtil.formatCurrentHeaderDate()}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp
+                        )
+                    }
 
-                // Summary Opportunities Banner
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp)),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = RoundedCornerShape(14.dp)
-                ) {
+                    // Summary Opportunities Banner
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp)),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Canvas(modifier = Modifier.size(20.dp)) {
+                                val path = Path().apply {
+                                    moveTo(size.width * 0.2f, size.height * 0.52f)
+                                    lineTo(size.width * 0.42f, size.height * 0.74f)
+                                    lineTo(size.width * 0.8f, size.height * 0.26f)
+                                }
+                                drawCircle(color = primaryColor, radius = size.width / 2f, style = Stroke(width = 1.5.dp.toPx()))
+                                drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = oppText,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    fontSize = 14.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "Based on stock levels and recent sales.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+
+                    // Filter Chips Row
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(14.dp),
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Canvas(modifier = Modifier.size(20.dp)) {
-                            val path = Path().apply {
-                                moveTo(size.width * 0.2f, size.height * 0.52f)
-                                lineTo(size.width * 0.42f, size.height * 0.74f)
-                                lineTo(size.width * 0.8f, size.height * 0.26f)
+                        InsightFilterCategory.values().forEach { filter ->
+                            val isSelected = selectedFilter == filter
+                            Surface(
+                                onClick = { selectedFilter = filter },
+                                shape = RoundedCornerShape(20.dp),
+                                color = if (isSelected) primaryColor else MaterialTheme.colorScheme.surface,
+                                border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                modifier = Modifier.defaultMinSize(minHeight = 40.dp)
+                            ) {
+                                Text(
+                                    text = filter.label,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = 12.sp,
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                                )
                             }
-                            drawCircle(color = primaryColor, radius = size.width / 2f, style = Stroke(width = 1.5.dp.toPx()))
-                            drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Column {
-                            Text(
-                                text = oppText,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                fontSize = 14.sp
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "Based on stock levels and recent sales.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 11.sp
-                            )
-                        }
-                    }
-                }
-
-                // Filter Chips Row
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    InsightFilterCategory.values().forEach { filter ->
-                        val isSelected = selectedFilter == filter
-                        Surface(
-                            onClick = { selectedFilter = filter },
-                            shape = RoundedCornerShape(20.dp),
-                            color = if (isSelected) primaryColor else MaterialTheme.colorScheme.surface,
-                            border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                        ) {
-                            Text(
-                                text = filter.label,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                fontSize = 12.sp,
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-                            )
                         }
                     }
                 }
             }
-        }
 
         // Content Area: Loading / Error / Empty State / List of Cards
         if (uiState.isLoading && allInsights.isEmpty()) {
@@ -405,6 +418,7 @@ fun InsightsContent(
         }
     }
 }
+}
 
 /**
  * Reorder Recommendation Card
@@ -446,14 +460,16 @@ fun ReorderInsightCard(
 
                     Spacer(modifier = Modifier.width(12.dp))
 
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         val productName = reorder.product?.name ?: "Stock"
                         Text(
                             text = "Reorder $productName",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         val priorityTag = when {
                             (reorder.currentStock ?: 0) <= 0 -> "OUT OF STOCK · REORDER"
@@ -467,10 +483,14 @@ fun ReorderInsightCard(
                             color = primaryColor,
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp,
-                            letterSpacing = 1.sp
+                            letterSpacing = 1.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Canvas(modifier = Modifier.size(12.dp)) {
                     val path = Path().apply {
@@ -538,14 +558,16 @@ fun SlowMovingInsightCard(
 
                     Spacer(modifier = Modifier.width(12.dp))
 
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         val itemName = item.name ?: "stock"
                         Text(
                             text = "Move $itemName faster",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         val isDeadStock = (item.unitsSold30Days ?: 0) == 0 || item.ruleTriggered?.contains("dead", ignoreCase = true) == true
                         val slowTag = if (isDeadStock) "HIGH PRIORITY · DEAD STOCK" else "MEDIUM PRIORITY · SLOW-MOVING"
@@ -555,10 +577,14 @@ fun SlowMovingInsightCard(
                             color = primaryColor,
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp,
-                            letterSpacing = 1.sp
+                            letterSpacing = 1.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Canvas(modifier = Modifier.size(12.dp)) {
                     val path = Path().apply {
@@ -622,7 +648,7 @@ fun ProductPairInsightCard(
 
                     Spacer(modifier = Modifier.width(12.dp))
 
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         val p1Name = pair.product1?.name ?: "Product 1"
                         val p2Name = pair.product2?.name ?: "Product 2"
                         val pairTitle = "$p1Name + $p2Name"
@@ -631,7 +657,9 @@ fun ProductPairInsightCard(
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = "FREQUENTLY BOUGHT TOGETHER",
@@ -639,10 +667,14 @@ fun ProductPairInsightCard(
                             color = primaryColor,
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp,
-                            letterSpacing = 1.sp
+                            letterSpacing = 1.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Canvas(modifier = Modifier.size(12.dp)) {
                     val path = Path().apply {

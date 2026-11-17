@@ -98,12 +98,14 @@ fun ProductAvatar(
         } else {
             // Letter avatar fallback
             val initial = cleanName.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
-            val fontSize = (size.value * 0.42f).sp
+            val fontSize = (size.value * 0.40f).sp
             Text(
                 text = initial,
                 color = department.badgeTextColor,
                 fontWeight = FontWeight.Bold,
-                fontSize = fontSize
+                fontSize = fontSize,
+                maxLines = 1,
+                softWrap = false
             )
         }
     }

@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -82,93 +83,100 @@ fun MainScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
+                    .padding(innerPadding),
+                contentAlignment = Alignment.TopCenter
             ) {
-                AnimatedContent(
-                    targetState = uiState.selectedTab,
-                    transitionSpec = {
-                        val direction = if (targetState > initialState) 1 else -1
-                        (slideInHorizontally(
-                            animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
-                            initialOffsetX = { fullWidth -> direction * fullWidth }
-                        ) + fadeIn(
-                            animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
-                        )).togetherWith(
-                            slideOutHorizontally(
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .widthIn(max = 720.dp)
+                ) {
+                    AnimatedContent(
+                        targetState = uiState.selectedTab,
+                        transitionSpec = {
+                            val direction = if (targetState > initialState) 1 else -1
+                            (slideInHorizontally(
                                 animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
-                                targetOffsetX = { fullWidth -> -direction * fullWidth }
-                            ) + fadeOut(
+                                initialOffsetX = { fullWidth -> direction * fullWidth }
+                            ) + fadeIn(
                                 animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+                            )).togetherWith(
+                                slideOutHorizontally(
+                                    animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+                                    targetOffsetX = { fullWidth -> -direction * fullWidth }
+                                ) + fadeOut(
+                                    animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+                                )
                             )
-                        )
-                    },
-                    label = "MainTabTransition",
-                    modifier = Modifier.fillMaxSize()
-                ) { tabIndex ->
-                    saveableStateHolder.SaveableStateProvider(key = tabIndex) {
-                        when (tabIndex) {
-                            0 -> DashboardHomeScreen(
-                                viewModel = dashboardViewModel,
-                                onNotificationsClick = onNotificationsClick,
-                                onLowStockClick = onProductMilkClick,
-                                onSlowMovingClick = onProductBiscuitsClick,
-                                onAnalyticsClick = onSalesAnalyticsClick,
-                                onInsightsClick = { viewModel.selectTab(2) },
-                                onReorderMilkClick = onReorderRecommendationClick,
-                                onFreeUpStockClick = onProductBiscuitsClick,
-                                onImportClick = onInventoryImportedClick
-                            )
-                            1 -> InventoryScreen(
-                                viewModel = inventoryViewModel,
-                                onImportDataClick = onInventoryImportedClick,
-                                onAddProductClick = onAddProductClick,
-                                onProductClick = onProductDetailClick,
-                                onMilkProductClick = onProductMilkClick,
-                                onBiscuitsProductClick = onProductBiscuitsClick,
-                                onAttaProductClick = onProductAttaClick,
-                                onTeaProductClick = onProductTeaClick,
-                                onParleGProductClick = onProductParleGClick
-                            )
-                            2 -> InsightsContent(
-                                storeName = uiState.storeProfile.name.takeIf { it.isNotBlank() },
-                                onReorderMilkClick = onReorderRecommendationClick,
-                                onMoveBiscuitsClick = onSlowMovingRecommendationClick,
-                                onTeaPairClick = onRecommendationPairsClick,
-                                viewModel = insightsViewModel
-                            )
-                            3 -> ProfileContent(
-                                storeProfile = uiState.storeProfile,
-                                isProfileLoading = uiState.isProfileLoading,
-                                profileErrorMessage = uiState.profileErrorMessage,
-                                onRetryClick = { viewModel.refreshProfile() },
-                                onUpdateShop = { name, loc, type, cb ->
-                                    viewModel.updateShop(name, loc, type, cb)
-                                },
-                                onShopNameChange = { viewModel.updateShopName(it) },
-                                onUserNameChange = { viewModel.updateUserName(it) },
-                                onEmailChange = { viewModel.updateEmail(it) },
-                                onUpdateProfile = { name, email, cb ->
-                                    viewModel.updateUserProfile(name, email, cb)
-                                },
-                                onChangePassword = { cur, new, conf, cb ->
-                                    viewModel.changePassword(cur, new, conf, cb)
-                                },
-                                onSettingsClick = onSettingsClick,
-                                onSignOutClick = onSignOutClick,
-                                onDeleteAccountClick = onDeleteAccountClick
-                            )
+                        },
+                        label = "MainTabTransition",
+                        modifier = Modifier.fillMaxSize()
+                    ) { tabIndex ->
+                        saveableStateHolder.SaveableStateProvider(key = tabIndex) {
+                            when (tabIndex) {
+                                0 -> DashboardHomeScreen(
+                                    viewModel = dashboardViewModel,
+                                    onNotificationsClick = onNotificationsClick,
+                                    onLowStockClick = onProductMilkClick,
+                                    onSlowMovingClick = onProductBiscuitsClick,
+                                    onAnalyticsClick = onSalesAnalyticsClick,
+                                    onInsightsClick = { viewModel.selectTab(2) },
+                                    onReorderMilkClick = onReorderRecommendationClick,
+                                    onFreeUpStockClick = onProductBiscuitsClick,
+                                    onImportClick = onInventoryImportedClick
+                                )
+                                1 -> InventoryScreen(
+                                    viewModel = inventoryViewModel,
+                                    onImportDataClick = onInventoryImportedClick,
+                                    onAddProductClick = onAddProductClick,
+                                    onProductClick = onProductDetailClick,
+                                    onMilkProductClick = onProductMilkClick,
+                                    onBiscuitsProductClick = onProductBiscuitsClick,
+                                    onAttaProductClick = onProductAttaClick,
+                                    onTeaProductClick = onProductTeaClick,
+                                    onParleGProductClick = onProductParleGClick
+                                )
+                                2 -> InsightsContent(
+                                    storeName = uiState.storeProfile.name.takeIf { it.isNotBlank() },
+                                    onReorderMilkClick = onReorderRecommendationClick,
+                                    onMoveBiscuitsClick = onSlowMovingRecommendationClick,
+                                    onTeaPairClick = onRecommendationPairsClick,
+                                    viewModel = insightsViewModel
+                                )
+                                3 -> ProfileContent(
+                                    storeProfile = uiState.storeProfile,
+                                    isProfileLoading = uiState.isProfileLoading,
+                                    profileErrorMessage = uiState.profileErrorMessage,
+                                    onRetryClick = { viewModel.refreshProfile() },
+                                    onUpdateShop = { name, loc, type, cb ->
+                                        viewModel.updateShop(name, loc, type, cb)
+                                    },
+                                    onShopNameChange = { viewModel.updateShopName(it) },
+                                    onUserNameChange = { viewModel.updateUserName(it) },
+                                    onEmailChange = { viewModel.updateEmail(it) },
+                                    onUpdateProfile = { name, email, cb ->
+                                        viewModel.updateUserProfile(name, email, cb)
+                                    },
+                                    onChangePassword = { cur, new, conf, cb ->
+                                        viewModel.changePassword(cur, new, conf, cb)
+                                    },
+                                    onSettingsClick = onSettingsClick,
+                                    onSignOutClick = onSignOutClick,
+                                    onDeleteAccountClick = onDeleteAccountClick
+                                )
+                            }
                         }
                     }
-                }
 
-                // Dukaan Mitra Floating Action Button (Home, Inventory, Insights only)
-                if (uiState.selectedTab in 0..2) {
-                    DukaanMitraFloatingButton(
-                        onClick = onAiChatClick,
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(end = 16.dp, bottom = 16.dp)
-                    )
+                    // Dukaan Mitra Floating Action Button (Home, Inventory, Insights only)
+                    if (uiState.selectedTab in 0..2) {
+                        DukaanMitraFloatingButton(
+                            onClick = onAiChatClick,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(end = 16.dp, bottom = 16.dp)
+                        )
+                    }
                 }
             }
         }

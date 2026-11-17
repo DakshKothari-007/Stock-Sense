@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -28,12 +29,15 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.DarkBackground
 import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.util.ResponsiveContainer
+import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.feature.auth.viewmodel.AuthViewModel
 import com.simats.stocksense.feature.auth.viewmodel.DeleteAccountUiState
 
@@ -101,63 +105,81 @@ fun DeleteAccountScreenContent(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(
+        val windowInfo = rememberWindowSizeInfo()
+
+        ResponsiveContainer(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                .imePadding()
-                .padding(horizontal = 20.dp)
-                .verticalScroll(rememberScrollState())
+                .imePadding(),
+            maxWidth = 520.dp
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 1. Header with Back Button
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = windowInfo.horizontalPadding)
+                    .verticalScroll(rememberScrollState())
             ) {
-                IconButton(
-                    onClick = onBackClick,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surface)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 1. Header with Back Button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Canvas(modifier = Modifier.size(16.dp)) {
-                        val path = Path().apply {
-                            moveTo(size.width * 0.7f, size.height * 0.2f)
-                            lineTo(size.width * 0.3f, size.height * 0.5f)
-                            lineTo(size.width * 0.7f, size.height * 0.8f)
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clickable { onBackClick() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surface),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Canvas(modifier = Modifier.size(16.dp)) {
+                                val path = Path().apply {
+                                    moveTo(size.width * 0.7f, size.height * 0.2f)
+                                    lineTo(size.width * 0.3f, size.height * 0.5f)
+                                    lineTo(size.width * 0.7f, size.height * 0.8f)
+                                }
+                                drawPath(
+                                    path = path,
+                                    color = primaryColor,
+                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                )
+                            }
                         }
-                        drawPath(
-                            path = path,
-                            color = primaryColor,
-                            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Delete account",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 22.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        val formattedShopName = shopName.trim().ifBlank { "Store" }
+                        Text(
+                            text = "$formattedShopName · owner account",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column {
-                    Text(
-                        text = "Delete account",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp
-                    )
-                    val formattedShopName = shopName.trim().ifBlank { "Store" }
-                    Text(
-                        text = "$formattedShopName · owner account",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
-                    )
-                }
-            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -385,7 +407,7 @@ fun DeleteAccountScreenContent(
                     enabled = isDeleteButtonEnabled,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
+                        .defaultMinSize(minHeight = 52.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = deleteButtonColor,
@@ -416,7 +438,7 @@ fun DeleteAccountScreenContent(
                     enabled = !uiState.isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
+                        .defaultMinSize(minHeight = 52.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surface,
@@ -436,6 +458,7 @@ fun DeleteAccountScreenContent(
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
 }
 
 @Preview(showBackground = true)

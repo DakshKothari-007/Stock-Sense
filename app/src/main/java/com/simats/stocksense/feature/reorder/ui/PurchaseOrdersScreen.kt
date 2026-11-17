@@ -5,9 +5,11 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,6 +33,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.util.NumberFormatUtil
+import com.simats.stocksense.core.util.ResponsiveContainer
+import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.data.model.PurchaseOrderDto
 import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.feature.reorder.viewmodel.PurchaseOrdersUiState
@@ -70,113 +74,135 @@ fun PurchaseOrdersScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(
+        val windowInfo = rememberWindowSizeInfo()
+
+        ResponsiveContainer(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp)
+                .statusBarsPadding()
+                .navigationBarsPadding(),
+            maxWidth = 640.dp
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 1. Header with Back Button and Title
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = windowInfo.horizontalPadding)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surface)
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
-                        .clickable { onBackClick() },
-                    contentAlignment = Alignment.Center
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 1. Header with Back Button and Title
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Canvas(modifier = Modifier.size(16.dp)) {
-                        val path = Path().apply {
-                            moveTo(size.width * 0.65f, size.height * 0.15f)
-                            lineTo(size.width * 0.25f, size.height * 0.5f)
-                            lineTo(size.width * 0.65f, size.height * 0.85f)
-                        }
-                        drawPath(
-                            path = path,
-                            color = primaryColor,
-                            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(14.dp))
-
-                Column {
-                    Text(
-                        text = "Purchase orders",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-
-                    val ordersCountText = if (uiState.totalOrdersCount > 0) {
-                        "${uiState.totalOrdersCount} ${if (uiState.totalOrdersCount == 1) "order" else "orders"}"
-                    } else if (uiState.isLoading) {
-                        "Loading orders..."
-                    } else {
-                        "0 orders"
-                    }
-
-                    val headerSubtitle = if (uiState.shopName.isNotBlank() && uiState.shopName != "—") {
-                        "${uiState.shopName} · $ordersCountText"
-                    } else {
-                        ordersCountText
-                    }
-
-                    Text(
-                        text = headerSubtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 2. Filter Segmented Chips (All, Placed · N, Received, Cancelled)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val placedLabel = if (uiState.placedOrdersCount > 0) {
-                    "Placed · ${uiState.placedOrdersCount}"
-                } else {
-                    "Placed"
-                }
-
-                val filterLabels = listOf("All", placedLabel, "Received", "Cancelled")
-
-                filterLabels.forEachIndexed { index, label ->
-                    val isSelected = uiState.selectedFilterIndex == index
-                    Surface(
-                        onClick = { viewModel.selectFilter(index) },
-                        shape = RoundedCornerShape(20.dp),
-                        color = if (isSelected) primaryColor else MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(
-                            1.dp,
-                            if (isSelected) Color.Transparent else MaterialTheme.colorScheme.outlineVariant
-                        )
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clickable { onBackClick() },
+                        contentAlignment = Alignment.Center
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Canvas(modifier = Modifier.size(16.dp)) {
+                                val path = Path().apply {
+                                    moveTo(size.width * 0.65f, size.height * 0.15f)
+                                    lineTo(size.width * 0.25f, size.height * 0.5f)
+                                    lineTo(size.width * 0.65f, size.height * 0.85f)
+                                }
+                                drawPath(
+                                    path = path,
+                                    color = primaryColor,
+                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = label,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                            fontSize = 13.sp
+                            text = "Purchase orders",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        val ordersCountText = if (uiState.totalOrdersCount > 0) {
+                            "${uiState.totalOrdersCount} ${if (uiState.totalOrdersCount == 1) "order" else "orders"}"
+                        } else if (uiState.isLoading) {
+                            "Loading orders..."
+                        } else {
+                            "0 orders"
+                        }
+
+                        val headerSubtitle = if (uiState.shopName.isNotBlank() && uiState.shopName != "—") {
+                            "${uiState.shopName} · $ordersCountText"
+                        } else {
+                            ordersCountText
+                        }
+
+                        Text(
+                            text = headerSubtitle,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
-            }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 2. Filter Segmented Chips (All, Placed · N, Received, Cancelled)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val placedLabel = if (uiState.placedOrdersCount > 0) {
+                        "Placed · ${uiState.placedOrdersCount}"
+                    } else {
+                        "Placed"
+                    }
+
+                    val filterLabels = listOf("All", placedLabel, "Received", "Cancelled")
+
+                    filterLabels.forEachIndexed { index, label ->
+                        val isSelected = uiState.selectedFilterIndex == index
+                        Surface(
+                            onClick = { viewModel.selectFilter(index) },
+                            shape = RoundedCornerShape(20.dp),
+                            color = if (isSelected) primaryColor else MaterialTheme.colorScheme.surface,
+                            border = BorderStroke(
+                                1.dp,
+                                if (isSelected) Color.Transparent else MaterialTheme.colorScheme.outlineVariant
+                            ),
+                            modifier = Modifier.defaultMinSize(minHeight = 40.dp)
+                        ) {
+                            Text(
+                                text = label,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
+                }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -324,6 +350,7 @@ fun PurchaseOrdersScreen(
         }
     }
 }
+}
 
 @Composable
 private fun PurchaseOrderCard(
@@ -387,8 +414,13 @@ private fun PurchaseOrderCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 15.sp
+                    fontSize = 15.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
@@ -434,7 +466,9 @@ private fun PurchaseOrderCard(
                         text = metaText,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -451,15 +485,21 @@ private fun PurchaseOrderCard(
                     text = totalLabel,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
                     text = totalAmountFormatted,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 17.sp
+                    fontSize = 17.sp,
+                    maxLines = 1
                 )
             }
         }

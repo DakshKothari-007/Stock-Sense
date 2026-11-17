@@ -33,6 +33,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.util.NumberFormatUtil
+import com.simats.stocksense.core.util.ResponsiveContainer
+import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.data.model.PurchaseOrderDto
 import com.simats.stocksense.data.model.PurchaseOrderItemDto
 import com.simats.stocksense.feature.inventory.icon.ProductAvatar
@@ -127,60 +129,78 @@ fun OrderDetailScreen(
         val totalUnits = order.totalUnits ?: order.items?.sumOf { it.quantity ?: 0 } ?: 0
         val totalItems = order.totalItems ?: order.items?.size ?: 0
         val totalCostFormatted = NumberFormatUtil.formatIndianRupees(order.totalEstimatedCost ?: 0.0)
+        val windowInfo = rememberWindowSizeInfo()
 
-        Column(
+        ResponsiveContainer(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp)
+                .statusBarsPadding()
+                .navigationBarsPadding(),
+            maxWidth = 640.dp
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 1. Header with Back Button and Order Number
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = windowInfo.horizontalPadding)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surface)
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
-                        .clickable { onBackClick() },
-                    contentAlignment = Alignment.Center
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 1. Header with Back Button and Order Number
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Canvas(modifier = Modifier.size(16.dp)) {
-                        val path = Path().apply {
-                            moveTo(size.width * 0.65f, size.height * 0.15f)
-                            lineTo(size.width * 0.25f, size.height * 0.5f)
-                            lineTo(size.width * 0.65f, size.height * 0.85f)
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clickable { onBackClick() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Canvas(modifier = Modifier.size(16.dp)) {
+                                val path = Path().apply {
+                                    moveTo(size.width * 0.65f, size.height * 0.15f)
+                                    lineTo(size.width * 0.25f, size.height * 0.5f)
+                                    lineTo(size.width * 0.65f, size.height * 0.85f)
+                                }
+                                drawPath(
+                                    path = path,
+                                    color = primaryColor,
+                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                )
+                            }
                         }
-                        drawPath(
-                            path = path,
-                            color = primaryColor,
-                            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = order.orderNo ?: "—",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = subtitleDate,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.width(14.dp))
-
-                Column {
-                    Text(
-                        text = order.orderNo ?: "—",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                    Text(
-                        text = subtitleDate,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
-                    )
-                }
-            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -420,7 +440,7 @@ fun OrderDetailScreen(
                             enabled = !uiState.isActionRunning,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(52.dp),
+                                .defaultMinSize(minHeight = 52.dp),
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = primaryColor,
@@ -448,7 +468,7 @@ fun OrderDetailScreen(
                             enabled = !uiState.isActionRunning,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(50.dp),
+                                .defaultMinSize(minHeight = 48.dp),
                             shape = RoundedCornerShape(14.dp),
                             border = BorderStroke(1.dp, Color(0xFFEF4444)),
                             colors = ButtonDefaults.outlinedButtonColors(
@@ -478,11 +498,13 @@ fun OrderDetailScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+        }
 
         // Receive Confirm Dialog (Requirement 3)
         if (showReceiveDialog) {
             AlertDialog(
                 onDismissRequest = { if (!uiState.isActionRunning) showReceiveDialog = false },
+                modifier = Modifier.widthIn(max = 520.dp),
                 title = {
                     Text("Receive purchase order?", fontWeight = FontWeight.Bold)
                 },
@@ -518,6 +540,7 @@ fun OrderDetailScreen(
         if (showCancelDialog) {
             AlertDialog(
                 onDismissRequest = { if (!uiState.isActionRunning) showCancelDialog = false },
+                modifier = Modifier.widthIn(max = 520.dp),
                 title = {
                     Text("Cancel purchase order?", fontWeight = FontWeight.Bold)
                 },
@@ -608,7 +631,8 @@ private fun OrderDetailItemCard(item: PurchaseOrderItemDto) {
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 16.sp
+                            fontSize = 16.sp,
+                            maxLines = 1
                         )
                     }
 
@@ -618,7 +642,9 @@ private fun OrderDetailItemCard(item: PurchaseOrderItemDto) {
                         text = skuCategory,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -633,14 +659,20 @@ private fun OrderDetailItemCard(item: PurchaseOrderItemDto) {
                     text = "$qty units × $unitCostFormatted",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
                     text = stockNowText,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    maxLines = 1
                 )
             }
         }

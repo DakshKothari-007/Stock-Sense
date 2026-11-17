@@ -42,11 +42,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
+import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.R
@@ -231,50 +233,55 @@ fun AiChatScreen(
         modifier = Modifier.fillMaxSize(),
         color = DarkNavyBg
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
+        ResponsiveContainer(
+            modifier = Modifier.fillMaxSize(),
+            maxWidth = 720.dp
         ) {
-            // 1. Header
-            AiChatHeader(
-                autoSpeak = uiState.autoSpeak,
-                onBackClick = onBackClick,
-                onAutoSpeakToggle = { viewModel.setAutoSpeak(it) }
-            )
-
-            // 2. Chat Body (Welcome State or Message List)
-            Box(
+            Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
+                    .fillMaxSize()
+                    .statusBarsPadding()
             ) {
-                if (uiState.messages.isEmpty()) {
-                    WelcomeContent(
-                        onQuestionClick = { q -> viewModel.sendMessage(q) }
-                    )
-                } else {
-                    ConversationContent(
-                        messages = uiState.messages,
-                        isTyping = uiState.isTyping,
-                        showStillThinking = uiState.showStillThinking,
-                        speakingMessageId = uiState.speakingMessageId,
-                        onSpeakClick = { id, text -> speakText(id, text) },
-                        onActionClick = { act -> onNavigate(act.target, act.productId) },
-                        onSuggestionClick = { msg -> viewModel.sendMessage(msg) },
-                        onRetryClick = { q -> viewModel.retryQuestion(q) }
-                    )
-                }
-            }
+                // 1. Header
+                AiChatHeader(
+                    autoSpeak = uiState.autoSpeak,
+                    onBackClick = onBackClick,
+                    onAutoSpeakToggle = { viewModel.setAutoSpeak(it) }
+                )
 
-            // 3. Bottom Input Bar with Soft Keyboard Padding
-            InputBar(
-                text = uiState.inputText,
-                isTyping = uiState.isTyping,
-                onTextChange = { viewModel.onInputTextChanged(it) },
-                onSend = { viewModel.sendMessage(uiState.inputText) },
-                onMicClick = { onMicTapped() }
-            )
+                // 2. Chat Body (Welcome State or Message List)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                ) {
+                    if (uiState.messages.isEmpty()) {
+                        WelcomeContent(
+                            onQuestionClick = { q -> viewModel.sendMessage(q) }
+                        )
+                    } else {
+                        ConversationContent(
+                            messages = uiState.messages,
+                            isTyping = uiState.isTyping,
+                            showStillThinking = uiState.showStillThinking,
+                            speakingMessageId = uiState.speakingMessageId,
+                            onSpeakClick = { id, text -> speakText(id, text) },
+                            onActionClick = { act -> onNavigate(act.target, act.productId) },
+                            onSuggestionClick = { msg -> viewModel.sendMessage(msg) },
+                            onRetryClick = { q -> viewModel.retryQuestion(q) }
+                        )
+                    }
+                }
+
+                // 3. Bottom Input Bar with Soft Keyboard Padding
+                InputBar(
+                    text = uiState.inputText,
+                    isTyping = uiState.isTyping,
+                    onTextChange = { viewModel.onInputTextChanged(it) },
+                    onSend = { viewModel.sendMessage(uiState.inputText) },
+                    onMicClick = { onMicTapped() }
+                )
+            }
         }
     }
 
@@ -311,28 +318,34 @@ private fun AiChatHeader(
         // Back Button
         Box(
             modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(CardNavyBg)
-                .border(1.dp, CardBorderColor, RoundedCornerShape(12.dp))
+                .size(48.dp)
                 .clickable { onBackClick() },
             contentAlignment = Alignment.Center
         ) {
-            Canvas(modifier = Modifier.size(16.dp)) {
-                val path = Path().apply {
-                    moveTo(size.width * 0.65f, size.height * 0.15f)
-                    lineTo(size.width * 0.25f, size.height * 0.5f)
-                    lineTo(size.width * 0.65f, size.height * 0.85f)
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(CardNavyBg)
+                    .border(1.dp, CardBorderColor, RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Canvas(modifier = Modifier.size(16.dp)) {
+                    val path = Path().apply {
+                        moveTo(size.width * 0.65f, size.height * 0.15f)
+                        lineTo(size.width * 0.25f, size.height * 0.5f)
+                        lineTo(size.width * 0.65f, size.height * 0.85f)
+                    }
+                    drawPath(
+                        path = path,
+                        color = VibrantGreen,
+                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                    )
                 }
-                drawPath(
-                    path = path,
-                    color = VibrantGreen,
-                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                )
             }
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
         // Avatar (52dp)
         Image(
@@ -353,12 +366,16 @@ private fun AiChatHeader(
                 text = "Dukaan Mitra",
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = "Your shop assistant",
                 color = MutedText,
-                fontSize = 12.sp
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
@@ -636,9 +653,10 @@ private fun UserMessageRow(message: ChatMessage) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End
     ) {
+        Spacer(modifier = Modifier.width(48.dp))
         Box(
             modifier = Modifier
-                .widthIn(max = 280.dp)
+                .widthIn(max = 520.dp)
                 .clip(RoundedCornerShape(18.dp, 18.dp, 4.dp, 18.dp))
                 .background(UserBubbleColor)
                 .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -681,7 +699,9 @@ private fun AssistantMessageRow(
         Spacer(modifier = Modifier.width(10.dp))
 
         Column(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .widthIn(max = 560.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             // Text Bubble with Speaker icon
@@ -802,7 +822,8 @@ private fun AssistantMessageRow(
                             onClick = { onSuggestionClick(suggestion.message) },
                             shape = RoundedCornerShape(16.dp),
                             color = CardNavyBg,
-                            border = BorderStroke(1.dp, CardBorderColor)
+                            border = BorderStroke(1.dp, CardBorderColor),
+                            modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                         ) {
                             Text(
                                 text = suggestion.label,

@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,6 +39,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
+import com.simats.stocksense.core.util.ResponsiveContainer
+import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.feature.inventory.viewmodel.ProductDetailUiState
 import com.simats.stocksense.feature.inventory.viewmodel.ProductDetailViewModel
@@ -162,10 +165,20 @@ fun ProductDetailScreenContent(
             }
 
             else -> {
+            val windowInfo = rememberWindowSizeInfo()
+
+            ResponsiveContainer(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
+                    .imePadding(),
+                maxWidth = 600.dp
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(24.dp)
+                        .padding(horizontal = windowInfo.horizontalPadding, vertical = 16.dp)
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.SpaceBetween,
                     horizontalAlignment = Alignment.Start
@@ -174,11 +187,11 @@ fun ProductDetailScreenContent(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // 1. Header with Back Button and Edit Action
+                        // 1. Header with Back Button and Edit Action (minimum 48dp touch target)
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 16.dp),
+                                .padding(top = 8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -186,43 +199,54 @@ fun ProductDetailScreenContent(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                IconButton(
-                                    onClick = onBackClick,
+                                Box(
                                     modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
-                                        .background(MaterialTheme.colorScheme.surface)
+                                        .size(48.dp)
+                                        .clickable(onClick = onBackClick),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Canvas(modifier = Modifier.size(16.dp)) {
-                                        val path = Path().apply {
-                                            moveTo(size.width * 0.7f, size.height * 0.2f)
-                                            lineTo(size.width * 0.3f, size.height * 0.5f)
-                                            lineTo(size.width * 0.7f, size.height * 0.8f)
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
+                                            .background(MaterialTheme.colorScheme.surface),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Canvas(modifier = Modifier.size(16.dp)) {
+                                            val path = Path().apply {
+                                                moveTo(size.width * 0.7f, size.height * 0.2f)
+                                                lineTo(size.width * 0.3f, size.height * 0.5f)
+                                                lineTo(size.width * 0.7f, size.height * 0.8f)
+                                            }
+                                            drawPath(
+                                                path = path,
+                                                color = primaryColor,
+                                                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                            )
                                         }
-                                        drawPath(
-                                            path = path,
-                                            color = primaryColor,
-                                            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                        )
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.width(16.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
 
-                                Column {
+                                Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                                     Text(
                                         text = "Product details",
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.onBackground,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 18.sp
+                                        fontSize = 18.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                     Text(
                                         text = "${uiState.product.sku} · ${uiState.categoryName}",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 12.sp
+                                        fontSize = 12.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -230,6 +254,7 @@ fun ProductDetailScreenContent(
                             // Edit Button
                             OutlinedButton(
                                 onClick = onEditClick,
+                                modifier = Modifier.defaultMinSize(minHeight = 44.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
@@ -247,7 +272,9 @@ fun ProductDetailScreenContent(
                                     text = "Edit",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.SemiBold,
-                                    fontSize = 14.sp
+                                    fontSize = 14.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -275,19 +302,23 @@ fun ProductDetailScreenContent(
 
                                 Spacer(modifier = Modifier.width(16.dp))
 
-                                Column {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = uiState.product.name,
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface,
-                                        fontSize = 20.sp
+                                        fontSize = 20.sp,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                     Text(
                                         text = uiState.description,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 13.sp
+                                        fontSize = 13.sp,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                     if (uiState.product.sku.isNotBlank() && uiState.product.sku != "—") {
                                         Spacer(modifier = Modifier.height(2.dp))
@@ -584,7 +615,8 @@ fun ProductDetailScreenContent(
                                                         ) {
                                                             Box(
                                                                 modifier = Modifier
-                                                                    .width(18.dp)
+                                                                    .fillMaxWidth(0.48f)
+                                                                    .widthIn(min = 6.dp, max = 18.dp)
                                                                     .fillMaxHeight(ratio)
                                                                     .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                                                                     .background(if (isLast) primaryColor else accentColor)
@@ -606,10 +638,12 @@ fun ProductDetailScreenContent(
                                                 val pointCount = chartPoints.size
                                                 val columnWidth = if (pointCount > 0) availableWidth / pointCount else availableWidth
 
-                                                // Dynamic overlap prevention: 360dp screens and large font scales
+                                                // Dynamic overlap prevention: 320dp screens and large font scales
                                                 val fontScale = LocalDensity.current.fontScale
                                                 val hasLongLabels = formattedLabels.any { it.length > 3 }
-                                                val shouldSkipLabels = (columnWidth < 45.dp && hasLongLabels) || columnWidth < 36.dp || fontScale > 1.05f || pointCount > 7
+                                                val isNarrow = columnWidth < 40.dp
+                                                val isVeryNarrow = columnWidth < 28.dp || fontScale >= 1.3f
+                                                val shouldSkipLabels = (columnWidth < 45.dp && hasLongLabels) || isNarrow || fontScale > 1.05f || pointCount > 7
 
                                                 Row(
                                                     modifier = Modifier.fillMaxWidth(),
@@ -618,7 +652,9 @@ fun ProductDetailScreenContent(
                                                 ) {
                                                     chartPoints.forEachIndexed { index, point ->
                                                         val rawAbbr = formattedLabels.getOrElse(index) { "" }
-                                                        val displayLabel = if (shouldSkipLabels) {
+                                                        val displayLabel = if (isVeryNarrow) {
+                                                            if (index == 0 || index == pointCount / 2 || index == pointCount - 1) rawAbbr else ""
+                                                        } else if (shouldSkipLabels) {
                                                             val step = if (pointCount > 7) ((pointCount + 5) / 6).coerceAtLeast(2) else 2
                                                             if (index % step == 0 || index == pointCount - 1) rawAbbr else ""
                                                         } else {
@@ -726,7 +762,7 @@ fun ProductDetailScreenContent(
 
                                     Spacer(modifier = Modifier.width(12.dp))
 
-                                    Column {
+                                    Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = if (uiState.onOrderUnits > 0 && uiState.unitsToReorder <= 0) {
                                                 "${uiState.onOrderUnits} units already on order"
@@ -736,7 +772,9 @@ fun ProductDetailScreenContent(
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface,
-                                            fontSize = 14.sp
+                                            fontSize = 14.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                         Text(
                                             text = if (uiState.onOrderUnits > 0 && uiState.unitsToReorder <= 0) {
@@ -746,7 +784,9 @@ fun ProductDetailScreenContent(
                                             },
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            fontSize = 12.sp
+                                            fontSize = 12.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
@@ -783,12 +823,14 @@ fun ProductDetailScreenContent(
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(52.dp),
+                                .defaultMinSize(minHeight = 52.dp),
                             shape = RoundedCornerShape(14.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant
                         ) {
                             Box(
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 14.dp, horizontal = 16.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -796,7 +838,9 @@ fun ProductDetailScreenContent(
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 16.sp
+                                    fontSize = 16.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -806,7 +850,7 @@ fun ProductDetailScreenContent(
                             enabled = !uiState.isOrdering && uiState.unitsToReorder > 0,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(52.dp),
+                                .defaultMinSize(minHeight = 52.dp),
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = primaryColor,
@@ -828,7 +872,9 @@ fun ProductDetailScreenContent(
                                     },
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
+                                    fontSize = 16.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -854,6 +900,7 @@ fun ProductDetailScreenContent(
             }
         }
     }
+}
 }
 
 /**

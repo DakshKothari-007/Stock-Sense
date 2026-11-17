@@ -28,10 +28,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.util.ResponsiveContainer
+import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.data.model.StoreProfile
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -129,6 +132,7 @@ fun ProfileContent(
                     shopDialogErrorMessage = null
                 }
             },
+            modifier = Modifier.widthIn(max = 560.dp),
             title = {
                 Text(
                     text = "Edit Shop Details",
@@ -303,6 +307,7 @@ fun ProfileContent(
                     profileDialogErrorMessage = null
                 }
             },
+            modifier = Modifier.widthIn(max = 560.dp),
             title = {
                 Text(
                     text = "Edit Profile Details",
@@ -311,7 +316,10 @@ fun ProfileContent(
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     Text(
                         text = "Update your name and email address:",
                         style = MaterialTheme.typography.bodySmall,
@@ -414,6 +422,7 @@ fun ProfileContent(
                 newPasswordInput = ""
                 confirmPasswordInput = ""
             },
+            modifier = Modifier.widthIn(max = 560.dp),
             title = {
                 Text(
                     text = "Change Password",
@@ -652,13 +661,19 @@ fun ProfileContent(
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 20.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    val windowInfo = rememberWindowSizeInfo()
+
+    ResponsiveContainer(
+        modifier = Modifier.fillMaxSize(),
+        maxWidth = 720.dp
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = windowInfo.horizontalPadding)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
         Spacer(modifier = Modifier.height(12.dp))
 
         // 1. Header
@@ -1395,6 +1410,7 @@ fun ProfileContent(
         Spacer(modifier = Modifier.height(20.dp))
     }
 }
+}
 
 @Composable
 private fun InfoRow(label: String, value: String) {
@@ -1407,14 +1423,19 @@ private fun InfoRow(label: String, value: String) {
             text = label,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontSize = 12.sp
+            fontSize = 12.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f, fill = false)
         )
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
-            fontSize = 12.sp
+            fontSize = 12.sp,
+            maxLines = 1
         )
     }
 }

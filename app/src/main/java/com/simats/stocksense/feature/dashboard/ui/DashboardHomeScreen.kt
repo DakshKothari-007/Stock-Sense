@@ -47,6 +47,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.fcm.FcmTokenManager
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
+import com.simats.stocksense.core.util.ResponsiveContainer
+import com.simats.stocksense.core.util.rememberWindowSizeInfo
+import androidx.compose.ui.platform.LocalDensity
 import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.data.model.DashboardAiPriority
 import com.simats.stocksense.data.model.DashboardSummaryData
@@ -309,58 +312,68 @@ fun DashboardHomeContent(
 
     val totalActiveProducts = data.inventory?.totalActiveProducts ?: 0
     val isNewEmptyStore = totalActiveProducts == 0 && (data.sales?.todaySalesAmount ?: 0.0) == 0.0
+    val windowInfo = rememberWindowSizeInfo()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 20.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+    ResponsiveContainer(
+        modifier = Modifier.fillMaxSize(),
+        maxWidth = 720.dp
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 1. Header Row (Shop name, location, and notification bell)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = windowInfo.horizontalPadding)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = storeName,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = if (todayHeaderDate.isNotEmpty()) "$storeLocation · $todayHeaderDate" else storeLocation,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 12.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            Spacer(modifier = Modifier.height(8.dp))
 
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Bell Notification Icon Box
-            val bellIconColor = MaterialTheme.colorScheme.onSurface
-            val bellBadgeColor = primaryColor
-            val bellSurfaceColor = MaterialTheme.colorScheme.surface
-
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(bellSurfaceColor)
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
-                    .clickable { onNotificationsClick() },
-                contentAlignment = Alignment.Center
+            // 1. Header Row (Shop name, location, and notification bell)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = storeName,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = if (todayHeaderDate.isNotEmpty()) "$storeLocation · $todayHeaderDate" else storeLocation,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Bell Notification Icon Box (min 48dp touch target)
+                val bellIconColor = MaterialTheme.colorScheme.onSurface
+                val bellBadgeColor = primaryColor
+                val bellSurfaceColor = MaterialTheme.colorScheme.surface
+
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clickable { onNotificationsClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(bellSurfaceColor)
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
                 Canvas(modifier = Modifier.size(22.dp)) {
                     val w = size.width
                     val h = size.height
@@ -426,6 +439,7 @@ fun DashboardHomeContent(
                 }
             }
         }
+    }
 
         // 2. Metric Cards (Today's Sales & Inventory Value)
         Row(
@@ -846,10 +860,11 @@ fun DashboardHomeContent(
                             }
                         }
 
-                        // Avoid overlap on small phones (360dp / large font):
-                        // If column width is narrow (< 45dp) and labels are long (> 3 chars), or width is < 36dp, skip alternating labels
-                        val hasLongLabels = formattedLabels.any { it.length > 3 }
-                        val shouldSkipLabels = (columnWidth < 45.dp && hasLongLabels) || columnWidth < 36.dp
+                        val fontScale = LocalDensity.current.fontScale
+                        // Avoid overlap on small phones (320dp / large font):
+                        val isNarrow = columnWidth < 46.dp || fontScale > 1.2f
+                        val isVeryNarrow = columnWidth < 36.dp || (columnWidth < 42.dp && fontScale > 1.3f)
+                        val barWidth = (columnWidth * 0.42f).coerceIn(8.dp, 20.dp)
 
                         Row(
                             modifier = Modifier
@@ -868,10 +883,10 @@ fun DashboardHomeContent(
                                 val isCurrent = point.isCurrentDay == true
                                 val rawAbbr = formattedLabels.getOrElse(index) { "" }
 
-                                val displayLabel = if (shouldSkipLabels) {
-                                    if (index % 2 == 0 || index == pointCount - 1) rawAbbr else ""
-                                } else {
-                                    rawAbbr
+                                val displayLabel = when {
+                                    isVeryNarrow -> if (index == 0 || index == pointCount / 2 || index == pointCount - 1) rawAbbr else ""
+                                    isNarrow -> if (index % 2 == 0 || index == pointCount - 1) rawAbbr else ""
+                                    else -> rawAbbr
                                 }
 
                                 Column(
@@ -889,7 +904,7 @@ fun DashboardHomeContent(
                                     ) {
                                         Box(
                                             modifier = Modifier
-                                                .width(18.dp)
+                                                .width(barWidth)
                                                 .height((60.dp * ratio).coerceAtLeast(6.dp))
                                                 .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 2.dp, bottomEnd = 2.dp))
                                                 .background(if (isCurrent) primaryColor else accentColor)
@@ -901,7 +916,7 @@ fun DashboardHomeContent(
                                         style = MaterialTheme.typography.bodySmall,
                                         color = if (isCurrent) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
-                                        fontSize = 11.sp,
+                                        fontSize = if (isNarrow) 9.sp else 11.sp,
                                         textAlign = TextAlign.Center,
                                         maxLines = 1,
                                         softWrap = false,
@@ -1087,8 +1102,10 @@ fun DashboardHomeContent(
                 .padding(vertical = 4.dp)
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        // Bottom padding to ensure content is never covered by Dukaan Mitra FAB or bottom bar
+        Spacer(modifier = Modifier.height(88.dp))
     }
+}
 }
 
 /**

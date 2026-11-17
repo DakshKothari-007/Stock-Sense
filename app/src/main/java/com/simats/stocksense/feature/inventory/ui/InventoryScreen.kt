@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,6 +40,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.util.NumberFormatUtil
+import com.simats.stocksense.core.util.ResponsiveContainer
+import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.data.model.InventoryProduct
 import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.feature.inventory.viewmodel.InventoryUiState
@@ -241,30 +244,39 @@ fun InventoryContent(
     val isShopEmpty = allProductsCount == 0 && searchQuery.isEmpty() && selectedFilter == 0
     val isNoSearchResults = products.isEmpty() && (searchQuery.isNotEmpty() || selectedFilter != 0)
     val showBottomImportButton = !isShopEmpty && searchQuery.isEmpty()
+    val windowInfo = rememberWindowSizeInfo()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 20.dp)
+    ResponsiveContainer(
+        modifier = Modifier.fillMaxSize(),
+        maxWidth = 720.dp
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = windowInfo.horizontalPadding)
+        ) {
+            Spacer(modifier = Modifier.height(8.dp))
 
-        // 1. Header (Fixed at top)
-        Column {
-            Text(
-                text = "Inventory",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp
-            )
-            Text(
-                text = headerSubtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 12.sp
-            )
-        }
+            // 1. Header (Fixed at top)
+            Column {
+                Text(
+                    text = "Inventory",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = headerSubtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -504,7 +516,9 @@ fun InventoryContent(
                                 ) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.weight(1f)
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(end = 8.dp)
                                     ) {
                                         ProductAvatar(
                                             name = item.name,
@@ -513,14 +527,15 @@ fun InventoryContent(
                                             size = 40.dp
                                         )
                                         Spacer(modifier = Modifier.width(12.dp))
-                                        Column {
+                                        Column(modifier = Modifier.weight(1f)) {
                                             Text(
                                                 text = item.name.ifBlank { "—" },
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.Bold,
                                                 color = MaterialTheme.colorScheme.onSurface,
                                                 fontSize = 13.sp,
-                                                maxLines = 1
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
                                             )
                                             val skuDisplay = item.sku.ifBlank { "—" }
                                             val priceDisplay = item.price.ifBlank { "—" }
@@ -529,7 +544,8 @@ fun InventoryContent(
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 fontSize = 11.sp,
-                                                maxLines = 1
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
                                             )
                                             if (item.status != null) {
                                                 Text(
@@ -538,7 +554,8 @@ fun InventoryContent(
                                                     color = Color(item.statusColorHex),
                                                     fontWeight = FontWeight.SemiBold,
                                                     fontSize = 11.sp,
-                                                    maxLines = 1
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
                                                 )
                                             }
                                         }
@@ -624,7 +641,7 @@ fun InventoryContent(
                             onClick = onImportDataClick,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(52.dp),
+                                .defaultMinSize(minHeight = 52.dp),
                             shape = RoundedCornerShape(14.dp),
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                             colors = ButtonDefaults.outlinedButtonColors(
@@ -635,7 +652,9 @@ fun InventoryContent(
                                 text = "Import Data",
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 15.sp
+                                fontSize = 14.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -643,7 +662,7 @@ fun InventoryContent(
                             onClick = onAddProductClick,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(52.dp),
+                                .defaultMinSize(minHeight = 52.dp),
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = primaryColor,
@@ -660,7 +679,9 @@ fun InventoryContent(
                                 text = "Add product",
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp
+                                fontSize = 14.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -668,6 +689,7 @@ fun InventoryContent(
             }
         }
     }
+}
 }
 
 @Preview(showBackground = true)

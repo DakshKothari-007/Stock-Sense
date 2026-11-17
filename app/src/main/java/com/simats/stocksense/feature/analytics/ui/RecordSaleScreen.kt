@@ -39,6 +39,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.util.NumberFormatUtil
+import com.simats.stocksense.core.util.ResponsiveContainer
+import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.feature.analytics.viewmodel.BillItem
 import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.feature.analytics.viewmodel.RecordSaleViewModel
@@ -104,72 +106,91 @@ fun RecordSaleScreen(
     val todayFormattedDate = remember {
         SimpleDateFormat("EEE, d MMM yyyy", Locale.ENGLISH).format(Date())
     }
+    val windowInfo = rememberWindowSizeInfo()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp)
-            ) {
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // 1. Header Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+        ResponsiveContainer(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .imePadding(),
+            maxWidth = 640.dp
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = windowInfo.horizontalPadding)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surface)
-                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
-                            .clickable { handleBack() },
-                        contentAlignment = Alignment.Center
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // 1. Header Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Canvas(modifier = Modifier.size(16.dp)) {
-                            val path = Path().apply {
-                                moveTo(size.width * 0.65f, size.height * 0.15f)
-                                lineTo(size.width * 0.25f, size.height * 0.5f)
-                                lineTo(size.width * 0.65f, size.height * 0.85f)
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clickable { handleBack() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.surface)
+                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Canvas(modifier = Modifier.size(16.dp)) {
+                                    val path = Path().apply {
+                                        moveTo(size.width * 0.65f, size.height * 0.15f)
+                                        lineTo(size.width * 0.25f, size.height * 0.5f)
+                                        lineTo(size.width * 0.65f, size.height * 0.85f)
+                                    }
+                                    drawPath(
+                                        path = path,
+                                        color = primaryColor,
+                                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                    )
+                                }
                             }
-                            drawPath(
-                                path = path,
-                                color = primaryColor,
-                                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                        }
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Record sale",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            val headerSubtitle = remember(uiState.storeName, todayFormattedDate) {
+                                if (uiState.storeName.isNotBlank() && uiState.storeName != "—") {
+                                    "${uiState.storeName} · $todayFormattedDate"
+                                } else {
+                                    todayFormattedDate
+                                }
+                            }
+                            Text(
+                                text = headerSubtitle,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
-
-                    Spacer(modifier = Modifier.width(14.dp))
-
-                    Column {
-                        Text(
-                            text = "Record sale",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                        val headerSubtitle = remember(uiState.storeName, todayFormattedDate) {
-                            if (uiState.storeName.isNotBlank() && uiState.storeName != "—") {
-                                "${uiState.storeName} · $todayFormattedDate"
-                            } else {
-                                todayFormattedDate
-                            }
-                        }
-                        Text(
-                            text = headerSubtitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -395,7 +416,7 @@ fun RecordSaleScreen(
                         enabled = uiState.items.isNotEmpty() && !uiState.isSaving,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
+                            .defaultMinSize(minHeight = 52.dp),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = primaryColor,
@@ -415,7 +436,9 @@ fun RecordSaleScreen(
                                 text = "Save sale",
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
+                                fontSize = 16.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -539,7 +562,7 @@ fun RecordSaleScreen(
                                 onClick = { viewModel.dismissSuccessState() },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(50.dp),
+                                    .defaultMinSize(minHeight = 50.dp),
                                 shape = RoundedCornerShape(14.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
                             ) {
@@ -553,7 +576,7 @@ fun RecordSaleScreen(
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(50.dp),
+                                    .defaultMinSize(minHeight = 50.dp),
                                 shape = RoundedCornerShape(14.dp)
                             ) {
                                 Text("Back to Sales Analytics", color = MaterialTheme.colorScheme.onSurface)
@@ -567,6 +590,7 @@ fun RecordSaleScreen(
             if (showDiscardDialog) {
                 AlertDialog(
                     onDismissRequest = { showDiscardDialog = false },
+                    modifier = Modifier.widthIn(max = 520.dp),
                     title = {
                         Text("Discard current bill?", fontWeight = FontWeight.Bold)
                     },
@@ -596,6 +620,7 @@ fun RecordSaleScreen(
             }
         }
     }
+}
 }
 
 @Composable
@@ -663,7 +688,9 @@ private fun BillItemCard(
                         text = "${item.sku} · ${NumberFormatUtil.formatIndianRupees(item.unitPrice)} each",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -683,7 +710,7 @@ private fun BillItemCard(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
                             onClick = onDecrement,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Remove,
@@ -705,7 +732,7 @@ private fun BillItemCard(
                         IconButton(
                             onClick = onIncrement,
                             enabled = !isAtStockLimit,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Add,
