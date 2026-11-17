@@ -184,20 +184,20 @@ class ProductDetailViewModel(
 
                     if (!rawStatus.isNullOrEmpty()) {
                         calculatedStatus = rawStatus
-                        calculatedColorHex = data.statusColorHex ?: 0xFF98621A
+                        calculatedColorHex = data.statusColorHex ?: 0xFFFF9F5A
                     } else {
                         when {
                             rawUnits <= 0 -> {
                                 calculatedStatus = "Out of stock"
-                                calculatedColorHex = 0xFFD32F2F
+                                calculatedColorHex = 0xFFFF6B6B
                             }
                             rawUnits <= threshold && threshold > 0 -> {
                                 calculatedStatus = "Low stock · Minimum $threshold"
-                                calculatedColorHex = 0xFF98621A
+                                calculatedColorHex = 0xFFFF9F5A
                             }
                             else -> {
                                 calculatedStatus = "In stock"
-                                calculatedColorHex = 0xFF2E7D32
+                                calculatedColorHex = 0xFFC9B8FF
                             }
                         }
                     }

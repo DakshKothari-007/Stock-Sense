@@ -31,7 +31,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
@@ -359,11 +359,11 @@ private fun PurchaseOrderCard(
 ) {
     val status = order.status?.lowercase() ?: "placed"
 
-    // Colors for status chip
+    // Colors for status chip (Bold Outline tokens)
     val (statusBg, statusFg) = when (status) {
-        "received" -> Color(0xFF10B981).copy(alpha = 0.15f) to Color(0xFF10B981)
-        "cancelled" -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
-        else -> Color(0xFF0284C7).copy(alpha = 0.18f) to Color(0xFF38BDF8) // placed
+        "received" -> SoftLavender to InkDark
+        "cancelled" -> SoftPink to InkDark
+        else -> SoftLightBlue to InkDark // placed
     }
 
     val firstItem = order.items?.firstOrNull()

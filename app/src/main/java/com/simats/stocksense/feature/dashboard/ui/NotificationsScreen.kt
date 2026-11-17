@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.simats.stocksense.core.theme.MainBlue
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
@@ -442,14 +443,14 @@ private fun NotificationCard(
                     }
                 }
 
-                // Unread Green Dot
+                // Unread Blue Dot
                 if (!isRead) {
                     Box(
                         modifier = Modifier
                             .padding(top = 4.dp)
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF20A486))
+                            .background(MainBlue)
                     )
                 }
             }

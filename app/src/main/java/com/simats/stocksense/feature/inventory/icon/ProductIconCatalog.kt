@@ -16,14 +16,14 @@ enum class ProductDepartment(
     val badgeTextColor: Color
 ) {
     FRUITS("fruits", "Fruits", R.drawable.ic_prod_apple, Color(0xFFFFF1F2), Color(0xFF4C1D24), Color(0xFFE11D48)),
-    VEGETABLES("vegetables", "Vegetables", R.drawable.ic_prod_potato, Color(0xFFF0FDF4), Color(0xFF14532D), Color(0xFF16A34A)),
+    VEGETABLES("vegetables", "Vegetables", R.drawable.ic_prod_potato, Color(0xFFF3E8FF), Color(0xFF3B0764), Color(0xFF7E22CE)),
     DAIRY("dairy", "Dairy & Eggs", R.drawable.ic_prod_milk_bottle, Color(0xFFF0F9FF), Color(0xFF164E63), Color(0xFF0284C7)),
     BAKERY("bakery", "Bakery", R.drawable.ic_prod_bread, Color(0xFFFFFBEB), Color(0xFF451A03), Color(0xFFD97706)),
     SNACKS("snacks", "Snacks", R.drawable.ic_prod_cookie, Color(0xFFFFF7ED), Color(0xFF431407), Color(0xFFEA580C)),
     SWEETS("sweets", "Sweets", R.drawable.ic_prod_chocolate, Color(0xFFFDF2F8), Color(0xFF500724), Color(0xFFDB2777)),
     STAPLES("staples", "Grains & Staples", R.drawable.ic_prod_sheaf_of_rice, Color(0xFFFEFCE8), Color(0xFF422006), Color(0xFFCA8A04)),
     SPICES_OILS("spices_oils", "Spices & Oils", R.drawable.ic_prod_oil_drop, Color(0xFFFEF3C7), Color(0xFF3F2D06), Color(0xFFB45309)),
-    BEVERAGES("beverages", "Beverages", R.drawable.ic_prod_tea_cup, Color(0xFFECFDF5), Color(0xFF064E3B), Color(0xFF059669)),
+    BEVERAGES("beverages", "Beverages", R.drawable.ic_prod_tea_cup, Color(0xFFEFF6FF), Color(0xFF1E3A8A), Color(0xFF2563EB)),
     MEAT_FISH("meat_fish", "Meat & Seafood", R.drawable.ic_prod_poultry_leg, Color(0xFFFFF1F2), Color(0xFF4C0519), Color(0xFFE11D48)),
     CLEANING("cleaning", "Cleaning", R.drawable.ic_prod_soap_bar, Color(0xFFEEF2FF), Color(0xFF1E1B4B), Color(0xFF4F46E5)),
     PERSONAL_CARE("personal_care", "Personal Care", R.drawable.ic_prod_toothbrush, Color(0xFFF5F3FF), Color(0xFF2E1065), Color(0xFF7C3AED)),
@@ -32,7 +32,7 @@ enum class ProductDepartment(
     STATIONERY("stationery", "Stationery", R.drawable.ic_prod_ballpoint_pen, Color(0xFFF8FAFC), Color(0xFF1E293B), Color(0xFF475569)),
     KITCHENWARE("kitchenware", "Kitchenware", R.drawable.ic_prod_kitchen_knife, Color(0xFFF4F4F5), Color(0xFF27272A), Color(0xFF52525B)),
     ELECTRONICS("electronics", "Electronics", R.drawable.ic_prod_battery, Color(0xFFEFF6FF), Color(0xFF1E3A8A), Color(0xFF1D4ED8)),
-    HEALTH("health", "Health & Medicine", R.drawable.ic_prod_pill, Color(0xFFF0FDF4), Color(0xFF064E3B), Color(0xFF15803D)),
+    HEALTH("health", "Health & Medicine", R.drawable.ic_prod_pill, Color(0xFFFFE4E6), Color(0xFF4C0519), Color(0xFFE11D48)),
     TOYS_GIFTS("toys_gifts", "Toys & Gifts", R.drawable.ic_prod_gift_box, Color(0xFFFAF5FF), Color(0xFF3B0764), Color(0xFF9333EA)),
     GENERAL("general", "General & Packaging", R.drawable.ic_prod_package, Color(0xFFF3F4F6), Color(0xFF1F2937), Color(0xFF4B5563));
 

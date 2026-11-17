@@ -1,5 +1,6 @@
 package com.simats.stocksense.feature.auth.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -29,7 +31,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.R
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import kotlinx.coroutines.launch
@@ -61,7 +65,7 @@ fun ForgotPasswordScreen(
 
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val primaryColor = MainYellow
 
     val isEmailValid = email.contains("@") && email.contains(".")
     val isPasswordLengthValid = newPassword.length >= 8
@@ -74,7 +78,7 @@ fun ForgotPasswordScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = CreamBackground
     ) { innerPadding ->
         ResponsiveContainer(
             modifier = Modifier
@@ -114,10 +118,10 @@ fun ForgotPasswordScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
-                                    .background(MaterialTheme.colorScheme.surface),
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .border(2.dp, InkDark, RoundedCornerShape(12.dp))
+                                .background(CardWhite),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Canvas(modifier = Modifier.size(16.dp)) {
@@ -128,7 +132,7 @@ fun ForgotPasswordScreen(
                                     }
                                     drawPath(
                                         path = path,
-                                        color = primaryColor,
+                                        color = InkDark,
                                         style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                                     )
                                 }
@@ -162,8 +166,9 @@ fun ForgotPasswordScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // 2. Logo Icon
-                AnimatedSplashLogo(
-                    t = 1f,
+                Image(
+                    painter = painterResource(id = R.drawable.stocksense_symbol_inkblue),
+                    contentDescription = "StockSense",
                     modifier = Modifier.size(64.dp)
                 )
 
@@ -214,10 +219,13 @@ fun ForgotPasswordScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedBorderColor = primaryColor,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        focusedContainerColor = CardWhite,
+                        unfocusedContainerColor = CardWhite,
+                        focusedBorderColor = InkDark,
+                        unfocusedBorderColor = InkDark,
+                        focusedTextColor = InkDark,
+                        unfocusedTextColor = InkDark,
+                        cursorColor = InkDark
                     ),
                     leadingIcon = {
                         Canvas(modifier = Modifier.size(20.dp)) {
@@ -275,10 +283,13 @@ fun ForgotPasswordScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedBorderColor = primaryColor,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        focusedContainerColor = CardWhite,
+                        unfocusedContainerColor = CardWhite,
+                        focusedBorderColor = InkDark,
+                        unfocusedBorderColor = InkDark,
+                        focusedTextColor = InkDark,
+                        unfocusedTextColor = InkDark,
+                        cursorColor = InkDark
                     ),
                     trailingIcon = {
                         IconButton(onClick = { newPasswordVisible = !newPasswordVisible }) {
@@ -342,11 +353,14 @@ fun ForgotPasswordScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedBorderColor = primaryColor,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        errorBorderColor = MaterialTheme.colorScheme.error
+                        focusedContainerColor = CardWhite,
+                        unfocusedContainerColor = CardWhite,
+                        focusedBorderColor = InkDark,
+                        unfocusedBorderColor = InkDark,
+                        errorBorderColor = StatusDangerRed,
+                        focusedTextColor = InkDark,
+                        unfocusedTextColor = InkDark,
+                        cursorColor = InkDark
                     ),
                     trailingIcon = {
                         IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
@@ -400,7 +414,7 @@ fun ForgotPasswordScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Button(
+                BoldButton(
                     onClick = {
                         resetPassword(email, newPassword) {
                             scope.launch {
@@ -410,21 +424,14 @@ fun ForgotPasswordScreen(
                         }
                     },
                     enabled = isResetEnabled,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = primaryColor,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledContainerColor = primaryColor.copy(alpha = 0.5f),
-                        disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
-                    )
+                    modifier = Modifier.fillMaxWidth(),
+                    isPrimary = true
                 ) {
                     Text(
                         text = "Reset Password",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
+                        color = InkDark,
                         fontSize = 16.sp
                     )
                 }

@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
@@ -35,7 +36,7 @@ fun OnboardingScreen1(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         val windowInfo = rememberWindowSizeInfo()
 
@@ -85,13 +86,13 @@ fun OnboardingScreen1(
                 }
 
             // 2. Illustration Card Container
-            val primaryColor = MaterialTheme.colorScheme.primary
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp)),
-                color = MaterialTheme.colorScheme.primaryContainer,
+            val primaryColor = MainYellow
+            BoldCard(
+                modifier = Modifier.fillMaxWidth(),
+                backgroundColor = SoftLightBlue,
+                borderColor = InkDark,
+                borderWidth = 2.dp,
+                shadowOffset = 3.dp,
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Column(
@@ -103,7 +104,7 @@ fun OnboardingScreen1(
                     Text(
                         text = "ONE CLEAR VIEW",
                         style = MaterialTheme.typography.labelSmall,
-                        color = primaryColor,
+                        color = InkDark,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.2.sp,
                         fontSize = 10.sp
@@ -117,7 +118,8 @@ fun OnboardingScreen1(
                         // Products Card
                         Card(
                             modifier = Modifier.weight(1f),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            colors = CardDefaults.cardColors(containerColor = CardWhite),
+                            border = androidx.compose.foundation.BorderStroke(1.5.dp, InkDark),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Column(
@@ -143,7 +145,8 @@ fun OnboardingScreen1(
                         // Stock Value Card
                         Card(
                             modifier = Modifier.weight(1f),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            colors = CardDefaults.cardColors(containerColor = CardWhite),
+                            border = androidx.compose.foundation.BorderStroke(1.5.dp, InkDark),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Column(
@@ -170,7 +173,8 @@ fun OnboardingScreen1(
                     // Item Row 1: Amul Milk
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        colors = CardDefaults.cardColors(containerColor = CardWhite),
+                        border = androidx.compose.foundation.BorderStroke(1.5.dp, InkDark),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Row(
@@ -239,7 +243,8 @@ fun OnboardingScreen1(
                     // Item Row 2: Aashirvaad Atta
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        colors = CardDefaults.cardColors(containerColor = CardWhite),
+                        border = androidx.compose.foundation.BorderStroke(1.5.dp, InkDark),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Row(
@@ -364,21 +369,16 @@ fun OnboardingScreen1(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Next Button
-                Button(
+                BoldButton(
                     onClick = onNextClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = primaryColor,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                    modifier = Modifier.fillMaxWidth(),
+                    isPrimary = true
                 ) {
                     Text(
                         text = "Next",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
+                        color = InkDark,
                         fontSize = 16.sp
                     )
                 }

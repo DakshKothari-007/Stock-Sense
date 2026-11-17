@@ -46,8 +46,8 @@ fun SalesAnalyticsScreen(
     viewModel: SalesAnalyticsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val accentColor = Teal500
+    val primaryColor = MainBlue
+    val accentColor = SoftLightBlue
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(lifecycleOwner) {

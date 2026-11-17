@@ -31,7 +31,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
@@ -226,7 +226,8 @@ fun OrderDetailScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF065F46))
+                            colors = CardDefaults.cardColors(containerColor = SoftLightBlue),
+                            border = BorderStroke(2.dp, InkDark)
                         ) {
                             Column(
                                 modifier = Modifier
@@ -238,7 +239,7 @@ fun OrderDetailScreen(
                                     text = "AWAITING DELIVERY",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF6EE7B7),
+                                    color = MainBlue,
                                     fontSize = 11.sp,
                                     letterSpacing = 0.8.sp
                                 )
@@ -246,13 +247,13 @@ fun OrderDetailScreen(
                                     text = "$totalUnits units on the way",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White,
+                                    color = InkDark,
                                     fontSize = 19.sp
                                 )
                                 Text(
                                     text = bannerDetail,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.White.copy(alpha = 0.85f),
+                                    color = InkDark.copy(alpha = 0.85f),
                                     fontSize = 12.sp,
                                     lineHeight = 16.sp
                                 )
@@ -264,8 +265,8 @@ fun OrderDetailScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.5f))
+                            colors = CardDefaults.cardColors(containerColor = CardWhite),
+                            border = BorderStroke(2.dp, InkDark)
                         ) {
                             Column(
                                 modifier = Modifier
@@ -277,7 +278,7 @@ fun OrderDetailScreen(
                                     text = "DELIVERY RECEIVED",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF10B981),
+                                    color = MainBlue,
                                     fontSize = 11.sp,
                                     letterSpacing = 0.8.sp
                                 )
@@ -285,13 +286,13 @@ fun OrderDetailScreen(
                                     text = "$totalUnits units added to stock",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = InkDark,
                                     fontSize = 18.sp
                                 )
                                 Text(
                                     text = "This purchase order was received. All items have been updated in your inventory.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = MutedInk,
                                     fontSize = 12.sp
                                 )
                             }

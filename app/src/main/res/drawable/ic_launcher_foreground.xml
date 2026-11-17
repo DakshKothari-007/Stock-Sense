@@ -10,10 +10,10 @@
         android:pathData="M24,54 C34,30 74,30 84,54 C70,41 38,41 24,54 Z"
         android:fillColor="#FFFFFF" />
 
-    <!-- Bottom Arch (Mint Green) -->
+    <!-- Bottom Arch (Main Blue) -->
     <path
         android:pathData="M24,54 C34,78 74,78 84,54 C70,67 38,67 24,54 Z"
-        android:fillColor="#8CE6B4" />
+        android:fillColor="#6C8CFF" />
 
     <!-- Center Stock Chart Bars (White, Rounded) -->
     <path

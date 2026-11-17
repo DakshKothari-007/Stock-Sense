@@ -38,7 +38,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
@@ -54,7 +55,7 @@ fun RecommendationPairsScreen(
     onDismissClick: () -> Unit = {},
     viewModel: InsightsViewModel = viewModel()
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val primaryColor = MainYellow
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     var showWhyDialog by remember { mutableStateOf(false) }
@@ -78,7 +79,7 @@ fun RecommendationPairsScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         val windowInfo = rememberWindowSizeInfo()
 
@@ -236,32 +237,28 @@ fun RecommendationPairsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Text(
-                            text = "Frequently bought together",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = primaryColor,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 10.sp,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
+                    BoldChip(
+                        text = "Frequently bought together",
+                        isSelected = true,
+                        backgroundColor = SoftLightBlue,
+                        textColor = InkDark,
+                        borderColor = InkDark,
+                        borderWidth = 1.5.dp
+                    )
 
-                    Surface(
-                        onClick = { showWhyDialog = true },
-                        shape = RoundedCornerShape(16.dp),
-                        color = primaryColor.copy(alpha = 0.12f),
-                        border = BorderStroke(1.dp, primaryColor.copy(alpha = 0.35f))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(CardWhite)
+                            .border(1.5.dp, InkDark, RoundedCornerShape(10.dp))
+                            .clickable { showWhyDialog = true }
+                            .padding(horizontal = 12.dp, vertical = 5.dp)
                     ) {
                         Text(
                             text = "Why?",
-                            color = primaryColor,
+                            color = InkDark,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                            fontSize = 12.sp
                         )
                     }
                 }
@@ -272,16 +269,16 @@ fun RecommendationPairsScreen(
                     text = headlineText,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = InkDark,
                     fontSize = 20.sp
                 )
 
                 // 4. Products Pair Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    colors = CardDefaults.cardColors(containerColor = CardWhite),
                     shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    border = BorderStroke(2.dp, InkDark)
                 ) {
                     Column(
                         modifier = Modifier
@@ -373,22 +370,22 @@ fun RecommendationPairsScreen(
                 ) {
                     Card(
                         modifier = Modifier.weight(1f),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        colors = CardDefaults.cardColors(containerColor = CardWhite),
                         shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                        border = BorderStroke(1.5.dp, InkDark)
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Text(
                                 text = "Baskets with both",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MutedInk,
                                 fontSize = 12.sp
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = "$supportPct%",
                                 style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = InkDark,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 22.sp
                             )
@@ -396,7 +393,7 @@ fun RecommendationPairsScreen(
                             Text(
                                 text = "$billsTogether of $totalBills baskets",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = primaryColor,
+                                color = MutedInk,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -405,22 +402,22 @@ fun RecommendationPairsScreen(
 
                     Card(
                         modifier = Modifier.weight(1f),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        colors = CardDefaults.cardColors(containerColor = CardWhite),
                         shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                        border = BorderStroke(1.5.dp, InkDark)
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Text(
                                 text = "Evidence window",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MutedInk,
                                 fontSize = 12.sp
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = "$windowDays days",
                                 style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = InkDark,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 22.sp
                             )
@@ -428,7 +425,7 @@ fun RecommendationPairsScreen(
                             Text(
                                 text = "Lift: ${pair.effectiveLift}x",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = primaryColor,
+                                color = MutedInk,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -446,7 +443,8 @@ fun RecommendationPairsScreen(
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    colors = CardDefaults.cardColors(containerColor = SoftPeach),
+                    border = BorderStroke(2.dp, InkDark),
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(
@@ -458,7 +456,7 @@ fun RecommendationPairsScreen(
                         Text(
                             text = "RECOMMENDED ACTION",
                             style = MaterialTheme.typography.labelSmall,
-                            color = primaryColor,
+                            color = InkDark,
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp,
                             letterSpacing = 1.sp
@@ -468,7 +466,7 @@ fun RecommendationPairsScreen(
                             text = "Offer the pair at ${NumberFormatUtil.formatIndianRupees(bundlePrice)}",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = InkDark,
                             fontSize = 20.sp
                         )
 
@@ -480,14 +478,14 @@ fun RecommendationPairsScreen(
                             Text(
                                 text = "Usual combined price",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MutedInk,
                                 fontSize = 12.sp
                             )
                             Text(
                                 text = NumberFormatUtil.formatIndianRupees(combinedPrice),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = InkDark,
                                 fontSize = 13.sp
                             )
                         }
@@ -500,14 +498,14 @@ fun RecommendationPairsScreen(
                             Text(
                                 text = "Customer saves",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MutedInk,
                                 fontSize = 12.sp
                             )
                             Text(
                                 text = NumberFormatUtil.formatIndianRupees(savings),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = InkDark,
                                 fontSize = 13.sp
                             )
                         }
@@ -517,7 +515,7 @@ fun RecommendationPairsScreen(
                         Text(
                             text = placementText,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MutedInk,
                             fontSize = 11.sp,
                             lineHeight = 15.sp
                         )
@@ -527,7 +525,8 @@ fun RecommendationPairsScreen(
                 // 7. Disclaimer Note Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    colors = CardDefaults.cardColors(containerColor = SoftLightBlue),
+                    border = BorderStroke(2.dp, InkDark),
                     shape = RoundedCornerShape(14.dp)
                 ) {
                     Row(
@@ -538,7 +537,7 @@ fun RecommendationPairsScreen(
                     ) {
                         Canvas(modifier = Modifier.size(20.dp)) {
                             drawCircle(
-                                color = primaryColor,
+                                color = InkDark,
                                 radius = size.width / 2f,
                                 style = Stroke(width = 1.5.dp.toPx())
                             )
@@ -549,7 +548,7 @@ fun RecommendationPairsScreen(
                             }
                             drawPath(
                                 path = path,
-                                color = primaryColor,
+                                color = InkDark,
                                 style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                             )
                         }
@@ -561,14 +560,14 @@ fun RecommendationPairsScreen(
                                 text = "Decision record only",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = InkDark,
                                 fontSize = 13.sp
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Accepting does not publish an offer or change prices.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MutedInk,
                                 fontSize = 11.sp
                             )
                         }
@@ -582,74 +581,70 @@ fun RecommendationPairsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Button(
-                        onClick = {
-                            val p1 = prod1?.effectiveId
-                            val p2 = prod2?.effectiveId
-                            if (p1 != null && p2 != null && p1 > 0 && p2 > 0) {
-                                viewModel.respondProductPair(
-                                    productId1 = p1,
-                                    productId2 = p2,
-                                    action = "accepted",
-                                    onSuccess = onAcceptClick,
-                                    onError = { msg ->
-                                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
-                                    }
-                                )
-                            } else {
-                                android.widget.Toast.makeText(context, "Invalid product pair IDs", android.widget.Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .defaultMinSize(minHeight = 52.dp),
-                        enabled = !uiState.isResponding,
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = primaryColor,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
-                    ) {
-                        Text(
-                            text = if (uiState.isResponding) "Saving..." else "Accept",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
-                        )
+                    Box(modifier = Modifier.weight(1f)) {
+                        BoldButton(
+                            onClick = {
+                                val p1 = prod1?.effectiveId
+                                val p2 = prod2?.effectiveId
+                                if (p1 != null && p2 != null && p1 > 0 && p2 > 0) {
+                                    viewModel.respondProductPair(
+                                        productId1 = p1,
+                                        productId2 = p2,
+                                        action = "accepted",
+                                        onSuccess = onAcceptClick,
+                                        onError = { msg ->
+                                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                                        }
+                                    )
+                                } else {
+                                    android.widget.Toast.makeText(context, "Invalid product pair IDs", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !uiState.isResponding,
+                            isPrimary = true
+                        ) {
+                            Text(
+                                text = if (uiState.isResponding) "Saving..." else "Accept",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark,
+                                fontSize = 15.sp
+                            )
+                        }
                     }
 
-                    OutlinedButton(
-                        onClick = {
-                            val p1 = prod1?.effectiveId
-                            val p2 = prod2?.effectiveId
-                            if (p1 != null && p2 != null && p1 > 0 && p2 > 0) {
-                                viewModel.respondProductPair(
-                                    productId1 = p1,
-                                    productId2 = p2,
-                                    action = "dismissed",
-                                    onSuccess = onDismissClick,
-                                    onError = { msg ->
-                                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
-                                    }
-                                )
-                            } else {
-                                android.widget.Toast.makeText(context, "Invalid product pair IDs", android.widget.Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .defaultMinSize(minHeight = 48.dp),
-                        enabled = !uiState.isResponding,
-                        shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                    ) {
-                        Text(
-                            text = "Dismiss",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = primaryColor,
-                            fontSize = 15.sp
-                        )
+                    Box(modifier = Modifier.weight(1f)) {
+                        BoldButton(
+                            onClick = {
+                                val p1 = prod1?.effectiveId
+                                val p2 = prod2?.effectiveId
+                                if (p1 != null && p2 != null && p1 > 0 && p2 > 0) {
+                                    viewModel.respondProductPair(
+                                        productId1 = p1,
+                                        productId2 = p2,
+                                        action = "dismissed",
+                                        onSuccess = onDismissClick,
+                                        onError = { msg ->
+                                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                                        }
+                                    )
+                                } else {
+                                    android.widget.Toast.makeText(context, "Invalid product pair IDs", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !uiState.isResponding,
+                            isPrimary = false
+                        ) {
+                            Text(
+                                text = "Dismiss",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark,
+                                fontSize = 15.sp
+                            )
+                        }
                     }
                 }
             }

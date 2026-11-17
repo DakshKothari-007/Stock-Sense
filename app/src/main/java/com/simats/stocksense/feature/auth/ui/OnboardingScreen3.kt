@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
@@ -29,7 +30,7 @@ fun OnboardingScreen3(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         val windowInfo = rememberWindowSizeInfo()
 
@@ -79,14 +80,14 @@ fun OnboardingScreen3(
                 }
 
             // 2. Illustration Card Container (Weekly Sales Chart)
-            val primaryColor = MaterialTheme.colorScheme.primary
-            val accentColor = Teal500
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp)),
-                color = MaterialTheme.colorScheme.primaryContainer,
+            val primaryColor = MainYellow
+            val accentColor = MainBlue
+            BoldCard(
+                modifier = Modifier.fillMaxWidth(),
+                backgroundColor = SoftPeach,
+                borderColor = InkDark,
+                borderWidth = 2.dp,
+                shadowOffset = 3.dp,
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Column(
@@ -98,7 +99,7 @@ fun OnboardingScreen3(
                     Text(
                         text = "MAKE EVERY RUPEE COUNT",
                         style = MaterialTheme.typography.labelSmall,
-                        color = primaryColor,
+                        color = InkDark,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.2.sp,
                         fontSize = 10.sp
@@ -107,7 +108,8 @@ fun OnboardingScreen3(
                     // Sales Chart White Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        colors = CardDefaults.cardColors(containerColor = CardWhite),
+                        border = androidx.compose.foundation.BorderStroke(1.5.dp, InkDark),
                         shape = RoundedCornerShape(14.dp)
                     ) {
                         Column(
@@ -268,21 +270,16 @@ fun OnboardingScreen3(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Get Started Button
-                Button(
+                BoldButton(
                     onClick = onGetStartedClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = primaryColor,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                    modifier = Modifier.fillMaxWidth(),
+                    isPrimary = true
                 ) {
                     Text(
                         text = "Get Started",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
+                        color = InkDark,
                         fontSize = 16.sp
                     )
                 }

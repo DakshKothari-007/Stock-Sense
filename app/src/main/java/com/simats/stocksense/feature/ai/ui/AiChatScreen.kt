@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -58,15 +59,7 @@ import com.simats.stocksense.data.model.ChatMessage
 import com.simats.stocksense.feature.ai.viewmodel.AiChatViewModel
 import java.util.*
 
-private val DarkNavyBg = Color(0xFF0F172A)
-private val CardNavyBg = Color(0xFF1E293B)
-private val CardBorderColor = Color(0xFF334155)
-private val VibrantGreen = Color(0xFF34D399)
-private val DarkGreenText = Color(0xFF064E3B)
-private val UserBubbleColor = Color(0xFF34D399)
-private val MutedText = Color(0xFF94A3B8)
-private val LowChipBg = Color(0xFFFEF3C7)
-private val LowChipText = Color(0xFFD97706)
+private val UserBubbleColor = SoftPeach
 
 @Composable
 fun AiChatScreen(
@@ -201,13 +194,13 @@ fun AiChatScreen(
                 Text(
                     text = "Microphone Access",
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = InkDark
                 )
             },
             text = {
                 Text(
                     text = "Dukaan Mitra uses your microphone to transcribe your voice questions in English, Tamil, or Hindi.",
-                    color = MutedText
+                    color = MutedInk
                 )
             },
             confirmButton = {
@@ -217,21 +210,22 @@ fun AiChatScreen(
                         permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                     }
                 ) {
-                    Text("Allow", color = VibrantGreen, fontWeight = FontWeight.Bold)
+                    Text("Allow", color = MainBlue, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showPermissionRationale = false }) {
-                    Text("Cancel", color = MutedText)
+                    Text("Cancel", color = MutedInk)
                 }
             },
-            containerColor = CardNavyBg
+            containerColor = CardWhite,
+            modifier = Modifier.border(2.5.dp, InkDark, RoundedCornerShape(20.dp))
         )
     }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = DarkNavyBg
+        color = CreamBackground
     ) {
         ResponsiveContainer(
             modifier = Modifier.fillMaxSize(),
@@ -326,8 +320,8 @@ private fun AiChatHeader(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(CardNavyBg)
-                    .border(1.dp, CardBorderColor, RoundedCornerShape(12.dp)),
+                    .background(CardWhite)
+                    .border(2.dp, InkDark, RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(modifier = Modifier.size(16.dp)) {
@@ -338,7 +332,7 @@ private fun AiChatHeader(
                     }
                     drawPath(
                         path = path,
-                        color = VibrantGreen,
+                        color = InkDark,
                         style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                     )
                 }
@@ -354,7 +348,7 @@ private fun AiChatHeader(
             modifier = Modifier
                 .size(52.dp)
                 .clip(CircleShape)
-                .border(1.5.dp, VibrantGreen, CircleShape),
+                .border(2.dp, InkDark, CircleShape),
             contentScale = ContentScale.Crop
         )
 
@@ -364,7 +358,7 @@ private fun AiChatHeader(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "Dukaan Mitra",
-                color = Color.White,
+                color = InkDark,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
                 maxLines = 1,
@@ -372,7 +366,7 @@ private fun AiChatHeader(
             )
             Text(
                 text = "Your shop assistant",
-                color = MutedText,
+                color = MutedInk,
                 fontSize = 12.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -385,13 +379,15 @@ private fun AiChatHeader(
                 Icon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = "Options",
-                    tint = Color.White
+                    tint = InkDark
                 )
             }
             DropdownMenu(
                 expanded = showMenu,
                 onDismissRequest = { showMenu = false },
-                modifier = Modifier.background(CardNavyBg)
+                modifier = Modifier
+                    .background(CardWhite)
+                    .border(2.dp, InkDark, RoundedCornerShape(12.dp))
             ) {
                 DropdownMenuItem(
                     text = {
@@ -400,7 +396,7 @@ private fun AiChatHeader(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Auto-speak answers", color = Color.White, fontSize = 14.sp)
+                            Text("Auto-speak answers", color = InkDark, fontSize = 14.sp)
                             Spacer(modifier = Modifier.width(12.dp))
                             Switch(
                                 checked = autoSpeak,
@@ -409,8 +405,8 @@ private fun AiChatHeader(
                                     showMenu = false
                                 },
                                 colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
-                                    checkedTrackColor = VibrantGreen
+                                    checkedThumbColor = InkDark,
+                                    checkedTrackColor = MainYellow
                                 )
                             )
                         }
@@ -457,7 +453,7 @@ private fun WelcomeContent(
             modifier = Modifier
                 .offset(y = floatOffset.dp)
                 .size(136.dp)
-                .background(VibrantGreen.copy(alpha = 0.12f), CircleShape),
+                .background(SoftLightBlue, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Image(
@@ -466,7 +462,7 @@ private fun WelcomeContent(
                 modifier = Modifier
                     .size(120.dp)
                     .clip(CircleShape)
-                    .border(2.dp, VibrantGreen, CircleShape),
+                    .border(2.5.dp, InkDark, CircleShape),
                 contentScale = ContentScale.Crop
             )
         }
@@ -475,7 +471,7 @@ private fun WelcomeContent(
 
         Text(
             text = "Namaste! I'm Dukaan Mitra",
-            color = Color.White,
+            color = InkDark,
             fontWeight = FontWeight.Bold,
             fontSize = 22.sp,
             textAlign = TextAlign.Center
@@ -485,7 +481,7 @@ private fun WelcomeContent(
 
         Text(
             text = "Your shop friend who never sleeps",
-            color = MutedText,
+            color = MutedInk,
             fontSize = 14.sp,
             textAlign = TextAlign.Center
         )
@@ -503,7 +499,7 @@ private fun WelcomeContent(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .border(1.dp, VibrantGreen, CircleShape),
+                    .border(1.5.dp, InkDark, CircleShape),
                 contentScale = ContentScale.Crop
             )
             Spacer(modifier = Modifier.width(10.dp))
@@ -511,12 +507,13 @@ private fun WelcomeContent(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp))
-                    .background(CardNavyBg)
+                    .background(CardWhite)
+                    .border(2.dp, InkDark, RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp))
                     .padding(16.dp)
             ) {
                 Text(
                     text = "Ask me about your stock and sales, in any language. I'll do the maths.",
-                    color = Color.White,
+                    color = InkDark,
                     fontSize = 14.sp,
                     lineHeight = 20.sp
                 )
@@ -528,7 +525,7 @@ private fun WelcomeContent(
         // Try Asking Section
         Text(
             text = "TRY ASKING",
-            color = MutedText,
+            color = MutedInk,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 1.sp,
@@ -565,7 +562,8 @@ private fun QuickQuestionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(CardNavyBg)
+            .background(CardWhite)
+            .border(2.dp, InkDark, RoundedCornerShape(14.dp))
             .clickable { onClick() }
             .padding(horizontal = 18.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -573,7 +571,7 @@ private fun QuickQuestionCard(
     ) {
         Text(
             text = text,
-            color = Color.White,
+            color = InkDark,
             fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
             modifier = Modifier.weight(1f)
@@ -586,7 +584,7 @@ private fun QuickQuestionCard(
             }
             drawPath(
                 path = path,
-                color = VibrantGreen,
+                color = InkDark,
                 style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
             )
         }
@@ -659,11 +657,12 @@ private fun UserMessageRow(message: ChatMessage) {
                 .widthIn(max = 520.dp)
                 .clip(RoundedCornerShape(18.dp, 18.dp, 4.dp, 18.dp))
                 .background(UserBubbleColor)
+                .border(2.dp, InkDark, RoundedCornerShape(18.dp, 18.dp, 4.dp, 18.dp))
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             Text(
                 text = message.text,
-                color = DarkGreenText,
+                color = InkDark,
                 fontWeight = FontWeight.Medium,
                 fontSize = 15.sp,
                 lineHeight = 21.sp
@@ -692,7 +691,7 @@ private fun AssistantMessageRow(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .border(1.dp, VibrantGreen, CircleShape),
+                .border(1.5.dp, InkDark, CircleShape),
             contentScale = ContentScale.Crop
         )
 
@@ -708,7 +707,8 @@ private fun AssistantMessageRow(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp))
-                    .background(CardNavyBg)
+                    .background(CardWhite)
+                    .border(2.dp, InkDark, RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp))
                     .padding(14.dp)
             ) {
                 Column {
@@ -719,7 +719,7 @@ private fun AssistantMessageRow(
                     ) {
                         Text(
                             text = message.text,
-                            color = if (message.isError) Color(0xFFFCA5A5) else Color.White,
+                            color = if (message.isError) StatusDangerRed else InkDark,
                             fontSize = 14.sp,
                             lineHeight = 20.sp,
                             modifier = Modifier.weight(1f)
@@ -735,7 +735,7 @@ private fun AssistantMessageRow(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Canvas(modifier = Modifier.size(16.dp)) {
-                                    val iconColor = if (isSpeaking) VibrantGreen else MutedText
+                                    val iconColor = if (isSpeaking) MainBlue else MutedInk
                                     // Speaker cone
                                     val path = Path().apply {
                                         moveTo(size.width * 0.15f, size.height * 0.35f)
@@ -768,8 +768,8 @@ private fun AssistantMessageRow(
                         OutlinedButton(
                             onClick = { onRetryClick(message.retryQuestion) },
                             shape = RoundedCornerShape(10.dp),
-                            border = BorderStroke(1.dp, VibrantGreen),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = VibrantGreen),
+                            border = BorderStroke(2.dp, InkDark),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = InkDark),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                             modifier = Modifier.height(32.dp)
                         ) {
@@ -794,15 +794,15 @@ private fun AssistantMessageRow(
                         OutlinedButton(
                             onClick = { onActionClick(action) },
                             shape = RoundedCornerShape(20.dp),
-                            border = BorderStroke(1.5.dp, VibrantGreen),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = VibrantGreen),
+                            border = BorderStroke(2.dp, InkDark),
+                            colors = ButtonDefaults.outlinedButtonColors(containerColor = CardWhite, contentColor = InkDark),
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                         ) {
                             Text(
                                 text = action.label,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = VibrantGreen
+                                color = InkDark
                             )
                         }
                     }
@@ -821,15 +821,15 @@ private fun AssistantMessageRow(
                         Surface(
                             onClick = { onSuggestionClick(suggestion.message) },
                             shape = RoundedCornerShape(16.dp),
-                            color = CardNavyBg,
-                            border = BorderStroke(1.dp, CardBorderColor),
+                            color = SoftLavender,
+                            border = BorderStroke(1.5.dp, InkDark),
                             modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                         ) {
                             Text(
                                 text = suggestion.label,
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                             )
                         }
@@ -845,8 +845,8 @@ private fun ProductCardsContainer(cards: List<AiProductCard>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = CardNavyBg),
-        border = BorderStroke(1.dp, CardBorderColor)
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        border = BorderStroke(2.dp, InkDark)
     ) {
         Column {
             cards.forEachIndexed { index, card ->
@@ -872,7 +872,7 @@ private fun ProductCardsContainer(cards: List<AiProductCard>) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = card.name,
-                                color = Color.White,
+                                color = InkDark,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 maxLines = 1
@@ -885,7 +885,7 @@ private fun ProductCardsContainer(cards: List<AiProductCard>) {
                             }
                             Text(
                                 text = salesText,
-                                color = MutedText,
+                                color = MutedInk,
                                 fontSize = 12.sp,
                                 maxLines = 1
                             )
@@ -897,12 +897,13 @@ private fun ProductCardsContainer(cards: List<AiProductCard>) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(if (isLow) LowChipBg else Color(0xFFD1FAE5))
+                            .background(if (isLow) StatusLowStock else SoftLavender)
+                            .border(1.5.dp, InkDark, RoundedCornerShape(8.dp))
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = if (isLow) "Low" else "Stock",
-                            color = if (isLow) LowChipText else DarkGreenText,
+                            color = InkDark,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -910,7 +911,7 @@ private fun ProductCardsContainer(cards: List<AiProductCard>) {
                 }
 
                 if (index < cards.size - 1) {
-                    HorizontalDivider(color = CardBorderColor, thickness = 0.8.dp)
+                    HorizontalDivider(color = InkDark.copy(alpha = 0.15f), thickness = 1.dp)
                 }
             }
         }
@@ -945,7 +946,7 @@ private fun TypingIndicatorRow(showStillThinking: Boolean = false) {
                 .scale(avatarScale)
                 .size(40.dp)
                 .clip(CircleShape)
-                .border(1.dp, VibrantGreen, CircleShape),
+                .border(1.5.dp, InkDark, CircleShape),
             contentScale = ContentScale.Crop
         )
 
@@ -955,7 +956,8 @@ private fun TypingIndicatorRow(showStillThinking: Boolean = false) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(16.dp))
-                    .background(CardNavyBg)
+                    .background(CardWhite)
+                    .border(2.dp, InkDark, RoundedCornerShape(16.dp))
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 ThreeDotsTypingIndicator()
@@ -965,7 +967,7 @@ private fun TypingIndicatorRow(showStillThinking: Boolean = false) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Still thinking...",
-                    color = MutedText,
+                    color = MutedInk,
                     fontSize = 11.sp,
                     modifier = Modifier.padding(start = 4.dp)
                 )
@@ -1010,9 +1012,9 @@ private fun ThreeDotsTypingIndicator() {
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(modifier = Modifier.size(7.dp).background(VibrantGreen.copy(alpha = dot1Alpha), CircleShape))
-        Box(modifier = Modifier.size(7.dp).background(VibrantGreen.copy(alpha = dot2Alpha), CircleShape))
-        Box(modifier = Modifier.size(7.dp).background(VibrantGreen.copy(alpha = dot3Alpha), CircleShape))
+        Box(modifier = Modifier.size(7.dp).background(MainBlue.copy(alpha = dot1Alpha), CircleShape))
+        Box(modifier = Modifier.size(7.dp).background(MainBlue.copy(alpha = dot2Alpha), CircleShape))
+        Box(modifier = Modifier.size(7.dp).background(MainBlue.copy(alpha = dot3Alpha), CircleShape))
     }
 }
 
@@ -1045,8 +1047,8 @@ private fun InputBar(
                     .weight(1f)
                     .height(52.dp)
                     .clip(RoundedCornerShape(26.dp))
-                    .background(CardNavyBg)
-                    .border(1.dp, CardBorderColor, RoundedCornerShape(26.dp))
+                    .background(CardWhite)
+                    .border(2.dp, InkDark, RoundedCornerShape(26.dp))
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1054,7 +1056,7 @@ private fun InputBar(
                     if (text.isEmpty()) {
                         Text(
                             text = "Ask in English, Tamil, Hindi...",
-                            color = MutedText,
+                            color = MutedInk,
                             fontSize = 14.sp
                         )
                     }
@@ -1062,11 +1064,11 @@ private fun InputBar(
                         value = text,
                         onValueChange = onTextChange,
                         textStyle = TextStyle(
-                            color = Color.White,
+                            color = InkDark,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Normal
                         ),
-                        cursorBrush = SolidColor(VibrantGreen),
+                        cursorBrush = SolidColor(InkDark),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -1079,22 +1081,22 @@ private fun InputBar(
                     modifier = Modifier
                         .size(34.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF10B981))
+                        .background(MainBlue)
+                        .border(1.5.dp, InkDark, CircleShape)
                         .clickable { onMicClick() },
                     contentAlignment = Alignment.Center
                 ) {
                     Canvas(modifier = Modifier.size(16.dp)) {
-                        // Microphone shape
                         val w = size.width
                         val h = size.height
                         drawRoundRect(
-                            color = DarkGreenText,
+                            color = CardWhite,
                             topLeft = androidx.compose.ui.geometry.Offset(w * 0.32f, h * 0.15f),
                             size = androidx.compose.ui.geometry.Size(w * 0.36f, h * 0.45f),
                             cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.18f, w * 0.18f)
                         )
                         drawArc(
-                            color = DarkGreenText,
+                            color = CardWhite,
                             startAngle = 0f,
                             sweepAngle = 180f,
                             useCenter = false,
@@ -1103,7 +1105,7 @@ private fun InputBar(
                             style = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round)
                         )
                         drawLine(
-                            color = DarkGreenText,
+                            color = CardWhite,
                             start = androidx.compose.ui.geometry.Offset(w * 0.5f, h * 0.70f),
                             end = androidx.compose.ui.geometry.Offset(w * 0.5f, h * 0.88f),
                             strokeWidth = 1.6.dp.toPx()
@@ -1114,13 +1116,14 @@ private fun InputBar(
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            // Green Up-Arrow Send Button
+            // Yellow Up-Arrow Send Button
             val canSend = text.isNotBlank() && !isTyping
             Box(
                 modifier = Modifier
                     .size(52.dp)
                     .clip(CircleShape)
-                    .background(if (canSend) VibrantGreen else VibrantGreen.copy(alpha = 0.35f))
+                    .background(if (canSend) MainYellow else MainYellow.copy(alpha = 0.4f))
+                    .border(2.dp, InkDark, CircleShape)
                     .clickable(enabled = canSend) { onSend() },
                 contentAlignment = Alignment.Center
             ) {
@@ -1135,7 +1138,7 @@ private fun InputBar(
                     }
                     drawPath(
                         path = path,
-                        color = if (canSend) DarkGreenText else DarkGreenText.copy(alpha = 0.5f),
+                        color = if (canSend) InkDark else InkDark.copy(alpha = 0.5f),
                         style = Stroke(width = 2.4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                     )
                 }
@@ -1146,7 +1149,7 @@ private fun InputBar(
 
         Text(
             text = "AI can make mistakes. Check important numbers.",
-            color = MutedText,
+            color = MutedInk,
             fontSize = 11.sp,
             textAlign = TextAlign.Center
         )
@@ -1249,7 +1252,7 @@ private fun ListeningSheet(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.65f))
+                .background(Color.Black.copy(alpha = 0.5f))
                 .clickable { onCancel() },
             contentAlignment = Alignment.BottomCenter
         ) {
@@ -1258,7 +1261,8 @@ private fun ListeningSheet(
                     .fillMaxWidth()
                     .clickable(enabled = false) {}
                     .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                    .background(DarkNavyBg)
+                    .background(CreamBackground)
+                    .border(2.5.dp, InkDark, RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -1266,7 +1270,7 @@ private fun ListeningSheet(
                 Box(
                     modifier = Modifier
                         .size(width = 40.dp, height = 4.dp)
-                        .background(MutedText.copy(alpha = 0.4f), RoundedCornerShape(2.dp))
+                        .background(InkDark.copy(alpha = 0.3f), RoundedCornerShape(2.dp))
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -1285,7 +1289,8 @@ private fun ListeningSheet(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(if (isSelected) VibrantGreen else CardNavyBg)
+                                .background(if (isSelected) MainYellow else CardWhite)
+                                .border(if (isSelected) 2.dp else 1.5.dp, InkDark, RoundedCornerShape(20.dp))
                                 .clickable {
                                     onLanguageSelected(code)
                                 }
@@ -1293,7 +1298,7 @@ private fun ListeningSheet(
                         ) {
                             Text(
                                 text = label,
-                                color = if (isSelected) DarkGreenText else Color.White,
+                                color = InkDark,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp
                             )
@@ -1313,34 +1318,35 @@ private fun ListeningSheet(
                         modifier = Modifier
                             .size(100.dp)
                             .scale(pulseScale1)
-                            .background(VibrantGreen.copy(alpha = pulseAlpha1), CircleShape)
+                            .background(SoftLightBlue.copy(alpha = pulseAlpha1), CircleShape)
                     )
 
                     // Secondary Ring
                     Box(
                         modifier = Modifier
                             .size(90.dp)
-                            .background(VibrantGreen.copy(alpha = 0.18f), CircleShape)
+                            .background(SoftLightBlue.copy(alpha = 0.35f), CircleShape)
                     )
 
-                    // Center Green Circle (72dp)
+                    // Center Blue Circle (72dp)
                     Box(
                         modifier = Modifier
                             .size(72.dp)
-                            .background(VibrantGreen, CircleShape),
+                            .background(MainBlue, CircleShape)
+                            .border(2.5.dp, InkDark, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Canvas(modifier = Modifier.size(32.dp)) {
                             val w = size.width
                             val h = size.height
                             drawRoundRect(
-                                color = DarkGreenText,
+                                color = CardWhite,
                                 topLeft = androidx.compose.ui.geometry.Offset(w * 0.32f, h * 0.12f),
                                 size = androidx.compose.ui.geometry.Size(w * 0.36f, h * 0.48f),
                                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.18f, w * 0.18f)
                             )
                             drawArc(
-                                color = DarkGreenText,
+                                color = CardWhite,
                                 startAngle = 0f,
                                 sweepAngle = 180f,
                                 useCenter = false,
@@ -1349,7 +1355,7 @@ private fun ListeningSheet(
                                 style = Stroke(width = 2.4.dp.toPx(), cap = StrokeCap.Round)
                             )
                             drawLine(
-                                color = DarkGreenText,
+                                color = CardWhite,
                                 start = androidx.compose.ui.geometry.Offset(w * 0.5f, h * 0.72f),
                                 end = androidx.compose.ui.geometry.Offset(w * 0.5f, h * 0.90f),
                                 strokeWidth = 2.4.dp.toPx()
@@ -1362,7 +1368,7 @@ private fun ListeningSheet(
 
                 Text(
                     text = "LISTENING",
-                    color = VibrantGreen,
+                    color = MainBlue,
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp,
                     letterSpacing = 1.5.sp
@@ -1374,7 +1380,7 @@ private fun ListeningSheet(
                 val displayText = if (currentTranscript.isNotBlank()) currentTranscript else "Speak now..."
                 Text(
                     text = displayText,
-                    color = if (currentTranscript.isNotBlank()) Color.White else MutedText,
+                    color = if (currentTranscript.isNotBlank()) InkDark else MutedInk,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,
@@ -1395,10 +1401,10 @@ private fun ListeningSheet(
                             .weight(1f)
                             .height(50.dp),
                         shape = RoundedCornerShape(25.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = CardNavyBg),
-                        border = BorderStroke(1.dp, CardBorderColor)
+                        colors = ButtonDefaults.buttonColors(containerColor = CardWhite),
+                        border = BorderStroke(2.dp, InkDark)
                     ) {
-                        Text("Cancel", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        Text("Cancel", color = InkDark, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
 
                     Button(
@@ -1409,11 +1415,12 @@ private fun ListeningSheet(
                             .height(50.dp),
                         shape = RoundedCornerShape(25.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = VibrantGreen,
-                            disabledContainerColor = VibrantGreen.copy(alpha = 0.35f)
-                        )
+                            containerColor = MainYellow,
+                            disabledContainerColor = MainYellow.copy(alpha = 0.4f)
+                        ),
+                        border = BorderStroke(2.dp, InkDark)
                     ) {
-                        Text("Send", color = DarkGreenText, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        Text("Send", color = InkDark, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
                 }
 

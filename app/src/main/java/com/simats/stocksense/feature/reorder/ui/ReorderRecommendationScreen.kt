@@ -187,9 +187,9 @@ fun ReorderRecommendationScreen(
                 val windowInfo = rememberWindowSizeInfo()
 
                 val (badgeBg, badgeText) = when (rec.priority) {
-                    "high" -> Amber50 to Amber700
-                    "medium" -> Color(0xFFE3F2FD) to Color(0xFF1976D2)
-                    else -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
+                    "high" -> StatusLowStock to InkDark
+                    "medium" -> SoftLightBlue to InkDark
+                    else -> SoftLavender to InkDark
                 }
 
                 ResponsiveContainer(

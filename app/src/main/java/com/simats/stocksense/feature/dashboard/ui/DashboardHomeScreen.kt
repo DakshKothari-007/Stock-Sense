@@ -44,6 +44,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.simats.stocksense.core.components.BoldButton
+import com.simats.stocksense.core.components.BoldCard
 import com.simats.stocksense.core.fcm.FcmTokenManager
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
@@ -303,9 +305,6 @@ fun DashboardHomeContent(
     onFreeUpStockClick: () -> Unit = {},
     onImportClick: () -> Unit = {}
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val accentColor = Teal500
-
     val storeName = data.store?.name?.takeIf { it.isNotBlank() } ?: "—"
     val storeLocation = data.store?.location?.takeIf { it.isNotBlank() } ?: "—"
     val todayHeaderDate = NumberFormatUtil.formatCurrentHeaderDate()
@@ -327,39 +326,46 @@ fun DashboardHomeContent(
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 1. Header Row (Shop name, location, and notification bell)
+            // 1. Header Row (Logo, Shop name, location, and notification bell)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = storeName,
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.stocksense_symbol_inkblue),
+                        contentDescription = "StockSense",
+                        modifier = Modifier.size(36.dp)
                     )
-                    Text(
-                        text = if (todayHeaderDate.isNotEmpty()) "$storeLocation · $todayHeaderDate" else storeLocation,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = storeName,
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = InkDark,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 22.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = if (todayHeaderDate.isNotEmpty()) "$storeLocation · $todayHeaderDate" else storeLocation,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MutedInk,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
                 // Bell Notification Icon Box (min 48dp touch target)
-                val bellIconColor = MaterialTheme.colorScheme.onSurface
-                val bellBadgeColor = primaryColor
-                val bellSurfaceColor = MaterialTheme.colorScheme.surface
-
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -370,284 +376,152 @@ fun DashboardHomeContent(
                         modifier = Modifier
                             .size(44.dp)
                             .clip(CircleShape)
-                            .background(bellSurfaceColor)
-                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+                            .background(CardWhite)
+                            .border(2.dp, InkDark, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                Canvas(modifier = Modifier.size(22.dp)) {
-                    val w = size.width
-                    val h = size.height
+                        Canvas(modifier = Modifier.size(22.dp)) {
+                            val w = size.width
+                            val h = size.height
 
-                    // Top stem
-                    drawLine(
-                        color = bellIconColor,
-                        start = Offset(w * 0.5f, h * 0.10f),
-                        end = Offset(w * 0.5f, h * 0.20f),
-                        strokeWidth = 1.8.dp.toPx(),
-                        cap = StrokeCap.Round
-                    )
-
-                    // Bell body
-                    val bellPath = Path().apply {
-                        moveTo(w * 0.5f, h * 0.20f)
-                        cubicTo(w * 0.32f, h * 0.20f, w * 0.22f, h * 0.40f, w * 0.22f, h * 0.60f)
-                        lineTo(w * 0.12f, h * 0.76f)
-                        lineTo(w * 0.88f, h * 0.76f)
-                        lineTo(w * 0.78f, h * 0.60f)
-                        cubicTo(w * 0.78f, h * 0.40f, w * 0.68f, h * 0.20f, w * 0.5f, h * 0.20f)
-                        close()
-                    }
-                    drawPath(
-                        path = bellPath,
-                        color = bellIconColor,
-                        style = Stroke(
-                            width = 1.8.dp.toPx(),
-                            cap = StrokeCap.Round,
-                            join = StrokeJoin.Round
-                        )
-                    )
-
-                    // Bell clapper
-                    val clapperPath = Path().apply {
-                        moveTo(w * 0.40f, h * 0.82f)
-                        cubicTo(w * 0.40f, h * 0.94f, w * 0.60f, h * 0.94f, w * 0.60f, h * 0.82f)
-                    }
-                    drawPath(
-                        path = clapperPath,
-                        color = bellIconColor,
-                        style = Stroke(
-                            width = 1.8.dp.toPx(),
-                            cap = StrokeCap.Round,
-                            join = StrokeJoin.Round
-                        )
-                    )
-
-                    // Notification badge dot (Shown ONLY when unreadCount > 0)
-                    if (unreadCount > 0) {
-                        drawCircle(
-                            color = bellBadgeColor,
-                            radius = w * 0.15f,
-                            center = Offset(w * 0.78f, h * 0.20f)
-                        )
-                        drawCircle(
-                            color = bellSurfaceColor,
-                            radius = w * 0.15f,
-                            center = Offset(w * 0.78f, h * 0.20f),
-                            style = Stroke(width = 1.dp.toPx())
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-        // 2. Metric Cards (Today's Sales & Inventory Value)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Today's Sales Card
-            Card(
-                modifier = Modifier.weight(1f),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text(
-                        text = "Today's sales",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = NumberFormatUtil.formatIndianRupees(data.sales?.todaySalesAmount),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    val bills = data.sales?.todayBillsCount ?: 0
-                    Text(
-                        text = "${NumberFormatUtil.formatIndianNumber(bills)} bills today",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = primaryColor,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 11.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            // Inventory Value Card
-            Card(
-                modifier = Modifier.weight(1f),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text(
-                        text = "Inventory value",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = NumberFormatUtil.formatIndianRupees(data.inventory?.totalStockValue),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "${NumberFormatUtil.formatIndianNumber(totalActiveProducts)} active products",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = primaryColor,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 11.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-        }
-
-        // Empty Store State Banner for newly registered shops
-        if (isNewEmptyStore) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Welcome to StockSense!",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Import your stock to get started with inventory tracking, low-stock alerts, and AI insights.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        fontSize = 12.sp
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onImportClick,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
-                    ) {
-                        Text("Import Stock", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-        }
-
-        // 3. Alerts Row (Low Stock & Slow Moving)
-        val lowStockCount = data.inventory?.lowStockCount ?: 0
-        val topLowItem = data.alerts?.lowStockItems?.firstOrNull()
-
-        val slowMovingMetadata = data.alerts?.slowMovingMetadata
-        val hasSalesHistory = slowMovingMetadata?.hasEnoughSalesHistory ?: false
-        val slowMovingCount = data.inventory?.slowMovingCount ?: 0
-        val topSlowItem = data.alerts?.slowMovingItems?.firstOrNull()
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Low Stock Alert Card
-            val isLowStockActive = lowStockCount > 0 && topLowItem != null
-            Card(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(14.dp))
-                    .clickable { onLowStockClick() },
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isLowStockActive) Amber50 else MaterialTheme.colorScheme.surface
-                ),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text(
-                        text = "LOW STOCK",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (isLowStockActive) Amber800 else MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 10.sp,
-                        letterSpacing = 1.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    if (isLowStockActive) {
-                        val lowName = topLowItem?.name?.takeIf { it.isNotBlank() } ?: "Item"
-                        val lowUnits = topLowItem?.units ?: 0
-                        val lowMin = topLowItem?.minStockThreshold ?: 0
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            ProductAvatar(
-                                name = topLowItem?.name,
-                                category = null,
-                                size = 28.dp
+                            // Top stem
+                            drawLine(
+                                color = InkDark,
+                                start = Offset(w * 0.5f, h * 0.10f),
+                                end = Offset(w * 0.5f, h * 0.20f),
+                                strokeWidth = 1.8.dp.toPx(),
+                                cap = StrokeCap.Round
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "$lowName · $lowUnits left ›",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = if (isLowStockActive) Amber900 else MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+
+                            // Bell body
+                            val bellPath = Path().apply {
+                                moveTo(w * 0.5f, h * 0.20f)
+                                cubicTo(w * 0.32f, h * 0.20f, w * 0.22f, h * 0.40f, w * 0.22f, h * 0.60f)
+                                lineTo(w * 0.12f, h * 0.76f)
+                                lineTo(w * 0.88f, h * 0.76f)
+                                lineTo(w * 0.78f, h * 0.60f)
+                                cubicTo(w * 0.78f, h * 0.40f, w * 0.68f, h * 0.20f, w * 0.5f, h * 0.20f)
+                                close()
+                            }
+                            drawPath(
+                                path = bellPath,
+                                color = InkDark,
+                                style = Stroke(
+                                    width = 1.8.dp.toPx(),
+                                    cap = StrokeCap.Round,
+                                    join = StrokeJoin.Round
                                 )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "Below $lowMin-unit minimum",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = if (isLowStockActive) Amber800 else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                            )
+
+                            // Bell clapper
+                            val clapperPath = Path().apply {
+                                moveTo(w * 0.40f, h * 0.82f)
+                                cubicTo(w * 0.40f, h * 0.94f, w * 0.60f, h * 0.94f, w * 0.60f, h * 0.82f)
+                            }
+                            drawPath(
+                                path = clapperPath,
+                                color = InkDark,
+                                style = Stroke(
+                                    width = 1.8.dp.toPx(),
+                                    cap = StrokeCap.Round,
+                                    join = StrokeJoin.Round
+                                )
+                            )
+
+                            // Notification badge dot (Shown ONLY when unreadCount > 0)
+                            if (unreadCount > 0) {
+                                drawCircle(
+                                    color = StatusDangerRed,
+                                    radius = w * 0.15f,
+                                    center = Offset(w * 0.78f, h * 0.20f)
+                                )
+                                drawCircle(
+                                    color = InkDark,
+                                    radius = w * 0.15f,
+                                    center = Offset(w * 0.78f, h * 0.20f),
+                                    style = Stroke(width = 1.2.dp.toPx())
                                 )
                             }
                         }
-                    } else {
+                    }
+                }
+            }
+
+            // 2. Metric Cards (Today's Sales & Inventory Value in Soft Boxes)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Today's Sales Card in Soft Peach
+                BoldCard(
+                    modifier = Modifier.weight(1f),
+                    backgroundColor = SoftPeach
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
                         Text(
-                            text = "Nothing needs attention",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
+                            text = "Today's sales",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = InkDark,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "All stock levels healthy",
+                            text = NumberFormatUtil.formatIndianRupees(data.sales?.todaySalesAmount),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = InkDark,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        val bills = data.sales?.todayBillsCount ?: 0
+                        Text(
+                            text = "${NumberFormatUtil.formatIndianNumber(bills)} bills today",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = InkDark.copy(alpha = 0.8f),
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                // Inventory Value Card in Soft Light Blue
+                BoldCard(
+                    modifier = Modifier.weight(1f),
+                    backgroundColor = SoftLightBlue
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text(
+                            text = "Inventory value",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = InkDark,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = NumberFormatUtil.formatIndianRupees(data.inventory?.totalStockValue),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = InkDark,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "${NumberFormatUtil.formatIndianNumber(totalActiveProducts)} active products",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = InkDark.copy(alpha = 0.8f),
+                            fontWeight = FontWeight.Medium,
                             fontSize = 11.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -656,68 +530,91 @@ fun DashboardHomeContent(
                 }
             }
 
-            // Slow Moving Alert Card
-            val isSlowMovingActive = hasSalesHistory && slowMovingCount > 0 && topSlowItem != null
-            Card(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(14.dp))
-                    .clickable { onSlowMovingClick() },
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(14.dp)
+            // Empty Store State Banner for newly registered shops
+            if (isNewEmptyStore) {
+                BoldCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = SoftLavender
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Welcome to StockSense!",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = InkDark
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Import your stock to get started with inventory tracking, low-stock alerts, and AI insights.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = InkDark.copy(alpha = 0.85f),
+                            textAlign = TextAlign.Center,
+                            fontSize = 12.sp
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        BoldButton(
+                            text = "Import Stock",
+                            onClick = onImportClick,
+                            isPrimary = true
+                        )
+                    }
+                }
+            }
+
+            // 3. Alerts Row (Low Stock & Slow Moving)
+            val lowStockCount = data.inventory?.lowStockCount ?: 0
+            val topLowItem = data.alerts?.lowStockItems?.firstOrNull()
+
+            val slowMovingMetadata = data.alerts?.slowMovingMetadata
+            val hasSalesHistory = slowMovingMetadata?.hasEnoughSalesHistory ?: false
+            val slowMovingCount = data.inventory?.slowMovingCount ?: 0
+            val topSlowItem = data.alerts?.slowMovingItems?.firstOrNull()
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text(
-                        text = "SLOW MOVING",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (isSlowMovingActive) Amber800 else MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 10.sp,
-                        letterSpacing = 1.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    when {
-                        !hasSalesHistory -> {
-                            Text(
-                                text = "Sales history needed",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = slowMovingMetadata?.message ?: "Requires 30 days history",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 11.sp,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                        isSlowMovingActive -> {
-                            val slowName = topSlowItem?.name?.takeIf { it.isNotBlank() } ?: "Item"
-                            val slowUnits = topSlowItem?.units ?: 0
-                            val slowSold = topSlowItem?.soldLast30Days ?: 0
+                // Low Stock Alert Card in Soft Lavender
+                val isLowStockActive = lowStockCount > 0 && topLowItem != null
+                BoldCard(
+                    modifier = Modifier.weight(1f),
+                    backgroundColor = if (isLowStockActive) SoftLavender else CardWhite,
+                    onClick = onLowStockClick
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text(
+                            text = "LOW STOCK",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (isLowStockActive) StatusLowStock else MutedInk,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                            letterSpacing = 1.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        if (isLowStockActive) {
+                            val lowName = topLowItem?.name?.takeIf { it.isNotBlank() } ?: "Item"
+                            val lowUnits = topLowItem?.units ?: 0
+                            val lowMin = topLowItem?.minStockThreshold ?: 0
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 ProductAvatar(
-                                    name = topSlowItem?.name,
+                                    name = topLowItem?.name,
                                     category = null,
                                     size = 28.dp
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "$slowName ›",
+                                        text = "$lowName · $lowUnits left ›",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface,
+                                        color = InkDark,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 13.sp,
                                         maxLines = 1,
@@ -725,21 +622,20 @@ fun DashboardHomeContent(
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
-                                        text = "$slowUnits left · $slowSold sold / 30 days",
+                                        text = "Below $lowMin-unit minimum",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = MutedInk,
                                         fontSize = 11.sp,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
-                        }
-                        else -> {
+                        } else {
                             Text(
                                 text = "Nothing needs attention",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = InkDark,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp,
                                 maxLines = 1,
@@ -747,9 +643,9 @@ fun DashboardHomeContent(
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "No slow-moving inventory",
+                                text = "All stock levels healthy",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MutedInk,
                                 fontSize = 11.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -757,292 +653,127 @@ fun DashboardHomeContent(
                         }
                     }
                 }
-            }
-        }
 
-        // 4. Sales This Week Card (Chart)
-        val rawPoints = data.sales?.dailySalesPoints ?: emptyList()
-        // Take maximum of 7 days points
-        val chartPoints = if (rawPoints.size > 7) rawPoints.takeLast(7) else rawPoints
-        val maxAmount = chartPoints.maxOfOrNull { it.amount ?: 0.0 } ?: 0.0
-
-        val firstLabel = chartPoints.firstOrNull()?.let { formatChartDayLabel(it.dayLabel, it.date) } ?: ""
-        val lastLabel = chartPoints.lastOrNull()?.let { formatChartDayLabel(it.dayLabel, it.date) } ?: ""
-        val weekDateRangeTag = if (firstLabel.isNotEmpty() && lastLabel.isNotEmpty()) {
-            val firstDay = firstLabel.split(" ").firstOrNull() ?: firstLabel
-            "$firstDay–$lastLabel"
-        } else {
-            "Past 7 days"
-        }
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .clickable { onAnalyticsClick() },
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                // Slow Moving Alert Card in Soft Pink
+                val isSlowMovingActive = hasSalesHistory && slowMovingCount > 0 && topSlowItem != null
+                BoldCard(
+                    modifier = Modifier.weight(1f),
+                    backgroundColor = if (isSlowMovingActive) SoftPink else CardWhite,
+                    onClick = onSlowMovingClick
                 ) {
-                    Text(
-                        text = "Sales this week",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 15.sp,
-                        modifier = Modifier.weight(1f, fill = false),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable { onAnalyticsClick() }
-                    ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
                         Text(
-                            text = "Analytics ›",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = primaryColor,
+                            text = "SLOW MOVING",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (isSlowMovingActive) StatusDangerRed else MutedInk,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
+                            fontSize = 10.sp,
+                            letterSpacing = 1.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer
-                        ) {
-                            Text(
-                                text = weekDateRangeTag,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                fontSize = 10.sp,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                maxLines = 1
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = NumberFormatUtil.formatIndianRupees(data.sales?.weeklySalesTotal),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 24.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Bar Chart dynamically rendered from dailySalesPoints (max 7 points)
-                if (chartPoints.isNotEmpty()) {
-                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                        val availableWidth = maxWidth
-                        val pointCount = chartPoints.size
-                        val columnWidth = if (pointCount > 0) availableWidth / pointCount else availableWidth
-
-                        // Format all labels from data
-                        val formattedLabels = remember(chartPoints) {
-                            chartPoints.map { point ->
-                                formatChartDayLabel(point.dayLabel, point.date)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        when {
+                            !hasSalesHistory -> {
+                                Text(
+                                    text = "Sales history needed",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = InkDark,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = slowMovingMetadata?.message ?: "Requires 30 days history",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MutedInk,
+                                    fontSize = 11.sp,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
-                        }
-
-                        val fontScale = LocalDensity.current.fontScale
-                        // Avoid overlap on small phones (320dp / large font):
-                        val isNarrow = columnWidth < 46.dp || fontScale > 1.2f
-                        val isVeryNarrow = columnWidth < 36.dp || (columnWidth < 42.dp && fontScale > 1.3f)
-                        val barWidth = (columnWidth * 0.42f).coerceIn(8.dp, 20.dp)
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(88.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Bottom
-                        ) {
-                            chartPoints.forEachIndexed { index, point ->
-                                val amount = point.amount ?: 0.0
-                                val ratio = if (maxAmount > 0.0) {
-                                    (amount / maxAmount).toFloat().coerceIn(0.08f, 1.0f)
-                                } else {
-                                    0.08f
-                                }
-                                val isCurrent = point.isCurrentDay == true
-                                val rawAbbr = formattedLabels.getOrElse(index) { "" }
-
-                                val displayLabel = when {
-                                    isVeryNarrow -> if (index == 0 || index == pointCount / 2 || index == pointCount - 1) rawAbbr else ""
-                                    isNarrow -> if (index % 2 == 0 || index == pointCount - 1) rawAbbr else ""
-                                    else -> rawAbbr
-                                }
-
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Bottom,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxHeight()
+                            isSlowMovingActive -> {
+                                val slowName = topSlowItem?.name?.takeIf { it.isNotBlank() } ?: "Item"
+                                val slowUnits = topSlowItem?.units ?: 0
+                                val slowSold = topSlowItem?.soldLast30Days ?: 0
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(60.dp),
-                                        contentAlignment = Alignment.BottomCenter
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .width(barWidth)
-                                                .height((60.dp * ratio).coerceAtLeast(6.dp))
-                                                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 2.dp, bottomEnd = 2.dp))
-                                                .background(if (isCurrent) primaryColor else accentColor)
+                                    ProductAvatar(
+                                        name = topSlowItem?.name,
+                                        category = null,
+                                        size = 28.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "$slowName ›",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = InkDark,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = "$slowUnits left · $slowSold sold / 30 days",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MutedInk,
+                                            fontSize = 11.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text(
-                                        text = displayLabel,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = if (isCurrent) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
-                                        fontSize = if (isNarrow) 9.sp else 11.sp,
-                                        textAlign = TextAlign.Center,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        overflow = TextOverflow.Clip
-                                    )
                                 }
                             }
-                        }
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(70.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No sales recorded this week",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "$weekDateRangeTag · Daily sales in ₹",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 10.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-
-        // 5. Your AI Priorities Section
-        val aiPriorities = data.aiPriorities ?: emptyList()
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Your AI priorities",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 16.sp
-                )
-                Text(
-                    text = "All insights ›",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = primaryColor,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
-                    modifier = Modifier.clickable { onInsightsClick() }
-                )
-            }
-
-            if (aiPriorities.isNotEmpty()) {
-                aiPriorities.forEach { priority ->
-                    AiPriorityCard(
-                        priority = priority,
-                        primaryColor = primaryColor,
-                        onClick = {
-                            if (priority.type.equals("reorder", ignoreCase = true)) {
-                                onReorderMilkClick()
-                            } else {
-                                onFreeUpStockClick()
+                            else -> {
+                                Text(
+                                    text = "Nothing needs attention",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = InkDark,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "No slow-moving inventory",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MutedInk,
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
-                    )
-                }
-            } else {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .clickable { onInsightsClick() },
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        SparkleIcon(primaryColor = primaryColor)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "All systems optimal",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 13.sp
-                            )
-                            Text(
-                                text = "AI will alert you when reordering or clearance is recommended",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 11.sp
-                            )
-                        }
                     }
                 }
             }
-        }
 
-        // Daily AI Summary Card (shown only if available)
-        if (!dailySummary.isNullOrBlank()) {
-            Card(
+            // 4. Sales This Week Card (Chart)
+            val rawPoints = data.sales?.dailySalesPoints ?: emptyList()
+            val chartPoints = if (rawPoints.size > 7) rawPoints.takeLast(7) else rawPoints
+            val maxAmount = chartPoints.maxOfOrNull { it.amount ?: 0.0 } ?: 0.0
+
+            val firstLabel = chartPoints.firstOrNull()?.let { formatChartDayLabel(it.dayLabel, it.date) } ?: ""
+            val lastLabel = chartPoints.lastOrNull()?.let { formatChartDayLabel(it.dayLabel, it.date) } ?: ""
+            val weekDateRangeTag = if (firstLabel.isNotEmpty() && lastLabel.isNotEmpty()) {
+                val firstDay = firstLabel.split(" ").firstOrNull() ?: firstLabel
+                "$firstDay–$lastLabel"
+            } else {
+                "Past 7 days"
+            }
+
+            BoldCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp)),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    .clickable { onAnalyticsClick() },
+                backgroundColor = CardWhite
             ) {
                 Column(
                     modifier = Modifier
@@ -1050,62 +781,316 @@ fun DashboardHomeContent(
                         .padding(16.dp)
                 ) {
                     Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.dukaan_mitra),
-                            contentDescription = "Dukaan Mitra",
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .border(1.dp, primaryColor, CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "Daily summary",
+                            text = "Sales this week",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 14.sp
+                            color = InkDark,
+                            fontSize = 15.sp,
+                            modifier = Modifier.weight(1f, fill = false),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable { onAnalyticsClick() }
+                        ) {
+                            Text(
+                                text = "Analytics ›",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MainBlue,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = SoftLightBlue,
+                                border = BorderStroke(1.5.dp, InkDark)
+                            ) {
+                                Text(
+                                    text = weekDateRangeTag,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = InkDark,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 10.sp,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    maxLines = 1
+                                )
+                            }
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = dailySummary,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 13.sp,
-                        lineHeight = 19.sp
+                        text = NumberFormatUtil.formatIndianRupees(data.sales?.weeklySalesTotal),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = InkDark,
+                        fontSize = 24.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (chartPoints.isNotEmpty()) {
+                        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                            val availableWidth = maxWidth
+                            val pointCount = chartPoints.size
+                            val columnWidth = if (pointCount > 0) availableWidth / pointCount else availableWidth
+
+                            val formattedLabels = remember(chartPoints) {
+                                chartPoints.map { point ->
+                                    formatChartDayLabel(point.dayLabel, point.date)
+                                }
+                            }
+
+                            val fontScale = LocalDensity.current.fontScale
+                            val isNarrow = columnWidth < 46.dp || fontScale > 1.2f
+                            val isVeryNarrow = columnWidth < 36.dp || (columnWidth < 42.dp && fontScale > 1.3f)
+                            val barWidth = (columnWidth * 0.42f).coerceIn(8.dp, 20.dp)
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(88.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                chartPoints.forEachIndexed { index, point ->
+                                    val amount = point.amount ?: 0.0
+                                    val ratio = if (maxAmount > 0.0) {
+                                        (amount / maxAmount).toFloat().coerceIn(0.08f, 1.0f)
+                                    } else {
+                                        0.08f
+                                    }
+                                    val isCurrent = point.isCurrentDay == true
+                                    val rawAbbr = formattedLabels.getOrElse(index) { "" }
+
+                                    val displayLabel = when {
+                                        isVeryNarrow -> if (index == 0 || index == pointCount / 2 || index == pointCount - 1) rawAbbr else ""
+                                        isNarrow -> if (index % 2 == 0 || index == pointCount - 1) rawAbbr else ""
+                                        else -> rawAbbr
+                                    }
+
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Bottom,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxHeight()
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(60.dp),
+                                            contentAlignment = Alignment.BottomCenter
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .width(barWidth)
+                                                    .height((60.dp * ratio).coerceAtLeast(6.dp))
+                                                    .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 2.dp, bottomEnd = 2.dp))
+                                                    .background(if (isCurrent) MainBlue else SoftLightBlue)
+                                                    .border(1.dp, InkDark, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 2.dp, bottomEnd = 2.dp))
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(
+                                            text = displayLabel,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = if (isCurrent) MainBlue else MutedInk,
+                                            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
+                                            fontSize = if (isNarrow) 9.sp else 11.sp,
+                                            textAlign = TextAlign.Center,
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            overflow = TextOverflow.Clip
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(70.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No sales recorded this week",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MutedInk,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "$weekDateRangeTag · Daily sales in ₹",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MutedInk,
+                        fontSize = 10.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
+
+            // 5. Your AI Priorities Section
+            val aiPriorities = data.aiPriorities ?: emptyList()
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Your AI priorities",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = InkDark,
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        text = "All insights ›",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MainBlue,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        modifier = Modifier.clickable { onInsightsClick() }
+                    )
+                }
+
+                if (aiPriorities.isNotEmpty()) {
+                    aiPriorities.forEach { priority ->
+                        AiPriorityCard(
+                            priority = priority,
+                            primaryColor = MainBlue,
+                            onClick = {
+                                if (priority.type.equals("reorder", ignoreCase = true)) {
+                                    onReorderMilkClick()
+                                } else {
+                                    onFreeUpStockClick()
+                                }
+                            }
+                        )
+                    }
+                } else {
+                    BoldCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onInsightsClick() },
+                        backgroundColor = CardWhite
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            SparkleIcon(primaryColor = MainBlue)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "All systems optimal",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = InkDark,
+                                    fontSize = 13.sp
+                                )
+                                Text(
+                                    text = "AI will alert you when reordering or clearance is recommended",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MutedInk,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Daily AI Summary Card (shown only if available)
+            if (!dailySummary.isNullOrBlank()) {
+                BoldCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = CardWhite
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.dukaan_mitra),
+                                contentDescription = "Dukaan Mitra",
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .border(1.5.dp, InkDark, CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "Daily summary",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark,
+                                fontSize = 14.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Text(
+                            text = dailySummary,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = InkDark,
+                            fontSize = 13.sp,
+                            lineHeight = 19.sp
+                        )
+                    }
+                }
+            }
+
+            // 6. Footer (Live store data & real timestamp)
+            val footerText = if (lastUpdatedText.isNotBlank()) {
+                "Live store data · Updated $lastUpdatedText"
+            } else {
+                "Live store data"
+            }
+
+            Text(
+                text = footerText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MutedInk,
+                fontSize = 10.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            )
+
+            Spacer(modifier = Modifier.height(88.dp))
         }
-
-        // 6. Footer (Live store data & real timestamp)
-        val footerText = if (lastUpdatedText.isNotBlank()) {
-            "Live store data · Updated $lastUpdatedText"
-        } else {
-            "Live store data"
-        }
-
-        Text(
-            text = footerText,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontSize = 10.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp)
-        )
-
-        // Bottom padding to ensure content is never covered by Dukaan Mitra FAB or bottom bar
-        Spacer(modifier = Modifier.height(88.dp))
     }
-}
 }
 
 /**
@@ -1117,13 +1102,11 @@ private fun AiPriorityCard(
     primaryColor: Color,
     onClick: () -> Unit
 ) {
-    Card(
+    BoldCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(14.dp)
+        backgroundColor = CardWhite
     ) {
         Row(
             modifier = Modifier
@@ -1143,7 +1126,7 @@ private fun AiPriorityCard(
                         text = priority.title ?: "AI Recommendation",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = InkDark,
                         fontSize = 13.sp,
                         maxLines = 1
                     )
@@ -1151,7 +1134,7 @@ private fun AiPriorityCard(
                         Text(
                             text = priority.subtitle,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MutedInk,
                             fontSize = 11.sp,
                             maxLines = 1
                         )
@@ -1168,7 +1151,7 @@ private fun AiPriorityCard(
                 }
                 drawPath(
                     path = path,
-                    color = primaryColor,
+                    color = InkDark,
                     style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                 )
             }
@@ -1185,7 +1168,8 @@ private fun SparkleIcon(primaryColor: Color) {
         modifier = Modifier
             .size(36.dp)
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.primaryContainer),
+            .background(SoftLavender)
+            .border(1.5.dp, InkDark, CircleShape),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.size(18.dp)) {
@@ -1200,7 +1184,7 @@ private fun SparkleIcon(primaryColor: Color) {
             }
             drawPath(
                 path = path,
-                color = primaryColor,
+                color = InkDark,
                 style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
             )
         }

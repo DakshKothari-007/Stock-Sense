@@ -27,15 +27,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.simats.stocksense.R
+import com.simats.stocksense.core.components.BoldButton
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.data.repository.AiRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
-private val DarkNavyBg = Color(0xFF0F172A)
-private val CardNavyBg = Color(0xFF1E293B)
-private val VibrantGreen = Color(0xFF34D399)
-private val DarkGreenText = Color(0xFF064E3B)
-private val MutedText = Color(0xFF94A3B8)
 
 @Composable
 fun AiExplainBottomSheet(
@@ -94,7 +90,7 @@ fun AiExplainBottomSheet(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.65f))
+                .background(Color.Black.copy(alpha = 0.5f))
                 .clickable { onDismiss() },
             contentAlignment = Alignment.BottomCenter
         ) {
@@ -104,7 +100,8 @@ fun AiExplainBottomSheet(
                     .fillMaxWidth()
                     .clickable(enabled = false) {}
                     .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                    .background(DarkNavyBg)
+                    .background(CreamBackground)
+                    .border(2.5.dp, InkDark, RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                     .navigationBarsPadding()
                     .padding(24.dp)
                     .verticalScroll(rememberScrollState()),
@@ -114,7 +111,7 @@ fun AiExplainBottomSheet(
                 Box(
                     modifier = Modifier
                         .size(width = 40.dp, height = 4.dp)
-                        .background(MutedText.copy(alpha = 0.4f), RoundedCornerShape(2.dp))
+                        .background(InkDark.copy(alpha = 0.3f), RoundedCornerShape(2.dp))
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -130,7 +127,7 @@ fun AiExplainBottomSheet(
                         modifier = Modifier
                             .size(44.dp)
                             .clip(CircleShape)
-                            .border(1.5.dp, VibrantGreen, CircleShape),
+                            .border(2.dp, InkDark, CircleShape),
                         contentScale = ContentScale.Crop
                     )
 
@@ -139,14 +136,14 @@ fun AiExplainBottomSheet(
                     Column {
                         Text(
                             text = "Why this recommendation?",
-                            color = Color.White,
+                            color = InkDark,
                             fontWeight = FontWeight.Bold,
                             fontSize = 17.sp
                         )
                         if (productName.isNotBlank()) {
                             Text(
                                 text = productName,
-                                color = MutedText,
+                                color = MutedInk,
                                 fontSize = 13.sp
                             )
                         }
@@ -169,19 +166,19 @@ fun AiExplainBottomSheet(
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 CircularProgressIndicator(
-                                    color = VibrantGreen,
+                                    color = MainBlue,
                                     strokeWidth = 3.dp,
                                     modifier = Modifier.size(32.dp)
                                 )
                                 Text(
                                     text = "Analyzing your shop data...",
-                                    color = MutedText,
+                                    color = MutedInk,
                                     fontSize = 13.sp
                                 )
                                 if (showStillThinking) {
                                     Text(
                                         text = "Still thinking...",
-                                        color = MutedText.copy(alpha = 0.8f),
+                                        color = MutedInk.copy(alpha = 0.8f),
                                         fontSize = 11.sp
                                     )
                                 }
@@ -194,7 +191,8 @@ fun AiExplainBottomSheet(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(CardNavyBg)
+                                .background(CardWhite)
+                                .border(2.dp, InkDark, RoundedCornerShape(16.dp))
                                 .padding(18.dp)
                         ) {
                             Column(
@@ -203,7 +201,7 @@ fun AiExplainBottomSheet(
                             ) {
                                 Text(
                                     text = errorMessage ?: "Could not explain right now.",
-                                    color = Color(0xFFFCA5A5),
+                                    color = StatusDangerRed,
                                     fontSize = 14.sp,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.fillMaxWidth()
@@ -211,8 +209,8 @@ fun AiExplainBottomSheet(
                                 Spacer(modifier = Modifier.height(12.dp))
                                 OutlinedButton(
                                     onClick = { loadExplanation() },
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = VibrantGreen),
-                                    border = BorderStroke(1.dp, VibrantGreen),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = InkDark),
+                                    border = BorderStroke(2.dp, InkDark),
                                     shape = RoundedCornerShape(12.dp),
                                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
                                 ) {
@@ -233,12 +231,13 @@ fun AiExplainBottomSheet(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(CardNavyBg)
+                                .background(CardWhite)
+                                .border(2.dp, InkDark, RoundedCornerShape(16.dp))
                                 .padding(18.dp)
                         ) {
                             Text(
                                 text = explanationText ?: "",
-                                color = Color.White,
+                                color = InkDark,
                                 fontSize = 14.sp,
                                 lineHeight = 22.sp
                             )
@@ -249,21 +248,12 @@ fun AiExplainBottomSheet(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Dismiss Button
-                Button(
+                BoldButton(
+                    text = "Got it",
                     onClick = onDismiss,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 48.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = VibrantGreen)
-                ) {
-                    Text(
-                        text = "Got it",
-                        color = DarkGreenText,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
-                }
+                    isPrimary = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 Spacer(modifier = Modifier.height(8.dp))
             }

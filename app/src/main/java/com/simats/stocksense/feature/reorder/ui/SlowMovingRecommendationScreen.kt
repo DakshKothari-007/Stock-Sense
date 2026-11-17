@@ -36,9 +36,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.theme.Amber50
-import com.simats.stocksense.core.theme.Amber700
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
@@ -54,7 +53,7 @@ fun SlowMovingRecommendationScreen(
     onDismissClick: () -> Unit = {},
     viewModel: InsightsViewModel = viewModel()
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val primaryColor = MainYellow
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     var showWhyDialog by remember { mutableStateOf(false) }
@@ -76,7 +75,7 @@ fun SlowMovingRecommendationScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         val windowInfo = rememberWindowSizeInfo()
 
@@ -226,19 +225,9 @@ fun SlowMovingRecommendationScreen(
                 }
             } else {
                 // 2. Category Tag
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = Amber50
-                ) {
-                    Text(
-                        text = "Slow-moving inventory",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Amber700,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 10.sp,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                }
+                BoldStatusChip(
+                    status = "SLOW-MOVING INVENTORY"
+                )
 
                 // 3. Product Title Header Card
                 Row(
@@ -274,9 +263,9 @@ fun SlowMovingRecommendationScreen(
                 // 4. What your sales tell us Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    colors = CardDefaults.cardColors(containerColor = CardWhite),
                     shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    border = BorderStroke(2.dp, InkDark)
                 ) {
                     Column(
                         modifier = Modifier
@@ -293,22 +282,23 @@ fun SlowMovingRecommendationScreen(
                                 text = "What your sales tell us",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = InkDark,
                                 fontSize = 15.sp
                             )
 
-                            Surface(
-                                onClick = { showWhyDialog = true },
-                                shape = RoundedCornerShape(16.dp),
-                                color = primaryColor.copy(alpha = 0.12f),
-                                border = BorderStroke(1.dp, primaryColor.copy(alpha = 0.35f))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(CardWhite)
+                                    .border(1.5.dp, InkDark, RoundedCornerShape(10.dp))
+                                    .clickable { showWhyDialog = true }
+                                    .padding(horizontal = 12.dp, vertical = 5.dp)
                             ) {
                                 Text(
                                     text = "Why?",
-                                    color = primaryColor,
+                                    color = InkDark,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                                    fontSize = 12.sp
                                 )
                             }
                         }
@@ -339,7 +329,8 @@ fun SlowMovingRecommendationScreen(
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    colors = CardDefaults.cardColors(containerColor = SoftPeach),
+                    border = BorderStroke(2.dp, InkDark),
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(
@@ -351,7 +342,7 @@ fun SlowMovingRecommendationScreen(
                         Text(
                             text = "RECOMMENDED · 7-DAY TRIAL",
                             style = MaterialTheme.typography.labelSmall,
-                            color = primaryColor,
+                            color = InkDark,
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp,
                             letterSpacing = 1.sp
@@ -361,7 +352,7 @@ fun SlowMovingRecommendationScreen(
                             text = "$discPct% off · ${NumberFormatUtil.formatIndianRupees(suggPrice)} per pack",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = InkDark,
                             fontSize = 20.sp
                         )
 
@@ -377,7 +368,7 @@ fun SlowMovingRecommendationScreen(
                         Text(
                             text = explanationText,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MutedInk,
                             fontSize = 12.sp,
                             lineHeight = 16.sp
                         )
@@ -387,7 +378,7 @@ fun SlowMovingRecommendationScreen(
                         val bundlePct = bundleSugg?.discountPct ?: 15
 
                         Spacer(modifier = Modifier.height(4.dp))
-                        HorizontalDivider(color = primaryColor.copy(alpha = 0.2f), thickness = 0.8.dp)
+                        HorizontalDivider(color = InkDark.copy(alpha = 0.2f), thickness = 1.dp)
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Row(
@@ -398,14 +389,14 @@ fun SlowMovingRecommendationScreen(
                             Text(
                                 text = "Alternative clearance bundle",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MutedInk,
                                 fontSize = 12.sp
                             )
                             Text(
                                 text = NumberFormatUtil.formatIndianRupees(bundlePrice),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = InkDark,
                                 fontSize = 13.sp
                             )
                         }
@@ -413,7 +404,7 @@ fun SlowMovingRecommendationScreen(
                         Text(
                             text = "$bundlePct% bundle discount: ${NumberFormatUtil.formatIndianRupees(bundlePrice)} per unit. Display together near the counter.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MutedInk,
                             fontSize = 11.sp,
                             lineHeight = 15.sp
                         )
@@ -423,7 +414,8 @@ fun SlowMovingRecommendationScreen(
                 // 6. Suggestion Disclaimer Note Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    colors = CardDefaults.cardColors(containerColor = SoftLightBlue),
+                    border = BorderStroke(2.dp, InkDark),
                     shape = RoundedCornerShape(14.dp)
                 ) {
                     Row(
@@ -434,7 +426,7 @@ fun SlowMovingRecommendationScreen(
                     ) {
                         Canvas(modifier = Modifier.size(20.dp)) {
                             drawCircle(
-                                color = primaryColor,
+                                color = InkDark,
                                 radius = size.width / 2f,
                                 style = Stroke(width = 1.5.dp.toPx())
                             )
@@ -445,7 +437,7 @@ fun SlowMovingRecommendationScreen(
                             }
                             drawPath(
                                 path = path,
-                                color = primaryColor,
+                                color = InkDark,
                                 style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                             )
                         }
@@ -457,14 +449,14 @@ fun SlowMovingRecommendationScreen(
                                 text = "A suggestion, not a sales guarantee",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = InkDark,
                                 fontSize = 13.sp
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Acceptance records your decision. No prices change automatically.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MutedInk,
                                 fontSize = 11.sp
                             )
                         }
@@ -478,70 +470,66 @@ fun SlowMovingRecommendationScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Button(
-                        onClick = {
-                            val pid = item.productId
-                            if (pid != null && pid > 0) {
-                                viewModel.respondSlowMoving(
-                                    productId = pid,
-                                    action = "accepted",
-                                    onSuccess = onAcceptClick,
-                                    onError = { msg ->
-                                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
-                                    }
-                                )
-                            } else {
-                                android.widget.Toast.makeText(context, "Invalid product ID", android.widget.Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .defaultMinSize(minHeight = 52.dp),
-                        enabled = !uiState.isResponding,
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = primaryColor,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
-                    ) {
-                        Text(
-                            text = if (uiState.isResponding) "Saving..." else "Accept",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
-                        )
+                    Box(modifier = Modifier.weight(1f)) {
+                        BoldButton(
+                            onClick = {
+                                val pid = item.productId
+                                if (pid != null && pid > 0) {
+                                    viewModel.respondSlowMoving(
+                                        productId = pid,
+                                        action = "accepted",
+                                        onSuccess = onAcceptClick,
+                                        onError = { msg ->
+                                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                                        }
+                                    )
+                                } else {
+                                    android.widget.Toast.makeText(context, "Invalid product ID", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !uiState.isResponding,
+                            isPrimary = true
+                        ) {
+                            Text(
+                                text = if (uiState.isResponding) "Saving..." else "Accept",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark,
+                                fontSize = 15.sp
+                            )
+                        }
                     }
 
-                    OutlinedButton(
-                        onClick = {
-                            val pid = item.productId
-                            if (pid != null && pid > 0) {
-                                viewModel.respondSlowMoving(
-                                    productId = pid,
-                                    action = "dismissed",
-                                    onSuccess = onDismissClick,
-                                    onError = { msg ->
-                                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
-                                    }
-                                )
-                            } else {
-                                android.widget.Toast.makeText(context, "Invalid product ID", android.widget.Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .defaultMinSize(minHeight = 48.dp),
-                        enabled = !uiState.isResponding,
-                        shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                    ) {
-                        Text(
-                            text = "Dismiss",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = primaryColor,
-                            fontSize = 15.sp
-                        )
+                    Box(modifier = Modifier.weight(1f)) {
+                        BoldButton(
+                            onClick = {
+                                val pid = item.productId
+                                if (pid != null && pid > 0) {
+                                    viewModel.respondSlowMoving(
+                                        productId = pid,
+                                        action = "dismissed",
+                                        onSuccess = onDismissClick,
+                                        onError = { msg ->
+                                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                                        }
+                                    )
+                                } else {
+                                    android.widget.Toast.makeText(context, "Invalid product ID", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !uiState.isResponding,
+                            isPrimary = false
+                        ) {
+                            Text(
+                                text = "Dismiss",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark,
+                                fontSize = 15.sp
+                            )
+                        }
                     }
                 }
             }

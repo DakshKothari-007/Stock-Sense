@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
@@ -42,12 +43,12 @@ fun SignUpScreen(
     viewModel: AuthViewModel = viewModel()
 ) {
     val signUpState by viewModel.signUpState.collectAsState()
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val primaryColor = MainYellow
     val windowInfo = rememberWindowSizeInfo()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         ResponsiveContainer(
             modifier = Modifier
@@ -82,8 +83,8 @@ fun SignUpScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surface),
+                                .border(2.dp, InkDark, RoundedCornerShape(12.dp))
+                                .background(CardWhite),
                             contentAlignment = Alignment.Center
                         ) {
                             Canvas(modifier = Modifier.size(16.dp)) {
@@ -94,7 +95,7 @@ fun SignUpScreen(
                                 }
                                 drawPath(
                                     path = path,
-                                    color = primaryColor,
+                                    color = InkDark,
                                     style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                                 )
                             }
@@ -143,10 +144,13 @@ fun SignUpScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedBorderColor = primaryColor,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    focusedContainerColor = CardWhite,
+                    unfocusedContainerColor = CardWhite,
+                    focusedBorderColor = InkDark,
+                    unfocusedBorderColor = InkDark,
+                    focusedTextColor = InkDark,
+                    unfocusedTextColor = InkDark,
+                    cursorColor = InkDark
                 ),
                 singleLine = true
             )
@@ -169,10 +173,13 @@ fun SignUpScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedBorderColor = primaryColor,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    focusedContainerColor = CardWhite,
+                    unfocusedContainerColor = CardWhite,
+                    focusedBorderColor = InkDark,
+                    unfocusedBorderColor = InkDark,
+                    focusedTextColor = InkDark,
+                    unfocusedTextColor = InkDark,
+                    cursorColor = InkDark
                 ),
                 singleLine = true
             )
@@ -195,10 +202,13 @@ fun SignUpScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedBorderColor = primaryColor,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    focusedContainerColor = CardWhite,
+                    unfocusedContainerColor = CardWhite,
+                    focusedBorderColor = InkDark,
+                    unfocusedBorderColor = InkDark,
+                    focusedTextColor = InkDark,
+                    unfocusedTextColor = InkDark,
+                    cursorColor = InkDark
                 ),
                 singleLine = true
             )
@@ -282,10 +292,10 @@ fun SignUpScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                    disabledTextColor = MaterialTheme.colorScheme.onBackground,
-                    disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    disabledContainerColor = SoftLightBlue.copy(alpha = 0.35f),
+                    disabledTextColor = InkDark,
+                    disabledBorderColor = InkDark,
+                    disabledLabelColor = MutedInk
                 ),
                 singleLine = true
             )
@@ -309,10 +319,13 @@ fun SignUpScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedBorderColor = primaryColor,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    focusedContainerColor = CardWhite,
+                    unfocusedContainerColor = CardWhite,
+                    focusedBorderColor = InkDark,
+                    unfocusedBorderColor = InkDark,
+                    focusedTextColor = InkDark,
+                    unfocusedTextColor = InkDark,
+                    cursorColor = InkDark
                 ),
                 singleLine = true
             )
@@ -334,10 +347,13 @@ fun SignUpScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedBorderColor = primaryColor,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    focusedContainerColor = CardWhite,
+                    unfocusedContainerColor = CardWhite,
+                    focusedBorderColor = InkDark,
+                    unfocusedBorderColor = InkDark,
+                    focusedTextColor = InkDark,
+                    unfocusedTextColor = InkDark,
+                    cursorColor = InkDark
                 ),
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -361,10 +377,13 @@ fun SignUpScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedBorderColor = primaryColor,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    focusedContainerColor = CardWhite,
+                    unfocusedContainerColor = CardWhite,
+                    focusedBorderColor = InkDark,
+                    unfocusedBorderColor = InkDark,
+                    focusedTextColor = InkDark,
+                    unfocusedTextColor = InkDark,
+                    cursorColor = InkDark
                 ),
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -391,24 +410,19 @@ fun SignUpScreen(
                     )
                 }
 
-                Button(
+                // Sign Up Button
+                BoldButton(
                     onClick = {
                         viewModel.signUp(onSuccess = onCreateAccountClick)
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    enabled = !signUpState.isLoading
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !signUpState.isLoading,
+                    isPrimary = true
                 ) {
                     if (signUpState.isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = InkDark,
                             strokeWidth = 2.dp
                         )
                     } else {
@@ -416,6 +430,7 @@ fun SignUpScreen(
                             text = "Sign Up",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
+                            color = InkDark,
                             fontSize = 16.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis

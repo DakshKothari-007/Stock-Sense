@@ -1,5 +1,6 @@
 package com.simats.stocksense.feature.auth.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.R
+import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
@@ -46,8 +48,8 @@ fun LoginScreen(
     viewModel: AuthViewModel = viewModel()
 ) {
     val loginState by viewModel.loginState.collectAsState()
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val iconStrokeColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val primaryColor = MainYellow
+    val iconStrokeColor = InkDark
     var passwordVisible by remember { mutableStateOf(false) }
     val windowInfo = rememberWindowSizeInfo()
 
@@ -102,8 +104,9 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(if (windowInfo.isLandscape) 12.dp else 24.dp))
 
                     // 2. Logo Icon (Compact in landscape/short screen)
-                    AnimatedSplashLogo(
-                        t = 1f,
+                    Image(
+                        painter = painterResource(id = R.drawable.stocksense_symbol_inkblue),
+                        contentDescription = "StockSense",
                         modifier = Modifier.size(if (windowInfo.isLandscape || windowInfo.screenHeightDp < 600.dp) 48.dp else 64.dp)
                     )
 
@@ -153,10 +156,13 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedBorderColor = primaryColor,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        focusedContainerColor = CardWhite,
+                        unfocusedContainerColor = CardWhite,
+                        focusedBorderColor = InkDark,
+                        unfocusedBorderColor = InkDark,
+                        focusedTextColor = InkDark,
+                        unfocusedTextColor = InkDark,
+                        cursorColor = InkDark
                     ),
                     leadingIcon = {
                         Canvas(modifier = Modifier.size(20.dp)) {
@@ -204,10 +210,13 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedBorderColor = primaryColor,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        focusedContainerColor = CardWhite,
+                        unfocusedContainerColor = CardWhite,
+                        focusedBorderColor = InkDark,
+                        unfocusedBorderColor = InkDark,
+                        focusedTextColor = InkDark,
+                        unfocusedTextColor = InkDark,
+                        cursorColor = InkDark
                     ),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -292,9 +301,12 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // 5. Green Basket Demo Credentials Box
-                Surface(
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.primaryContainer,
+                    backgroundColor = SoftLightBlue,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp,
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Row(
@@ -310,13 +322,13 @@ fun LoginScreen(
                                 lineTo(size.width * 0.75f, size.height * 0.3f)
                             }
                             drawCircle(
-                                color = primaryColor,
+                                color = InkDark,
                                 radius = size.width / 2f,
                                 style = Stroke(width = 1.5.dp.toPx())
                             )
                             drawPath(
                                 path = path,
-                                color = primaryColor,
+                                color = InkDark,
                                 style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                             )
                         }
@@ -326,14 +338,14 @@ fun LoginScreen(
                                 text = "Explore the Green Basket demo",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = InkDark,
                                 fontSize = 13.sp
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Sample credentials are filled in. No real account or data is used.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = InkDark.copy(alpha = 0.8f),
                                 fontSize = 12.sp,
                                 lineHeight = 16.sp
                             )
@@ -363,24 +375,18 @@ fun LoginScreen(
                 }
 
                 // Log In Button
-                Button(
+                BoldButton(
                     onClick = {
                         viewModel.login(onSuccess = onLoginClick)
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = primaryColor,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    enabled = !loginState.isLoading
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !loginState.isLoading,
+                    isPrimary = true
                 ) {
                     if (loginState.isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = InkDark,
                             strokeWidth = 2.dp
                         )
                     } else {
@@ -388,6 +394,7 @@ fun LoginScreen(
                             text = "Log In",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
+                            color = InkDark,
                             fontSize = 16.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis

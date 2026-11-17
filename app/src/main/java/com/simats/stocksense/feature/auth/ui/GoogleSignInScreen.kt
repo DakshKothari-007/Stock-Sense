@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.theme.*
 
 @Composable
@@ -27,7 +28,7 @@ fun GoogleSignInScreen(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         Column(
             modifier = Modifier
@@ -47,8 +48,8 @@ fun GoogleSignInScreen(
                     modifier = Modifier
                         .size(56.dp)
                         .clip(CircleShape)
-                        .background(Color.White)
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+                        .background(CardWhite)
+                        .border(2.dp, InkDark, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -65,7 +66,7 @@ fun GoogleSignInScreen(
                     text = "Choose an account",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = InkDark
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -73,7 +74,7 @@ fun GoogleSignInScreen(
                 Text(
                     text = "to continue to StockSense",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MutedInk
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -103,39 +104,41 @@ fun GoogleSignInScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
+                        .background(CardWhite)
+                        .border(2.dp, InkDark, RoundedCornerShape(12.dp))
                         .clickable { onAccountSelected("other@domain.com") }
-                        .padding(16.dp),
+                        .padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(36.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surface)
-                            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
+                            .background(SoftLavender)
+                            .border(1.5.dp, InkDark, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Canvas(modifier = Modifier.size(16.dp)) {
                             drawLine(
-                                color = Color.Gray,
+                                color = InkDark,
                                 start = androidx.compose.ui.geometry.Offset(size.width * 0.5f, 0f),
                                 end = androidx.compose.ui.geometry.Offset(size.width * 0.5f, size.height),
                                 strokeWidth = 2.dp.toPx()
                             )
                             drawLine(
-                                color = Color.Gray,
+                                color = InkDark,
                                 start = androidx.compose.ui.geometry.Offset(0f, size.height * 0.5f),
                                 end = androidx.compose.ui.geometry.Offset(size.width, size.height * 0.5f),
                                 strokeWidth = 2.dp.toPx()
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(modifier = Modifier.width(14.dp))
                     Text(
                         text = "Use another account",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onBackground
+                        fontWeight = FontWeight.Bold,
+                        color = InkDark
                     )
                 }
             }
@@ -144,18 +147,16 @@ fun GoogleSignInScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                OutlinedButton(
+                BoldButton(
                     onClick = onCancelClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                    modifier = Modifier.fillMaxWidth(),
+                    isPrimary = false
                 ) {
                     Text(
                         text = "Cancel",
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = InkDark,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -164,7 +165,7 @@ fun GoogleSignInScreen(
                 Text(
                     text = "To continue, Google will share your name, email address, and language preference with StockSense.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MutedInk,
                     fontSize = 11.sp,
                     textAlign = TextAlign.Center,
                     lineHeight = 16.sp
@@ -181,13 +182,14 @@ private fun AccountItem(
     email: String,
     onClick: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp)),
-        color = MaterialTheme.colorScheme.surface
+    BoldCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = CardWhite,
+        borderColor = InkDark,
+        borderWidth = 2.dp,
+        shadowOffset = 3.dp,
+        shape = RoundedCornerShape(14.dp),
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier
@@ -199,12 +201,13 @@ private fun AccountItem(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .background(SoftLightBlue)
+                    .border(1.5.dp, InkDark, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = initial,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = InkDark,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
@@ -215,12 +218,12 @@ private fun AccountItem(
                     text = name,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = InkDark
                 )
                 Text(
                     text = email,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MutedInk,
                     fontSize = 12.sp
                 )
             }

@@ -99,7 +99,7 @@ fun ProductDetailScreenContent(
     onSalesAnalyticsClick: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
-    val accentColor = Teal500
+    val accentColor = SoftLightBlue
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -336,14 +336,15 @@ fun ProductDetailScreenContent(
                                     val isOutOfStock = statusText.contains("out of stock", ignoreCase = true)
 
                                     val (chipBg, chipTextColor) = when {
-                                        isOutOfStock -> Color(0xFFFFEBEE) to Color(0xFFB71C1C)
-                                        isLowStock -> Amber100 to Amber900
-                                        else -> Green50 to Green700
+                                        isOutOfStock -> StatusDangerRed to CardWhite
+                                        isLowStock -> StatusLowStock to InkDark
+                                        else -> StatusInStock to InkDark
                                     }
 
                                     Surface(
                                         shape = RoundedCornerShape(8.dp),
-                                        color = chipBg
+                                        color = chipBg,
+                                        border = BorderStroke(1.5.dp, InkDark)
                                     ) {
                                         Text(
                                             text = statusText,

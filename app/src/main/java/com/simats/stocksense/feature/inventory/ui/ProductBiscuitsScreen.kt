@@ -25,10 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.simats.stocksense.core.theme.Amber50
-import com.simats.stocksense.core.theme.Amber700
-import com.simats.stocksense.core.theme.StockSenseTheme
-import com.simats.stocksense.core.theme.Teal500
+import com.simats.stocksense.core.theme.*
 
 @Composable
 fun ProductBiscuitsScreen(
@@ -37,7 +34,7 @@ fun ProductBiscuitsScreen(
     onActionClick: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
-    val accentColor = Teal500
+    val accentColor = SoftLightBlue
 
     Surface(
         modifier = Modifier.fillMaxSize(),

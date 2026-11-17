@@ -2,6 +2,7 @@ package com.simats.stocksense.feature.inventory.icon
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.simats.stocksense.core.theme.DarkSurface
+import com.simats.stocksense.core.theme.InkDark
 
 /**
  * Universal product avatar composable used throughout StockSense:
@@ -30,8 +32,9 @@ import com.simats.stocksense.core.theme.DarkSurface
  *
  * Visual specifications:
  * - Rounded square with 16 dp radius (or scaled for smaller sizes)
- * - Soft tinted background per product department
- * - High contrast & readable in both Light and Dark themes
+ * - Soft pastel tinted background per product department (no green)
+ * - 2dp ink border
+ * - High contrast & readable
  * - Accessible content description: "{name} icon"
  * - Fallback order:
  *     1. Saved iconKey (from server or user selection)
@@ -84,6 +87,7 @@ fun ProductAvatar(
             .size(size)
             .clip(RoundedCornerShape(cornerRadius))
             .background(bgColor)
+            .border(2.dp, InkDark, RoundedCornerShape(cornerRadius))
             .semantics { contentDescription = desc },
         contentAlignment = Alignment.Center
     ) {
@@ -101,7 +105,7 @@ fun ProductAvatar(
             val fontSize = (size.value * 0.40f).sp
             Text(
                 text = initial,
-                color = department.badgeTextColor,
+                color = InkDark,
                 fontWeight = FontWeight.Bold,
                 fontSize = fontSize,
                 maxLines = 1,

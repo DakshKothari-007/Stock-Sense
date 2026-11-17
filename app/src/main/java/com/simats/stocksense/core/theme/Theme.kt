@@ -1,15 +1,10 @@
 package com.simats.stocksense.core.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Shapes
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,65 +14,51 @@ enum class ThemeMode {
 }
 
 object ThemeState {
-    private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
+    private val _themeMode = MutableStateFlow(ThemeMode.LIGHT)
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
     fun setThemeMode(mode: ThemeMode) {
-        _themeMode.value = mode
+        // Enforce light theme only per design system specification
+        _themeMode.value = ThemeMode.LIGHT
     }
 }
 
-private val LightColorScheme = lightColorScheme(
-    primary = Green700,
-    onPrimary = Color.White,
-    primaryContainer = Green50,
-    onPrimaryContainer = Green700,
-    secondary = Teal500,
-    background = ScreenBackground,
-    onBackground = InkPrimary,
-    surface = CardSurface,
-    onSurface = InkPrimary,
-    onSurfaceVariant = InkSecondary,
-    outline = BorderGray,
-    outlineVariant = Green100,
-)
-
-private val DarkColorScheme = darkColorScheme(
-    primary = DarkPrimary,
-    onPrimary = DarkOnPrimary,
-    primaryContainer = DarkPrimaryContainer,
-    onPrimaryContainer = DarkOnPrimaryContainer,
-    secondary = DarkSecondary,
-    background = DarkBackground,
-    onBackground = DarkOnBackground,
-    surface = DarkSurface,
-    onSurface = DarkOnSurface,
-    onSurfaceVariant = DarkOnSurfaceVariant,
-    outline = DarkOutline,
-    outlineVariant = DarkOutlineVariant,
-)
-
-private val StockSenseShapes = Shapes(
-    small = RoundedCornerShape(8.dp),
-    medium = RoundedCornerShape(12.dp),
-    large = RoundedCornerShape(16.dp),
+/**
+ * Bold Outline Light Color Scheme (Strictly light, no green, high contrast)
+ */
+private val BoldOutlineColorScheme = lightColorScheme(
+    primary = MainYellow,
+    onPrimary = InkDark,
+    primaryContainer = SoftPeach,
+    onPrimaryContainer = InkDark,
+    secondary = MainBlue,
+    onSecondary = Color.White,
+    secondaryContainer = SoftLightBlue,
+    onSecondaryContainer = InkDark,
+    tertiary = SoftLavender,
+    onTertiary = InkDark,
+    background = CreamBackground,
+    onBackground = InkDark,
+    surface = CardWhite,
+    onSurface = InkDark,
+    surfaceVariant = SoftLightBlue,
+    onSurfaceVariant = MutedInk,
+    outline = OutlineInk,
+    outlineVariant = OutlineInk,
+    error = StatusDangerRed,
+    onError = Color.White,
+    errorContainer = SoftPink,
+    onErrorContainer = InkDark
 )
 
 @Composable
 fun StockSenseTheme(
-    themeMode: ThemeMode = ThemeState.themeMode.collectAsState().value,
+    themeMode: ThemeMode = ThemeMode.LIGHT,
     content: @Composable () -> Unit
 ) {
-    val darkTheme = when (themeMode) {
-        ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
-        ThemeMode.SYSTEM -> isSystemInDarkTheme()
-    }
-
-    val colors = if (darkTheme) DarkColorScheme else LightColorScheme
-
+    // Light theme only (disable dark theme / dynamic color)
     MaterialTheme(
-        colorScheme = colors,
+        colorScheme = BoldOutlineColorScheme,
         typography = Typography,
         shapes = StockSenseShapes,
         content = content

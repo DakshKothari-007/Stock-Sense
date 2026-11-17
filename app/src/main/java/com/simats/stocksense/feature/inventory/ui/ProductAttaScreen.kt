@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.foundation.border
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -25,10 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.simats.stocksense.core.theme.Green50
-import com.simats.stocksense.core.theme.Green700
-import com.simats.stocksense.core.theme.StockSenseTheme
-import com.simats.stocksense.core.theme.Teal500
+import com.simats.stocksense.core.theme.*
 
 @Composable
 fun ProductAttaScreen(
@@ -37,7 +35,7 @@ fun ProductAttaScreen(
     onSalesAnalyticsClick: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
-    val accentColor = Teal500
+    val accentColor = SoftLightBlue
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -154,12 +152,12 @@ fun ProductAttaScreen(
                         Spacer(modifier = Modifier.height(4.dp))
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = Green50
+                            color = SoftLavender
                         ) {
                             Text(
                                 text = "Top seller · High revenue",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Green700,
+                                color = InkDark,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 11.sp,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
