@@ -44,8 +44,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.components.BoldButton
-import com.simats.stocksense.core.components.BoldCard
+import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.fcm.FcmTokenManager
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
@@ -102,64 +101,59 @@ fun DashboardHomeScreen(
     }
 
     if (showPermissionExplanation) {
-        AlertDialog(
+        BoldDialog(
             onDismissRequest = {
                 showPermissionExplanation = false
                 FcmTokenManager.setPromptedPermission(context, true)
-            },
-            title = {
+            }
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 Text(
                     text = "Stock alerts",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = InkDark
                 )
-            },
-            text = {
                 Text(
                     text = "Get alerts when stock runs low.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MutedInk
                 )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showPermissionExplanation = false
-                        FcmTokenManager.setPromptedPermission(context, true)
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            try {
-                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            } catch (_: Throwable) {
-                                // Graceful safety
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    BoldButton(
+                        text = "Not now",
+                        onClick = {
+                            showPermissionExplanation = false
+                            FcmTokenManager.setPromptedPermission(context, true)
+                        },
+                        modifier = Modifier.weight(1f),
+                        isPrimary = false
+                    )
+                    BoldButton(
+                        text = "Enable",
+                        onClick = {
+                            showPermissionExplanation = false
+                            FcmTokenManager.setPromptedPermission(context, true)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                try {
+                                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                } catch (_: Throwable) {
+                                    // Graceful safety
+                                }
                             }
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Enable", fontWeight = FontWeight.SemiBold)
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showPermissionExplanation = false
-                        FcmTokenManager.setPromptedPermission(context, true)
-                    }
-                ) {
-                    Text(
-                        "Not now",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        modifier = Modifier.weight(1f),
+                        isPrimary = true
                     )
                 }
-            },
-            shape = RoundedCornerShape(16.dp),
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+            }
+        }
     }
 
     // Auto-refresh when screen resumes
@@ -336,11 +330,7 @@ fun DashboardHomeContent(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.stocksense_symbol_inkblue),
-                        contentDescription = "StockSense",
-                        modifier = Modifier.size(36.dp)
-                    )
+                    StockSenseLogo(size = 36.dp)
                     Spacer(modifier = Modifier.width(10.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(

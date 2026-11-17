@@ -103,11 +103,9 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(if (windowInfo.isLandscape) 12.dp else 24.dp))
 
-                    // 2. Logo Icon (Compact in landscape/short screen)
-                    Image(
-                        painter = painterResource(id = R.drawable.stocksense_symbol_inkblue),
-                        contentDescription = "StockSense",
-                        modifier = Modifier.size(if (windowInfo.isLandscape || windowInfo.screenHeightDp < 600.dp) 48.dp else 64.dp)
+                    // 2. Logo Icon (Compact in landscape/short screen, badge in dark mode)
+                    StockSenseLogo(
+                        size = if (windowInfo.isLandscape || windowInfo.screenHeightDp < 600.dp) 48.dp else 64.dp
                     )
 
                     Spacer(modifier = Modifier.height(if (windowInfo.isLandscape) 12.dp else 24.dp))

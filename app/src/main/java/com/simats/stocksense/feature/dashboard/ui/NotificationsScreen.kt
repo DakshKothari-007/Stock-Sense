@@ -32,8 +32,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.theme.MainBlue
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.data.model.NotificationItem
@@ -92,7 +92,7 @@ fun NotificationsScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         val windowInfo = rememberWindowSizeInfo()
 
@@ -112,217 +112,172 @@ fun NotificationsScreen(
             ) {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 1. Header Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable { onBackClick() },
-                        contentAlignment = Alignment.Center
+                val shopDisplay = uiState.shopName.ifBlank { "Store" }
+                val unreadText = if (uiState.unreadCount == 1) "1 unread" else "${uiState.unreadCount} unread"
+
+                // 1. Header with Shared BoldTopBar
+                BoldTopBar(
+                    title = "Notifications",
+                    subtitle = "$shopDisplay · $unreadText",
+                    onBackClick = onBackClick
+                )
+
+                // 2. Date Subheading
+                val todayFormatted = remember {
+                    SimpleDateFormat("d MMM yyyy", Locale.ENGLISH).format(Date())
+                }
+                Text(
+                    text = "Today · $todayFormatted",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = InkDark,
+                    fontSize = 14.sp
+                )
+
+                // Error banner with Retry
+                if (uiState.errorMessage != null) {
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = SoftPink,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 2.dp,
+                        contentPadding = PaddingValues(12.dp)
                     ) {
-                        Box(
+                        Row(
                             modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surface)
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Canvas(modifier = Modifier.size(16.dp)) {
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.65f, size.height * 0.15f)
-                                    lineTo(size.width * 0.25f, size.height * 0.5f)
-                                    lineTo(size.width * 0.65f, size.height * 0.85f)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                            Text(
+                                text = uiState.errorMessage ?: "Failed to retrieve notifications.",
+                                color = StatusDangerRed,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                modifier = Modifier.weight(1f)
+                            )
+                            TextButton(onClick = { viewModel.refresh() }) {
+                                Text(
+                                    text = "Retry",
+                                    color = InkDark,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 12.sp
                                 )
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Notifications",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        val shopDisplay = uiState.shopName.ifBlank { "Green Basket" }
-                        val unreadText = if (uiState.unreadCount == 1) "1 unread" else "${uiState.unreadCount} unread"
-                        Text(
-                            text = "$shopDisplay · $unreadText",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
                 }
 
-            // 2. Date Subheading
-            val todayFormatted = remember {
-                SimpleDateFormat("d MMM yyyy", Locale.ENGLISH).format(Date())
-            }
-            Text(
-                text = "Today · $todayFormatted",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontSize = 14.sp
-            )
-
-            // Error banner with Retry
-            if (uiState.errorMessage != null) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Row(
+                // Loading state
+                if (uiState.isLoading && uiState.notifications.isEmpty()) {
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(vertical = 40.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = uiState.errorMessage ?: "Failed to retrieve notifications.",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 12.sp,
-                            modifier = Modifier.weight(1f)
+                        CircularProgressIndicator(
+                            color = MainBlue,
+                            modifier = Modifier.size(36.dp)
                         )
-                        TextButton(onClick = { viewModel.refresh() }) {
+                    }
+                } else if (uiState.notifications.isEmpty()) {
+                    // Empty state: "You're all caught up"
+                    BoldCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        backgroundColor = CardWhite,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp,
+                        contentPadding = PaddingValues(vertical = 36.dp, horizontal = 24.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             Text(
-                                text = "Retry",
-                                color = primaryColor,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
+                                text = "You're all caught up",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Black,
+                                color = InkDark,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = "No new alerts or recommendations at this time.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MutedInk,
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.Center
                             )
                         }
                     }
-                }
-            }
+                } else {
+                    // Live Notification Cards
+                    uiState.notifications.forEach { item ->
+                        NotificationCard(
+                            item = item,
+                            primaryColor = primaryColor,
+                            onClick = {
+                                if (pendingTarget != null) return@NotificationCard
 
-            // Loading state
-            if (uiState.isLoading && uiState.notifications.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 40.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = primaryColor,
-                        modifier = Modifier.size(36.dp)
-                    )
-                }
-            } else if (uiState.notifications.isEmpty()) {
-                // Empty state: "You're all caught up"
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 24.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 36.dp, horizontal = 24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "You're all caught up",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 16.sp
-                        )
-                        Text(
-                            text = "No new alerts or recommendations at this time.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
-                            textAlign = TextAlign.Center
+                                val key = item.key ?: ""
+                                if (key.isNotBlank()) {
+                                    viewModel.markAsRead(key)
+                                }
+
+                                pendingTarget = {
+                                    when (item.type) {
+                                        "low_stock" -> {
+                                            if (onReorderClick != null) {
+                                                onReorderClick(item.productId)
+                                            } else {
+                                                onAmulMilkClick()
+                                            }
+                                        }
+                                        "slow_moving" -> {
+                                            if (onInsightsClick != null) {
+                                                onInsightsClick()
+                                            } else {
+                                                onMarieBiscuitsClick()
+                                            }
+                                        }
+                                        "sales" -> onSalesAnalyticsClick()
+                                        "import" -> {
+                                            if (onInventoryClick != null) {
+                                                onInventoryClick()
+                                            } else {
+                                                onBackClick()
+                                            }
+                                        }
+                                        else -> onBackClick()
+                                    }
+                                }
+                            }
                         )
                     }
                 }
-            } else {
-                // Live Notification Cards
-                uiState.notifications.forEach { item ->
-                    NotificationCard(
-                        item = item,
-                        primaryColor = primaryColor,
-                        onClick = {
-                            if (pendingTarget != null) return@NotificationCard
 
-                            val key = item.key ?: ""
-                            if (key.isNotBlank()) {
-                                viewModel.markAsRead(key)
-                            }
+                Spacer(modifier = Modifier.height(8.dp))
 
-                            pendingTarget = {
-                                when (item.type) {
-                                    "low_stock" -> {
-                                        if (onReorderClick != null) {
-                                            onReorderClick(item.productId)
-                                        } else {
-                                            onAmulMilkClick()
-                                        }
-                                    }
-                                    "slow_moving" -> {
-                                        if (onInsightsClick != null) {
-                                            onInsightsClick()
-                                        } else {
-                                            onMarieBiscuitsClick()
-                                        }
-                                    }
-                                    "sales" -> onSalesAnalyticsClick()
-                                    "import" -> {
-                                        if (onInventoryClick != null) {
-                                            onInventoryClick()
-                                        } else {
-                                            onBackClick()
-                                        }
-                                    }
-                                    else -> onBackClick()
-                                }
-                            }
-                        }
-                    )
-                }
+                // Footer Note
+                Text(
+                    text = "Preferences are in Profile → Settings",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MutedInk,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 11.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Footer Note
-            Text(
-                text = "Preferences are in Profile → Settings",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
         }
     }
-}
 }
 
 @Composable
@@ -333,19 +288,17 @@ private fun NotificationCard(
 ) {
     val isRead = item.isRead == true
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    BoldCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = CardWhite,
+        borderColor = InkDark,
+        borderWidth = 2.dp,
+        shadowOffset = 3.dp,
+        onClick = onClick,
+        contentPadding = PaddingValues(16.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
@@ -357,24 +310,32 @@ private fun NotificationCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
+                    val iconBg = when (item.type) {
+                        "low_stock" -> SoftLowStock
+                        "slow_moving" -> SoftPeach
+                        "sales" -> SoftLightBlue
+                        else -> PaleBlue
+                    }
+
                     Box(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer),
+                            .background(iconBg)
+                            .border(1.5.dp, InkDark, RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         when (item.type) {
                             "low_stock" -> {
                                 Canvas(modifier = Modifier.size(20.dp)) {
                                     drawRect(
-                                        color = primaryColor,
+                                        color = InkDark,
                                         topLeft = Offset(size.width * 0.15f, size.height * 0.15f),
                                         size = Size(size.width * 0.7f, size.height * 0.7f),
                                         style = Stroke(width = 1.8.dp.toPx())
                                     )
                                     drawLine(
-                                        color = primaryColor,
+                                        color = InkDark,
                                         start = Offset(size.width * 0.5f, size.height * 0.15f),
                                         end = Offset(size.width * 0.5f, size.height * 0.85f),
                                         strokeWidth = 1.5.dp.toPx()
@@ -384,34 +345,34 @@ private fun NotificationCard(
                             "slow_moving" -> {
                                 Canvas(modifier = Modifier.size(20.dp)) {
                                     drawCircle(
-                                        color = primaryColor,
+                                        color = InkDark,
                                         radius = size.width * 0.45f,
                                         center = Offset(size.width / 2f, size.height / 2f),
                                         style = Stroke(width = 1.5.dp.toPx())
                                     )
-                                    drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.35f, size.height * 0.35f))
-                                    drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.65f, size.height * 0.45f))
-                                    drawCircle(color = primaryColor, radius = size.width * 0.08f, center = Offset(size.width * 0.45f, size.height * 0.65f))
+                                    drawCircle(color = InkDark, radius = size.width * 0.08f, center = Offset(size.width * 0.35f, size.height * 0.35f))
+                                    drawCircle(color = InkDark, radius = size.width * 0.08f, center = Offset(size.width * 0.65f, size.height * 0.45f))
+                                    drawCircle(color = InkDark, radius = size.width * 0.08f, center = Offset(size.width * 0.45f, size.height * 0.65f))
                                 }
                             }
                             "sales" -> {
                                 Canvas(modifier = Modifier.size(20.dp)) {
-                                    drawLine(color = primaryColor, start = Offset(size.width * 0.2f, size.height * 0.8f), end = Offset(size.width * 0.2f, size.height * 0.5f), strokeWidth = 2.dp.toPx())
-                                    drawLine(color = primaryColor, start = Offset(size.width * 0.5f, size.height * 0.8f), end = Offset(size.width * 0.5f, size.height * 0.2f), strokeWidth = 2.dp.toPx())
-                                    drawLine(color = primaryColor, start = Offset(size.width * 0.8f, size.height * 0.8f), end = Offset(size.width * 0.8f, size.height * 0.4f), strokeWidth = 2.dp.toPx())
+                                    drawLine(color = InkDark, start = Offset(size.width * 0.2f, size.height * 0.8f), end = Offset(size.width * 0.2f, size.height * 0.5f), strokeWidth = 2.dp.toPx())
+                                    drawLine(color = InkDark, start = Offset(size.width * 0.5f, size.height * 0.8f), end = Offset(size.width * 0.5f, size.height * 0.2f), strokeWidth = 2.dp.toPx())
+                                    drawLine(color = InkDark, start = Offset(size.width * 0.8f, size.height * 0.8f), end = Offset(size.width * 0.8f, size.height * 0.4f), strokeWidth = 2.dp.toPx())
                                 }
                             }
                             else -> {
                                 Canvas(modifier = Modifier.size(20.dp)) {
                                     drawRoundRect(
-                                        color = primaryColor,
+                                        color = InkDark,
                                         topLeft = Offset(size.width * 0.2f, size.height * 0.15f),
                                         size = Size(size.width * 0.6f, size.height * 0.7f),
                                         style = Stroke(width = 1.8.dp.toPx())
                                     )
-                                    drawLine(color = primaryColor, start = Offset(size.width * 0.35f, size.height * 0.35f), end = Offset(size.width * 0.65f, size.height * 0.35f), strokeWidth = 1.5.dp.toPx())
-                                    drawLine(color = primaryColor, start = Offset(size.width * 0.35f, size.height * 0.50f), end = Offset(size.width * 0.65f, size.height * 0.50f), strokeWidth = 1.5.dp.toPx())
-                                    drawLine(color = primaryColor, start = Offset(size.width * 0.35f, size.height * 0.65f), end = Offset(size.width * 0.55f, size.height * 0.65f), strokeWidth = 1.5.dp.toPx())
+                                    drawLine(color = InkDark, start = Offset(size.width * 0.35f, size.height * 0.35f), end = Offset(size.width * 0.65f, size.height * 0.35f), strokeWidth = 1.5.dp.toPx())
+                                    drawLine(color = InkDark, start = Offset(size.width * 0.35f, size.height * 0.50f), end = Offset(size.width * 0.65f, size.height * 0.50f), strokeWidth = 1.5.dp.toPx())
+                                    drawLine(color = InkDark, start = Offset(size.width * 0.35f, size.height * 0.65f), end = Offset(size.width * 0.55f, size.height * 0.65f), strokeWidth = 1.5.dp.toPx())
                                 }
                             }
                         }
@@ -424,7 +385,7 @@ private fun NotificationCard(
                             text = item.title?.takeIf { it.isNotBlank() } ?: "—",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = InkDark,
                             fontSize = 14.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -435,7 +396,7 @@ private fun NotificationCard(
                         Text(
                             text = "$timeLabel · $statusLabel",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MutedInk,
                             fontSize = 11.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -448,9 +409,10 @@ private fun NotificationCard(
                     Box(
                         modifier = Modifier
                             .padding(top = 4.dp)
-                            .size(8.dp)
+                            .size(10.dp)
                             .clip(CircleShape)
                             .background(MainBlue)
+                            .border(1.dp, InkDark, CircleShape)
                     )
                 }
             }
@@ -458,7 +420,7 @@ private fun NotificationCard(
             Text(
                 text = item.body?.takeIf { it.isNotBlank() } ?: "—",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MutedInk,
                 fontSize = 12.sp,
                 lineHeight = 16.sp,
                 maxLines = 3,
@@ -480,8 +442,8 @@ private fun NotificationCard(
                 Text(
                     text = actionText,
                     style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Bold,
-                    color = primaryColor,
+                    fontWeight = FontWeight.Black,
+                    color = MainBlue,
                     fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -494,7 +456,7 @@ private fun NotificationCard(
                         lineTo(size.width * 0.8f, size.height * 0.5f)
                         lineTo(size.width * 0.2f, size.height * 0.9f)
                     }
-                    drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                    drawPath(path = path, color = MainBlue, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
                 }
             }
         }

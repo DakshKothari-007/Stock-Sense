@@ -44,6 +44,7 @@ import com.simats.stocksense.core.theme.CardWhite
 import com.simats.stocksense.core.theme.InkDark
 import com.simats.stocksense.core.theme.MainYellow
 import com.simats.stocksense.core.theme.MutedInk
+import com.simats.stocksense.core.theme.ShadowColor
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -89,7 +90,7 @@ fun StockSenseBottomNavigation(
                 modifier = Modifier
                     .matchParentSize()
                     .offset(x = 4.dp, y = 4.dp)
-                    .background(InkDark, RoundedCornerShape(26.dp))
+                    .background(ShadowColor, RoundedCornerShape(26.dp))
             )
 
             // White Pill Container with 2.5dp Ink Border

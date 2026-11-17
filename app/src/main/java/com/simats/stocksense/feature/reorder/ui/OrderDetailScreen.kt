@@ -31,6 +31,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.core.util.ResponsiveContainer
@@ -90,7 +91,7 @@ fun OrderDetailScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         if (order == null) {
             Box(
@@ -107,11 +108,13 @@ fun OrderDetailScreen(
                         text = "Order not found",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = InkDark
                     )
-                    Button(onClick = onBackClick) {
-                        Text("Back to Orders")
-                    }
+                    BoldButton(
+                        text = "Back to Orders",
+                        onClick = onBackClick,
+                        isPrimary = true
+                    )
                 }
             }
             return@Surface
@@ -145,62 +148,12 @@ fun OrderDetailScreen(
             ) {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 1. Header with Back Button and Order Number
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable { onBackClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surface)
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Canvas(modifier = Modifier.size(16.dp)) {
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.65f, size.height * 0.15f)
-                                    lineTo(size.width * 0.25f, size.height * 0.5f)
-                                    lineTo(size.width * 0.65f, size.height * 0.85f)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = order.orderNo ?: "—",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = subtitleDate,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
+                // 1. Header with Shared BoldTopBar
+                BoldTopBar(
+                    title = order.orderNo ?: "—",
+                    subtitle = subtitleDate,
+                    onBackClick = onBackClick
+                )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -223,16 +176,16 @@ fun OrderDetailScreen(
                             "When the delivery arrives, tap Receive to add $totalUnits units to your stock."
                         }
 
-                        Card(
+                        BoldCard(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(containerColor = SoftLightBlue),
-                            border = BorderStroke(2.dp, InkDark)
+                            backgroundColor = SoftLightBlue,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp,
+                            contentPadding = PaddingValues(18.dp)
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(18.dp),
+                                modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Text(
@@ -253,7 +206,7 @@ fun OrderDetailScreen(
                                 Text(
                                     text = bannerDetail,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = InkDark.copy(alpha = 0.85f),
+                                    color = MutedInk,
                                     fontSize = 12.sp,
                                     lineHeight = 16.sp
                                 )
@@ -262,23 +215,23 @@ fun OrderDetailScreen(
                     }
 
                     "received" -> {
-                        Card(
+                        BoldCard(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(containerColor = CardWhite),
-                            border = BorderStroke(2.dp, InkDark)
+                            backgroundColor = SoftLavender,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp,
+                            contentPadding = PaddingValues(18.dp)
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(18.dp),
+                                modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Text(
                                     text = "DELIVERY RECEIVED",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = MainBlue,
+                                    color = InkDark,
                                     fontSize = 11.sp,
                                     letterSpacing = 0.8.sp
                                 )
@@ -300,23 +253,23 @@ fun OrderDetailScreen(
                     }
 
                     else -> { // cancelled
-                        Card(
+                        BoldCard(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                            backgroundColor = SoftPink,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp,
+                            contentPadding = PaddingValues(18.dp)
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(18.dp),
+                                modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Text(
                                     text = "ORDER CANCELLED",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = StatusDangerRed,
                                     fontSize = 11.sp,
                                     letterSpacing = 0.8.sp
                                 )
@@ -324,13 +277,13 @@ fun OrderDetailScreen(
                                     text = "Order cancelled",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = InkDark,
                                     fontSize = 18.sp
                                 )
                                 Text(
                                     text = "This purchase order was cancelled. No units were added to your stock.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = MutedInk,
                                     fontSize = 12.sp
                                 )
                             }
@@ -343,7 +296,7 @@ fun OrderDetailScreen(
                     text = "Items in this order",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = InkDark,
                     fontSize = 14.sp
                 )
 
@@ -353,16 +306,16 @@ fun OrderDetailScreen(
                 }
 
                 // 4. Totals Card
-                Card(
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp,
+                    contentPadding = PaddingValues(16.dp)
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Row(
@@ -372,14 +325,14 @@ fun OrderDetailScreen(
                             Text(
                                 text = "Items",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MutedInk,
                                 fontSize = 13.sp
                             )
                             Text(
                                 text = totalItems.toString(),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = InkDark,
                                 fontSize = 13.sp
                             )
                         }
@@ -391,21 +344,21 @@ fun OrderDetailScreen(
                             Text(
                                 text = "Units",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MutedInk,
                                 fontSize = 13.sp
                             )
                             Text(
                                 text = totalUnits.toString(),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = InkDark,
                                 fontSize = 13.sp
                             )
                         }
 
                         HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                            thickness = 0.5.dp
+                            color = InkDark.copy(alpha = 0.15f),
+                            thickness = 1.dp
                         )
 
                         Row(
@@ -416,14 +369,14 @@ fun OrderDetailScreen(
                             Text(
                                 text = if (isPlaced) "Estimated total" else "Total",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MutedInk,
                                 fontSize = 13.sp
                             )
                             Text(
                                 text = totalCostFormatted,
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = InkDark,
                                 fontSize = 20.sp
                             )
                         }
@@ -436,59 +389,27 @@ fun OrderDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Button(
+                        BoldButton(
+                            text = "Receive order",
                             onClick = { showReceiveDialog = true },
                             enabled = !uiState.isActionRunning,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = 52.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = primaryColor,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            )
-                        ) {
-                            if (uiState.isActionRunning) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Text(
-                                    text = "Receive order",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp
-                                )
-                            }
-                        }
+                            isPrimary = true,
+                            isLoading = uiState.isActionRunning
+                        )
 
-                        OutlinedButton(
+                        BoldButton(
+                            text = "Cancel order",
                             onClick = { showCancelDialog = true },
                             enabled = !uiState.isActionRunning,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = 48.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            border = BorderStroke(1.dp, Color(0xFFEF4444)),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Color(0xFFEF4444)
-                            )
-                        ) {
-                            Text(
-                                text = "Cancel order",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFEF4444),
-                                fontSize = 15.sp
-                            )
-                        }
+                            isPrimary = false,
+                            containerColor = SoftPink,
+                            contentColor = StatusDangerRed
+                        )
 
                         Text(
                             text = "Receiving adds the units to your stock. You will be asked to confirm.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MutedInk,
                             fontSize = 11.sp,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
@@ -503,73 +424,59 @@ fun OrderDetailScreen(
 
         // Receive Confirm Dialog (Requirement 3)
         if (showReceiveDialog) {
-            AlertDialog(
+            BoldDialog(
                 onDismissRequest = { if (!uiState.isActionRunning) showReceiveDialog = false },
-                modifier = Modifier.widthIn(max = 520.dp),
-                title = {
-                    Text("Receive purchase order?", fontWeight = FontWeight.Bold)
-                },
-                text = {
-                    Text("Add $totalUnits units to your stock?")
-                },
+                title = "Receive purchase order?",
+                text = "Add $totalUnits units to your stock?",
                 confirmButton = {
-                    Button(
+                    BoldButton(
+                        text = "Receive",
                         onClick = {
                             showReceiveDialog = false
                             viewModel.receiveOrder(order)
                         },
                         enabled = !uiState.isActionRunning,
-                        colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
-                    ) {
-                        Text("Receive", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
-                    }
+                        isPrimary = true
+                    )
                 },
                 dismissButton = {
-                    TextButton(
+                    BoldButton(
+                        text = "Cancel",
                         onClick = { showReceiveDialog = false },
-                        enabled = !uiState.isActionRunning
-                    ) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                },
-                shape = RoundedCornerShape(16.dp),
-                containerColor = MaterialTheme.colorScheme.surface
+                        enabled = !uiState.isActionRunning,
+                        isPrimary = false
+                    )
+                }
             )
         }
 
         // Cancel Confirm Dialog (Requirement 4)
         if (showCancelDialog) {
-            AlertDialog(
+            BoldDialog(
                 onDismissRequest = { if (!uiState.isActionRunning) showCancelDialog = false },
-                modifier = Modifier.widthIn(max = 520.dp),
-                title = {
-                    Text("Cancel purchase order?", fontWeight = FontWeight.Bold)
-                },
-                text = {
-                    Text("Are you sure you want to cancel order ${order.orderNo ?: ""}? This action cannot be undone.")
-                },
+                title = "Cancel purchase order?",
+                text = "Are you sure you want to cancel order ${order.orderNo ?: ""}? This action cannot be undone.",
                 confirmButton = {
-                    Button(
+                    BoldButton(
+                        text = "Cancel order",
                         onClick = {
                             showCancelDialog = false
                             viewModel.cancelOrder(order)
                         },
                         enabled = !uiState.isActionRunning,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
-                    ) {
-                        Text("Cancel order", color = Color.White, fontWeight = FontWeight.Bold)
-                    }
+                        isPrimary = false,
+                        containerColor = StatusDangerRed,
+                        contentColor = Color.White
+                    )
                 },
                 dismissButton = {
-                    TextButton(
+                    BoldButton(
+                        text = "Keep order",
                         onClick = { showCancelDialog = false },
-                        enabled = !uiState.isActionRunning
-                    ) {
-                        Text("Keep order", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                },
-                shape = RoundedCornerShape(16.dp),
-                containerColor = MaterialTheme.colorScheme.surface
+                        enabled = !uiState.isActionRunning,
+                        isPrimary = false
+                    )
+                }
             )
         }
     }
@@ -585,16 +492,16 @@ private fun OrderDetailItemCard(item: PurchaseOrderItemDto) {
 
     val stockNowText = item.currentStock?.let { "Stock now: $it" } ?: "Stock now: —"
 
-    Card(
+    BoldCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        backgroundColor = CardWhite,
+        borderColor = InkDark,
+        borderWidth = 2.dp,
+        shadowOffset = 3.dp,
+        contentPadding = PaddingValues(16.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             // Row 1: Product Avatar, Name & Line Total
@@ -620,7 +527,7 @@ private fun OrderDetailItemCard(item: PurchaseOrderItemDto) {
                             text = item.displayName,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = InkDark,
                             fontSize = 15.sp,
                             modifier = Modifier.weight(1f),
                             maxLines = 1,
@@ -631,7 +538,7 @@ private fun OrderDetailItemCard(item: PurchaseOrderItemDto) {
                             text = lineCostFormatted,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = InkDark,
                             fontSize = 16.sp,
                             maxLines = 1
                         )
@@ -642,7 +549,7 @@ private fun OrderDetailItemCard(item: PurchaseOrderItemDto) {
                     Text(
                         text = skuCategory,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MutedInk,
                         fontSize = 12.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -659,7 +566,7 @@ private fun OrderDetailItemCard(item: PurchaseOrderItemDto) {
                 Text(
                     text = "$qty units × $unitCostFormatted",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MutedInk,
                     fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -671,7 +578,7 @@ private fun OrderDetailItemCard(item: PurchaseOrderItemDto) {
                 Text(
                     text = stockNowText,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MutedInk,
                     fontSize = 12.sp,
                     maxLines = 1
                 )

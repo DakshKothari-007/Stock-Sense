@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.components.StockSenseBottomNavigation
+import com.simats.stocksense.core.theme.CreamBackground
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.feature.ai.ui.DukaanMitraFloatingButton
 import com.simats.stocksense.feature.dashboard.viewmodel.DashboardViewModel
@@ -69,7 +70,7 @@ fun MainScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         Scaffold(
             bottomBar = {
@@ -78,7 +79,7 @@ fun MainScreen(
                     onTabSelected = { viewModel.selectTab(it) }
                 )
             },
-            containerColor = MaterialTheme.colorScheme.background
+            containerColor = CreamBackground
         ) { innerPadding ->
             Box(
                 modifier = Modifier

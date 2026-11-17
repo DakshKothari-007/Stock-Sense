@@ -38,7 +38,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
@@ -114,9 +115,10 @@ fun InventoryScreenContent(
     onTeaProductClick: () -> Unit = {},
     onParleGProductClick: () -> Unit = {}
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
-
-    Box(modifier = Modifier.fillMaxSize()) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = CreamBackground
+    ) {
         when {
             uiState.isLoading -> {
                 // Initial Loading Spinner
@@ -129,14 +131,14 @@ fun InventoryScreenContent(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         CircularProgressIndicator(
-                            color = primaryColor,
+                            color = MainBlue,
                             modifier = Modifier.size(36.dp),
                             strokeWidth = 3.dp
                         )
                         Text(
                             text = "Loading inventory...",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MutedInk
                         )
                     }
                 }
@@ -150,27 +152,36 @@ fun InventoryScreenContent(
                         .padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth().widthIn(max = 480.dp),
+                        backgroundColor = CardWhite,
+                        borderColor = InkDark,
+                        borderWidth = 2.5.dp,
+                        shadowOffset = 4.dp
                     ) {
-                        Text(
-                            text = "Unable to load inventory",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = uiState.errorMessage,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        Button(
-                            onClick = onRetryClick,
-                            shape = RoundedCornerShape(12.dp)
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Text("Retry")
+                            Text(
+                                text = "Unable to load inventory",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark
+                            )
+                            Text(
+                                text = uiState.errorMessage,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MutedInk,
+                                textAlign = TextAlign.Center
+                            )
+                            BoldButton(
+                                text = "Retry",
+                                onClick = onRetryClick,
+                                modifier = Modifier.fillMaxWidth(),
+                                isPrimary = true
+                            )
                         }
                     }
                 }
@@ -227,7 +238,6 @@ fun InventoryContent(
     onTeaProductClick: () -> Unit = {},
     onParleGProductClick: () -> Unit = {}
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
     val scrollState = rememberScrollState()
 
     // Pagination: Trigger loadMore when scrolling near bottom
@@ -237,7 +247,7 @@ fun InventoryContent(
         }
     }
 
-    val displayShopName = shopName.ifBlank { "Green Basket" }
+    val displayShopName = shopName.ifBlank { "StockSense Store" }
     val displayDate = NumberFormatUtil.formatCurrentHeaderDate()
     val headerSubtitle = "$displayShopName · $totalCount products · $displayDate"
 
@@ -262,7 +272,7 @@ fun InventoryContent(
                 Text(
                     text = "Inventory",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = InkDark,
                     fontWeight = FontWeight.Bold,
                     fontSize = 22.sp,
                     maxLines = 1,
@@ -271,230 +281,226 @@ fun InventoryContent(
                 Text(
                     text = headerSubtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MutedInk,
                     fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // 2. Find a Product Section (Search & Filter - Fixed at top)
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = "Find a product",
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontSize = 12.sp
-            )
+            // 2. Find a Product Section (Search & Filter - Fixed at top)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Find a product",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = InkDark,
+                    fontSize = 12.sp
+                )
 
-            var isFocused by remember { mutableStateOf(false) }
-            val showBack = isFocused || searchQuery.isNotEmpty()
+                var isFocused by remember { mutableStateOf(false) }
+                val showBack = isFocused || searchQuery.isNotEmpty()
 
-            val focusManager = LocalFocusManager.current
-            val softwareKeyboardController = LocalSoftwareKeyboardController.current
+                val focusManager = LocalFocusManager.current
+                val softwareKeyboardController = LocalSoftwareKeyboardController.current
 
-            val handleBack: () -> Unit = {
-                onSearchQueryChange("")
-                focusManager.clearFocus()
-                softwareKeyboardController?.hide()
-            }
+                val handleBack: () -> Unit = {
+                    onSearchQueryChange("")
+                    focusManager.clearFocus()
+                    softwareKeyboardController?.hide()
+                }
 
-            BackHandler(enabled = showBack) {
-                handleBack()
-            }
+                BackHandler(enabled = showBack) {
+                    handleBack()
+                }
 
-            // Search Box (Debounced typing supported by ViewModel)
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChange,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onFocusChanged { isFocused = it.isFocused },
-                placeholder = {
-                    Text(
-                        text = "Search name or SKU",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray,
-                        fontSize = 14.sp
-                    )
-                },
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedBorderColor = primaryColor,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                ),
-                leadingIcon = {
-                    if (showBack) {
-                        IconButton(onClick = handleBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    } else {
-                        Canvas(modifier = Modifier.size(18.dp)) {
-                            drawCircle(
-                                color = Color.Gray,
-                                radius = size.width * 0.35f,
-                                center = Offset(size.width * 0.4f, size.height * 0.4f),
-                                style = Stroke(width = 1.5.dp.toPx())
-                            )
-                            drawLine(
-                                color = Color.Gray,
-                                start = Offset(size.width * 0.65f, size.height * 0.65f),
-                                end = Offset(size.width * 0.95f, size.height * 0.95f),
-                                strokeWidth = 1.8.dp.toPx()
-                            )
-                        }
-                    }
-                },
-                singleLine = true
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Filter Chips Row
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val filters = listOf("All", "Low stock", "Slow moving")
-                filters.forEachIndexed { index, label ->
-                    val isSelected = selectedFilter == index
-                    Surface(
-                        onClick = { onFilterSelected(index) },
-                        shape = RoundedCornerShape(20.dp),
-                        color = if (isSelected) primaryColor else MaterialTheme.colorScheme.surface,
-                        border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                    ) {
+                // Search Box (Debounced typing supported by ViewModel)
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { isFocused = it.isFocused },
+                    placeholder = {
                         Text(
+                            text = "Search name or SKU",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MutedInk.copy(alpha = 0.7f),
+                            fontSize = 14.sp
+                        )
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = CardWhite,
+                        unfocusedContainerColor = CardWhite,
+                        focusedBorderColor = InkDark,
+                        unfocusedBorderColor = InkDark,
+                        focusedTextColor = InkDark,
+                        unfocusedTextColor = InkDark,
+                        cursorColor = InkDark
+                    ),
+                    leadingIcon = {
+                        if (showBack) {
+                            IconButton(onClick = handleBack) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = InkDark
+                                )
+                            }
+                        } else {
+                            Canvas(modifier = Modifier.size(18.dp)) {
+                                drawCircle(
+                                    color = InkDark,
+                                    radius = size.width * 0.35f,
+                                    center = Offset(size.width * 0.4f, size.height * 0.4f),
+                                    style = Stroke(width = 2.dp.toPx())
+                                )
+                                drawLine(
+                                    color = InkDark,
+                                    start = Offset(size.width * 0.65f, size.height * 0.65f),
+                                    end = Offset(size.width * 0.95f, size.height * 0.95f),
+                                    strokeWidth = 2.dp.toPx()
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Filter Chips Row
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val filters = listOf("All", "Low stock", "Slow moving")
+                    filters.forEachIndexed { index, label ->
+                        val isSelected = selectedFilter == index
+                        BoldChip(
                             text = label,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                            isSelected = isSelected,
+                            onClick = { onFilterSelected(index) }
                         )
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // 3. Product List Area with Fixed Bottom Import Button
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-        ) {
-            Column(
+            // 3. Product List Area with Fixed Bottom Import Button
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .weight(1f)
+                    .fillMaxWidth()
             ) {
-                // Empty State for New Stores
-                if (isShopEmpty) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(20.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Empty State for New Stores
+                    if (isShopEmpty) {
+                        BoldCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = SoftLightBlue,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp,
+                            shape = RoundedCornerShape(16.dp)
                         ) {
-                            Text(
-                                text = "No products in inventory",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "Your store has no inventory yet. Import your stock spreadsheet to start tracking products, stock levels, and sales.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                                fontSize = 12.sp
-                            )
-                            Spacer(modifier = Modifier.height(14.dp))
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            Column(
+                                modifier = Modifier.padding(20.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                OutlinedButton(
-                                    onClick = onImportDataClick,
-                                    shape = RoundedCornerShape(10.dp),
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                Text(
+                                    text = "No products in inventory",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = InkDark
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "Your store has no inventory yet. Import your stock spreadsheet to start tracking products, stock levels, and sales.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = InkDark,
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 13.sp
+                                )
+                                Spacer(modifier = Modifier.height(14.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
-                                    Text("Import Stock", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                }
-                                Button(
-                                    onClick = onAddProductClick,
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
-                                ) {
-                                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Add product", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                    BoldButton(
+                                        text = "Import Stock",
+                                        onClick = onImportDataClick,
+                                        modifier = Modifier.weight(1f),
+                                        isPrimary = false
+                                    )
+                                    BoldButton(
+                                        text = "Add product",
+                                        onClick = onAddProductClick,
+                                        modifier = Modifier.weight(1f),
+                                        isPrimary = true
+                                    )
                                 }
                             }
                         }
-                    }
-                } else if (isNoSearchResults) {
-                    // Empty State for Filter/Search with 0 matches
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 36.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    } else if (isNoSearchResults) {
+                        // Empty State for Filter/Search with 0 matches
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 36.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "No products found",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = InkDark,
+                                    fontSize = 16.sp
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Try searching for a different item or clear filters",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MutedInk,
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
+                    } else {
+                        // 4. Your Products List
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Text(
-                                text = "No products found",
+                                text = "Your products",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 15.sp
+                                color = InkDark,
+                                fontSize = 16.sp
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Try searching for a different item or clear filters",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 12.sp
-                            )
-                        }
-                    }
-                } else {
-                    // 4. Your Products List
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text(
-                            text = "Your products",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 15.sp
-                        )
 
-                        products.forEach { item ->
-                            val isMarie = item.name.contains("Marie", ignoreCase = true)
-                            val isAtta = item.name.contains("Atta", ignoreCase = true)
-                            val isTea = item.name.contains("Tea", ignoreCase = true)
-                            val isParleG = item.name.contains("Parle", ignoreCase = true)
+                            products.forEach { item ->
+                                val isMarie = item.name.contains("Marie", ignoreCase = true)
+                                val isAtta = item.name.contains("Atta", ignoreCase = true)
+                                val isTea = item.name.contains("Tea", ignoreCase = true)
+                                val isParleG = item.name.contains("Parle", ignoreCase = true)
 
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .clickable {
+                                BoldCard(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    backgroundColor = CardWhite,
+                                    borderColor = InkDark,
+                                    borderWidth = 2.dp,
+                                    shadowOffset = 3.dp,
+                                    shape = RoundedCornerShape(14.dp),
+                                    onClick = {
                                         onProductClick(item)
                                         when {
                                             isMarie -> onBiscuitsProductClick()
@@ -503,82 +509,74 @@ fun InventoryContent(
                                             isParleG -> onParleGProductClick()
                                             else -> onMilkProductClick()
                                         }
-                                    },
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                                shape = RoundedCornerShape(14.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(14.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                    }
                                 ) {
                                     Row(
-                                        verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier
-                                            .weight(1f)
-                                            .padding(end = 8.dp)
+                                            .fillMaxWidth()
+                                            .padding(14.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        ProductAvatar(
-                                            name = item.name,
-                                            category = item.category,
-                                            iconKey = item.iconKey,
-                                            size = 40.dp
-                                        )
-                                        Spacer(modifier = Modifier.width(12.dp))
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = item.name.ifBlank { "—" },
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                fontSize = 13.sp,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .padding(end = 8.dp)
+                                        ) {
+                                            ProductAvatar(
+                                                name = item.name,
+                                                category = item.category,
+                                                iconKey = item.iconKey,
+                                                size = 40.dp
                                             )
-                                            val skuDisplay = item.sku.ifBlank { "—" }
-                                            val priceDisplay = item.price.ifBlank { "—" }
-                                            Text(
-                                                text = "$skuDisplay · $priceDisplay",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                fontSize = 11.sp,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                            if (item.status != null) {
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Column(
+                                                modifier = Modifier.weight(1f),
+                                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
                                                 Text(
-                                                    text = item.status,
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = Color(item.statusColorHex),
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    fontSize = 11.sp,
+                                                    text = item.name.ifBlank { "—" },
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = InkDark,
+                                                    fontSize = 14.sp,
                                                     maxLines = 1,
                                                     overflow = TextOverflow.Ellipsis
                                                 )
+                                                val skuDisplay = item.sku.ifBlank { "—" }
+                                                val priceDisplay = item.price.ifBlank { "—" }
+                                                Text(
+                                                    text = "$skuDisplay · $priceDisplay",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MutedInk,
+                                                    fontSize = 12.sp,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                                if (item.status != null) {
+                                                    BoldStatusChip(status = item.status)
+                                                }
                                             }
                                         }
-                                    }
 
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Column(horizontalAlignment = Alignment.End) {
-                                            Text(
-                                                text = item.units.ifBlank { "0" },
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                fontSize = 14.sp
-                                            )
-                                            Text(
-                                                text = "units",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                fontSize = 10.sp
-                                            )
-                                        }
-                                        if (item.status != null) {
-                                            Spacer(modifier = Modifier.width(6.dp))
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Column(horizontalAlignment = Alignment.End) {
+                                                Text(
+                                                    text = item.units.ifBlank { "0" },
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = InkDark,
+                                                    fontSize = 15.sp
+                                                )
+                                                Text(
+                                                    text = "units",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MutedInk,
+                                                    fontSize = 10.sp
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(8.dp))
                                             Canvas(modifier = Modifier.size(10.dp)) {
                                                 val path = Path().apply {
                                                     moveTo(size.width * 0.2f, size.height * 0.1f)
@@ -587,101 +585,67 @@ fun InventoryContent(
                                                 }
                                                 drawPath(
                                                     path = path,
-                                                    color = Color.Gray,
-                                                    style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                                    color = InkDark,
+                                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                                                 )
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
 
-                        // Loading More Indicator
-                        if (isLoadingMore) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 12.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = primaryColor,
-                                    strokeWidth = 2.dp
-                                )
+                            // Loading More Indicator
+                            if (isLoadingMore) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 12.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = MainBlue,
+                                        strokeWidth = 2.dp
+                                    )
+                                }
                             }
                         }
                     }
+
+                    // Bottom padding so the last product is not hidden behind the button
+                    if (showBottomImportButton) {
+                        Spacer(modifier = Modifier.height(88.dp))
+                    } else {
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
                 }
 
-                // Bottom padding so the last product is not hidden behind the button
+                // Fixed Bottom Area (Import Data and Add product buttons side by side)
                 if (showBottomImportButton) {
-                    Spacer(modifier = Modifier.height(88.dp))
-                } else {
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-            }
-
-            // Fixed Bottom Area (Import Data and Add product buttons side by side)
-            if (showBottomImportButton) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(bottom = 16.dp, top = 8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .background(CreamBackground)
+                            .padding(bottom = 16.dp, top = 8.dp)
                     ) {
-                        OutlinedButton(
-                            onClick = onImportDataClick,
-                            modifier = Modifier
-                                .weight(1f)
-                                .defaultMinSize(minHeight = 52.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onBackground
-                            )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
+                            BoldButton(
                                 text = "Import Data",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                onClick = onImportDataClick,
+                                modifier = Modifier.weight(1f),
+                                isPrimary = false
                             )
-                        }
 
-                        Button(
-                            onClick = onAddProductClick,
-                            modifier = Modifier
-                                .weight(1f)
-                                .defaultMinSize(minHeight = 52.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = primaryColor,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
+                            BoldButton(
                                 text = "Add product",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                onClick = onAddProductClick,
+                                modifier = Modifier.weight(1f),
+                                isPrimary = true
                             )
                         }
                     }
@@ -689,7 +653,6 @@ fun InventoryContent(
             }
         }
     }
-}
 }
 
 @Preview(showBackground = true)
@@ -704,7 +667,7 @@ fun InventoryScreenPreview() {
                     sku = "DAI-001",
                     price = "₹30",
                     status = "Low stock · Minimum 24",
-                    statusColorHex = 0xFF98621A,
+                    statusColorHex = 0xFFFF9F5A,
                     units = "8",
                     iconType = 0
                 )

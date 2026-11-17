@@ -31,6 +31,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.core.util.ResponsiveContainer
@@ -72,7 +73,7 @@ fun PurchaseOrdersScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         val windowInfo = rememberWindowSizeInfo()
 
@@ -90,77 +91,26 @@ fun PurchaseOrdersScreen(
             ) {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 1. Header with Back Button and Title
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable { onBackClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surface)
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Canvas(modifier = Modifier.size(16.dp)) {
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.65f, size.height * 0.15f)
-                                    lineTo(size.width * 0.25f, size.height * 0.5f)
-                                    lineTo(size.width * 0.65f, size.height * 0.85f)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Purchase orders",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-
-                        val ordersCountText = if (uiState.totalOrdersCount > 0) {
-                            "${uiState.totalOrdersCount} ${if (uiState.totalOrdersCount == 1) "order" else "orders"}"
-                        } else if (uiState.isLoading) {
-                            "Loading orders..."
-                        } else {
-                            "0 orders"
-                        }
-
-                        val headerSubtitle = if (uiState.shopName.isNotBlank() && uiState.shopName != "—") {
-                            "${uiState.shopName} · $ordersCountText"
-                        } else {
-                            ordersCountText
-                        }
-
-                        Text(
-                            text = headerSubtitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                val ordersCountText = if (uiState.totalOrdersCount > 0) {
+                    "${uiState.totalOrdersCount} ${if (uiState.totalOrdersCount == 1) "order" else "orders"}"
+                } else if (uiState.isLoading) {
+                    "Loading orders..."
+                } else {
+                    "0 orders"
                 }
+
+                val headerSubtitle = if (uiState.shopName.isNotBlank() && uiState.shopName != "—") {
+                    "${uiState.shopName} · $ordersCountText"
+                } else {
+                    ordersCountText
+                }
+
+                // 1. Shared BoldTopBar
+                BoldTopBar(
+                    title = "Purchase orders",
+                    subtitle = headerSubtitle,
+                    onBackClick = onBackClick
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -182,25 +132,11 @@ fun PurchaseOrdersScreen(
 
                     filterLabels.forEachIndexed { index, label ->
                         val isSelected = uiState.selectedFilterIndex == index
-                        Surface(
-                            onClick = { viewModel.selectFilter(index) },
-                            shape = RoundedCornerShape(20.dp),
-                            color = if (isSelected) primaryColor else MaterialTheme.colorScheme.surface,
-                            border = BorderStroke(
-                                1.dp,
-                                if (isSelected) Color.Transparent else MaterialTheme.colorScheme.outlineVariant
-                            ),
-                            modifier = Modifier.defaultMinSize(minHeight = 40.dp)
-                        ) {
-                            Text(
-                                text = label,
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                                fontSize = 13.sp
-                            )
-                        }
+                        BoldChip(
+                            text = label,
+                            isSelected = isSelected,
+                            onClick = { viewModel.selectFilter(index) }
+                        )
                     }
                 }
 
@@ -218,7 +154,7 @@ fun PurchaseOrdersScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = primaryColor, modifier = Modifier.size(36.dp))
+                            CircularProgressIndicator(color = MainBlue, modifier = Modifier.size(36.dp))
                         }
                     }
 
@@ -229,27 +165,37 @@ fun PurchaseOrdersScreen(
                                 .padding(24.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            BoldCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                backgroundColor = SoftPink,
+                                borderColor = InkDark,
+                                borderWidth = 2.dp,
+                                shadowOffset = 3.dp
                             ) {
-                                Text(
-                                    text = "Unable to load purchase orders",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = uiState.errorMessage ?: "Unknown error",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = TextAlign.Center
-                                )
-                                Button(
-                                    onClick = { viewModel.loadOrders(resetPage = true) },
-                                    shape = RoundedCornerShape(12.dp)
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(24.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    Text("Retry")
+                                    Text(
+                                        text = "Unable to load purchase orders",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = StatusDangerRed
+                                    )
+                                    Text(
+                                        text = uiState.errorMessage ?: "Unknown error",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = InkDark,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    BoldButton(
+                                        text = "Retry",
+                                        onClick = { viewModel.loadOrders(resetPage = true) },
+                                        isPrimary = true
+                                    )
                                 }
                             }
                         }
@@ -262,11 +208,12 @@ fun PurchaseOrdersScreen(
                                 .padding(24.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Card(
+                            BoldCard(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(18.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                backgroundColor = CardWhite,
+                                borderColor = InkDark,
+                                borderWidth = 2.dp,
+                                shadowOffset = 3.dp
                             ) {
                                 Column(
                                     modifier = Modifier
@@ -279,13 +226,13 @@ fun PurchaseOrdersScreen(
                                         text = "No orders yet",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
+                                        color = InkDark,
                                         fontSize = 16.sp
                                     )
                                     Text(
                                         text = "Orders you place from Reorder appear here.",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = MutedInk,
                                         textAlign = TextAlign.Center,
                                         fontSize = 13.sp
                                     )
@@ -322,11 +269,15 @@ fun PurchaseOrdersScreen(
                                         contentAlignment = Alignment.Center
                                     ) {
                                         if (uiState.isLoadingMore) {
-                                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = primaryColor)
+                                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MainBlue)
                                         } else {
-                                            TextButton(onClick = { viewModel.loadNextPage() }) {
-                                                Text("Load more orders", color = primaryColor, fontWeight = FontWeight.Bold)
-                                            }
+                                            BoldButton(
+                                                text = "Load more orders",
+                                                onClick = { viewModel.loadNextPage() },
+                                                isPrimary = false,
+                                                borderWidth = 2.dp,
+                                                shadowOffset = 2.dp
+                                            )
                                         }
                                     }
                                 }
@@ -340,7 +291,7 @@ fun PurchaseOrdersScreen(
             Text(
                 text = "Tap an order to receive or cancel it.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MutedInk,
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
@@ -389,13 +340,13 @@ private fun PurchaseOrderCard(
     val totalLabel = if (status == "placed") "Estimated total" else "Total"
     val totalAmountFormatted = NumberFormatUtil.formatIndianRupees(order.totalEstimatedCost ?: 0.0)
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    BoldCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = CardWhite,
+        borderColor = InkDark,
+        borderWidth = 2.dp,
+        shadowOffset = 3.dp,
+        onClick = onClick
     ) {
         Column(
             modifier = Modifier
@@ -413,7 +364,7 @@ private fun PurchaseOrderCard(
                     text = order.orderNo ?: "—",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = InkDark,
                     fontSize = 15.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -424,7 +375,8 @@ private fun PurchaseOrderCard(
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = statusBg
+                    color = statusBg,
+                    border = BorderStroke(1.5.dp, InkDark)
                 ) {
                     Text(
                         text = order.status?.uppercase() ?: "PLACED",
@@ -456,7 +408,7 @@ private fun PurchaseOrderCard(
                         text = productTitle,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = InkDark,
                         fontSize = 14.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -465,7 +417,7 @@ private fun PurchaseOrderCard(
                     Text(
                         text = metaText,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MutedInk,
                         fontSize = 12.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -484,7 +436,7 @@ private fun PurchaseOrderCard(
                 Text(
                     text = totalLabel,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MutedInk,
                     fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -496,8 +448,8 @@ private fun PurchaseOrderCard(
                 Text(
                     text = totalAmountFormatted,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Black,
+                    color = InkDark,
                     fontSize = 17.sp,
                     maxLines = 1
                 )

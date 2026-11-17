@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import com.simats.stocksense.core.components.StockSenseLogo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -77,11 +78,9 @@ fun AnimatedSplashLogo(
             },
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.stocksense_symbol_inkblue),
-            contentDescription = "StockSense Logo",
+        StockSenseLogo(
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Fit
+            size = 100.dp
         )
     }
 }

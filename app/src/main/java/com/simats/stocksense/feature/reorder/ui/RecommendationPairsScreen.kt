@@ -99,63 +99,12 @@ fun RecommendationPairsScreen(
             ) {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 1. Header Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable { onBackClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surface)
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Canvas(modifier = Modifier.size(16.dp)) {
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.65f, size.height * 0.15f)
-                                    lineTo(size.width * 0.25f, size.height * 0.5f)
-                                    lineTo(size.width * 0.65f, size.height * 0.85f)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Better together",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "AI INSIGHT · ${NumberFormatUtil.formatCurrentHeaderDate().uppercase(Locale.ENGLISH)}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 10.sp,
-                            letterSpacing = 1.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
+                // 1. Header with Shared BoldTopBar
+                BoldTopBar(
+                    title = "Better together",
+                    subtitle = "AI INSIGHT · ${NumberFormatUtil.formatCurrentHeaderDate().uppercase(Locale.ENGLISH)}",
+                    onBackClick = onBackClick
+                )
 
             if (uiState.isLoading && pair == null) {
                 Box(
@@ -164,15 +113,16 @@ fun RecommendationPairsScreen(
                         .height(300.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = primaryColor)
+                    CircularProgressIndicator(color = MainBlue)
                 }
             } else if (!uiState.hasEnoughPairsHistory) {
                 // Not enough sales history state
-                Card(
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp
                 ) {
                     Column(
                         modifier = Modifier
@@ -185,13 +135,13 @@ fun RecommendationPairsScreen(
                             text = "Sales history needed",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = InkDark
                         )
                         Text(
                             text = uiState.productPairsHistoryMessage
                                 ?: "Store needs at least 30 bills in the last 90 days to identify reliable product pairs.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MutedInk,
                             textAlign = TextAlign.Center,
                             fontSize = 13.sp
                         )
@@ -199,11 +149,12 @@ fun RecommendationPairsScreen(
                 }
             } else if (pair == null) {
                 // Empty state
-                Card(
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp
                 ) {
                     Column(
                         modifier = Modifier
@@ -216,12 +167,12 @@ fun RecommendationPairsScreen(
                             text = "No product pairs yet",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = InkDark
                         )
                         Text(
                             text = "No strong product affinities found meeting the minimum co-occurrence threshold.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MutedInk,
                             textAlign = TextAlign.Center,
                             fontSize = 13.sp
                         )
@@ -246,21 +197,14 @@ fun RecommendationPairsScreen(
                         borderWidth = 1.5.dp
                     )
 
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(CardWhite)
-                            .border(1.5.dp, InkDark, RoundedCornerShape(10.dp))
-                            .clickable { showWhyDialog = true }
-                            .padding(horizontal = 12.dp, vertical = 5.dp)
-                    ) {
-                        Text(
-                            text = "Why?",
-                            color = InkDark,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
-                        )
-                    }
+                    BoldButton(
+                        text = "Why?",
+                        onClick = { showWhyDialog = true },
+                        isPrimary = false,
+                        borderWidth = 1.5.dp,
+                        shadowOffset = 2.dp,
+                        modifier = Modifier.height(34.dp)
+                    )
                 }
 
                 // 3. Headline
@@ -274,11 +218,12 @@ fun RecommendationPairsScreen(
                 )
 
                 // 4. Products Pair Card
-                Card(
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = CardWhite),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(2.dp, InkDark)
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp
                 ) {
                     Column(
                         modifier = Modifier
@@ -303,7 +248,7 @@ fun RecommendationPairsScreen(
                                     text = "${prod1?.name ?: " — "} · ${prod1?.category ?: prod1?.sku ?: " — "}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = InkDark,
                                     fontSize = 14.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -312,7 +257,7 @@ fun RecommendationPairsScreen(
                                 Text(
                                     text = "${NumberFormatUtil.formatIndianRupees(prod1?.price)} · ${prod1?.effectiveStock ?: 0} units available",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = MutedInk,
                                     fontSize = 11.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -320,7 +265,7 @@ fun RecommendationPairsScreen(
                             }
                         }
 
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
+                        HorizontalDivider(color = InkDark.copy(alpha = 0.2f), thickness = 1.dp)
 
                         // Product 2
                         Row(
@@ -339,7 +284,7 @@ fun RecommendationPairsScreen(
                                     text = "${prod2?.name ?: " — "} · ${prod2?.category ?: prod2?.sku ?: " — "}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = InkDark,
                                     fontSize = 14.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -348,7 +293,7 @@ fun RecommendationPairsScreen(
                                 Text(
                                     text = "${NumberFormatUtil.formatIndianRupees(prod2?.price)} · ${prod2?.effectiveStock ?: 0} units available",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = MutedInk,
                                     fontSize = 11.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -368,11 +313,12 @@ fun RecommendationPairsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Card(
+                    BoldCard(
                         modifier = Modifier.weight(1f),
-                        colors = CardDefaults.cardColors(containerColor = CardWhite),
-                        shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.5.dp, InkDark)
+                        backgroundColor = CardWhite,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Text(
@@ -400,11 +346,12 @@ fun RecommendationPairsScreen(
                         }
                     }
 
-                    Card(
+                    BoldCard(
                         modifier = Modifier.weight(1f),
-                        colors = CardDefaults.cardColors(containerColor = CardWhite),
-                        shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.5.dp, InkDark)
+                        backgroundColor = CardWhite,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Text(
@@ -441,11 +388,12 @@ fun RecommendationPairsScreen(
                     ?: (combinedPrice * 0.9)
                 val savings = if (combinedPrice > bundlePrice) combinedPrice - bundlePrice else 0.0
 
-                Card(
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = SoftPeach),
-                    border = BorderStroke(2.dp, InkDark),
-                    shape = RoundedCornerShape(16.dp)
+                    backgroundColor = SoftPeach,
+                    borderColor = InkDark,
+                    borderWidth = 2.5.dp,
+                    shadowOffset = 4.dp
                 ) {
                     Column(
                         modifier = Modifier
@@ -523,11 +471,12 @@ fun RecommendationPairsScreen(
                 }
 
                 // 7. Disclaimer Note Card
-                Card(
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = SoftLightBlue),
-                    border = BorderStroke(2.dp, InkDark),
-                    shape = RoundedCornerShape(14.dp)
+                    backgroundColor = PaleBlue,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp
                 ) {
                     Row(
                         modifier = Modifier

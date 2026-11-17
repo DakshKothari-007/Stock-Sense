@@ -31,6 +31,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.feature.inventory.icon.ProductAvatar
@@ -101,7 +103,6 @@ fun AddProductScreenContent(
     onDismissBanner: () -> Unit,
     onSaveClick: () -> Unit
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
     var categoryDropdownExpanded by remember { mutableStateOf(false) }
     var showIconPicker by remember { mutableStateOf(false) }
 
@@ -109,7 +110,7 @@ fun AddProductScreenContent(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         ResponsiveContainer(
             modifier = Modifier
@@ -124,575 +125,450 @@ fun AddProductScreenContent(
                     .fillMaxSize()
                     .padding(horizontal = windowInfo.horizontalPadding)
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
+                // Header with Back Button
+                BoldTopBar(
+                    title = "New product",
+                    subtitle = "Add one product to your shop",
+                    onBackClick = onBackClick
+                )
 
-                // 1. Header with Back Button (minimum 48dp touch target)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable(onClick = onBackClick),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surface),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Canvas(modifier = Modifier.size(16.dp)) {
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.7f, size.height * 0.2f)
-                                    lineTo(size.width * 0.3f, size.height * 0.5f)
-                                    lineTo(size.width * 0.7f, size.height * 0.8f)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                )
-                            }
-                        }
-                    }
+                Spacer(modifier = Modifier.height(8.dp))
 
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "New product",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "Add one product to your shop",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Error Banner (Backend error or general message)
-            if (uiState.bannerError != null) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Row(
+                // Error Banner
+                if (uiState.bannerError != null) {
+                    BoldCard(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(bottom = 12.dp),
+                        backgroundColor = SoftPink,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 2.dp
                     ) {
-                        Text(
-                            text = uiState.bannerError,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.weight(1f)
-                        )
-                        TextButton(onClick = onDismissBanner) {
-                            Text("Dismiss", color = MaterialTheme.colorScheme.onErrorContainer)
-                        }
-                    }
-                }
-            }
-
-            // Scrollable Form Fields
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // 0. Product icon selector
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    ProductAvatar(
-                        name = uiState.name,
-                        category = uiState.category,
-                        iconKey = uiState.iconKey,
-                        size = 56.dp,
-                        modifier = Modifier.clickable { showIconPicker = true }
-                    )
-
-                    Spacer(modifier = Modifier.width(14.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        val iconLabel = if (uiState.iconKey != null) {
-                            ProductIconCatalog.get(uiState.iconKey)?.nameEn ?: "Custom icon"
-                        } else {
-                            "Auto (matches from name)"
-                        }
-                        Text(
-                            text = "Product icon",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 13.sp
-                        )
-                        Text(
-                            text = iconLabel,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-                    }
-
-                    OutlinedButton(
-                        onClick = { showIconPicker = true },
-                        shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Text("Change", fontSize = 12.sp, color = primaryColor)
-                    }
-                }
-
-                if (showIconPicker) {
-                    ProductIconPickerDialog(
-                        currentIconKey = uiState.iconKey,
-                        productName = uiState.name,
-                        productCategory = uiState.category,
-                        onIconSelected = onIconKeyChange,
-                        onDismissRequest = { showIconPicker = false }
-                    )
-                }
-
-                // 1. Product name
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = "Product name",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 13.sp
-                    )
-                    OutlinedTextField(
-                        value = uiState.name,
-                        onValueChange = onNameChange,
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = {
-                            Text(
-                                text = "Name with size, for example 500 ml",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                fontSize = 14.sp
-                            )
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        singleLine = true,
-                        isError = uiState.nameError != null,
-                        supportingText = uiState.nameError?.let {
-                            { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 11.sp) }
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surface,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                            focusedBorderColor = primaryColor,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                            errorBorderColor = MaterialTheme.colorScheme.error,
-                            errorSupportingTextColor = MaterialTheme.colorScheme.error
-                        ),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-                    )
-                }
-
-                // 2. SKU (optional) - Server auto-generates if omitted or empty
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = "SKU (optional)",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 13.sp
-                    )
-                    OutlinedTextField(
-                        value = uiState.sku,
-                        onValueChange = onSkuChange,
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = {
-                            Text(
-                                text = "Leave empty to auto-generate",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                fontSize = 14.sp
-                            )
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        singleLine = true,
-                        isError = uiState.skuError != null,
-                        supportingText = {
-                            if (uiState.skuError != null) {
-                                Text(
-                                    text = uiState.skuError,
-                                    color = MaterialTheme.colorScheme.error,
-                                    fontSize = 11.sp
-                                )
-                            } else {
-                                Text(
-                                    text = "Leave empty to auto-generate",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp
-                                )
-                            }
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surface,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                            focusedBorderColor = primaryColor,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                            errorBorderColor = MaterialTheme.colorScheme.error,
-                            errorSupportingTextColor = MaterialTheme.colorScheme.error
-                        ),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-                    )
-                }
-
-                // 3. Category (Suggest existing shop categories, allow custom typing)
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = "Category",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 13.sp
-                    )
-
-                    ExposedDropdownMenuBox(
-                        expanded = categoryDropdownExpanded,
-                        onExpandedChange = { categoryDropdownExpanded = !categoryDropdownExpanded }
-                    ) {
-                        OutlinedTextField(
-                            value = uiState.category,
-                            onValueChange = onCategoryChange,
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, enabled = true),
-                            placeholder = {
-                                Text(
-                                    text = "Choose or type a category",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                    fontSize = 14.sp
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = uiState.bannerError,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = StatusDangerRed,
+                                modifier = Modifier.weight(1f)
+                            )
+                            TextButton(onClick = onDismissBanner) {
+                                Text("Dismiss", color = InkDark, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+
+                // Scrollable Form Fields
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // 0. Product icon selector
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = CardWhite,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp
+                    ) {
+                        val isNarrow = windowInfo.screenWidthDp < 360.dp
+                        if (isNarrow) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    ProductAvatar(
+                                        name = uiState.name,
+                                        category = uiState.category,
+                                        iconKey = uiState.iconKey,
+                                        size = 52.dp,
+                                        modifier = Modifier.clickable { showIconPicker = true }
+                                    )
+
+                                    Spacer(modifier = Modifier.width(14.dp))
+
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        val iconLabel = if (uiState.iconKey != null) {
+                                            ProductIconCatalog.get(uiState.iconKey)?.nameEn ?: "Custom icon"
+                                        } else {
+                                            "Auto (matches from name)"
+                                        }
+                                        Text(
+                                            text = "PRODUCT ICON",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 11.sp,
+                                                letterSpacing = 0.5.sp
+                                            ),
+                                            color = InkDark
+                                        )
+                                        Text(
+                                            text = iconLabel,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MutedInk,
+                                            fontSize = 12.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                                BoldButton(
+                                    text = "Change",
+                                    onClick = { showIconPicker = true },
+                                    isPrimary = false,
+                                    borderWidth = 2.dp,
+                                    shadowOffset = 2.dp,
+                                    modifier = Modifier.fillMaxWidth()
                                 )
-                            },
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryDropdownExpanded)
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                                focusedBorderColor = primaryColor,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                            }
+                        } else {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                ProductAvatar(
+                                    name = uiState.name,
+                                    category = uiState.category,
+                                    iconKey = uiState.iconKey,
+                                    size = 52.dp,
+                                    modifier = Modifier.clickable { showIconPicker = true }
+                                )
+
+                                Spacer(modifier = Modifier.width(14.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    val iconLabel = if (uiState.iconKey != null) {
+                                        ProductIconCatalog.get(uiState.iconKey)?.nameEn ?: "Custom icon"
+                                    } else {
+                                        "Auto (matches from name)"
+                                    }
+                                    Text(
+                                        text = "PRODUCT ICON",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 11.sp,
+                                            letterSpacing = 0.5.sp
+                                        ),
+                                        color = InkDark
+                                    )
+                                    Text(
+                                        text = iconLabel,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MutedInk,
+                                        fontSize = 12.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+
+                                BoldButton(
+                                    text = "Change",
+                                    onClick = { showIconPicker = true },
+                                    isPrimary = false,
+                                    borderWidth = 2.dp,
+                                    shadowOffset = 2.dp,
+                                    modifier = Modifier.wrapContentWidth()
+                                )
+                            }
+                        }
+                    }
+
+                    if (showIconPicker) {
+                        ProductIconPickerDialog(
+                            currentIconKey = uiState.iconKey,
+                            productName = uiState.name,
+                            productCategory = uiState.category,
+                            onIconSelected = onIconKeyChange,
+                            onDismissRequest = { showIconPicker = false }
+                        )
+                    }
+
+                    // 1. Product name
+                    BoldTextField(
+                        value = uiState.name,
+                        onValueChange = onNameChange,
+                        label = "Product name",
+                        placeholderText = "Name with size, for example 500 ml",
+                        isError = uiState.nameError != null,
+                        errorMessage = uiState.nameError,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                    )
+
+                    // 2. SKU (optional)
+                    BoldTextField(
+                        value = uiState.sku,
+                        onValueChange = onSkuChange,
+                        label = "SKU (optional - leave blank to auto-generate)",
+                        placeholderText = "Leave empty to auto-generate",
+                        isError = uiState.skuError != null,
+                        errorMessage = uiState.skuError,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                    )
+
+                    // 3. Category (Suggest existing shop categories, allow custom typing)
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = "CATEGORY",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                letterSpacing = 0.5.sp
                             ),
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                            color = InkDark
                         )
 
-                        val filteredCategories = if (uiState.category.isBlank()) {
-                            uiState.categories
-                        } else {
-                            uiState.categories.filter { it.contains(uiState.category, ignoreCase = true) }
-                        }
-
-                        if (filteredCategories.isNotEmpty()) {
-                            ExposedDropdownMenu(
-                                expanded = categoryDropdownExpanded,
-                                onDismissRequest = { categoryDropdownExpanded = false }
-                            ) {
-                                filteredCategories.forEach { cat ->
-                                    DropdownMenuItem(
-                                        text = { Text(cat, fontSize = 14.sp) },
-                                        onClick = {
-                                            onCategoryChange(cat)
-                                            categoryDropdownExpanded = false
-                                        }
+                        ExposedDropdownMenuBox(
+                            expanded = categoryDropdownExpanded,
+                            onExpandedChange = { categoryDropdownExpanded = !categoryDropdownExpanded }
+                        ) {
+                            OutlinedTextField(
+                                value = uiState.category,
+                                onValueChange = onCategoryChange,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, enabled = true),
+                                placeholder = {
+                                    Text(
+                                        text = "Choose or type a category",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MutedInk.copy(alpha = 0.7f)
                                     )
+                                },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryDropdownExpanded)
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = CardWhite,
+                                    unfocusedContainerColor = CardWhite,
+                                    focusedBorderColor = MainBlue,
+                                    unfocusedBorderColor = InkDark,
+                                    focusedTextColor = InkDark,
+                                    unfocusedTextColor = InkDark,
+                                    cursorColor = InkDark
+                                ),
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                            )
+
+                            val filteredCategories = if (uiState.category.isBlank()) {
+                                uiState.categories
+                            } else {
+                                uiState.categories.filter { it.contains(uiState.category, ignoreCase = true) }
+                            }
+
+                            if (filteredCategories.isNotEmpty()) {
+                                ExposedDropdownMenu(
+                                    expanded = categoryDropdownExpanded,
+                                    onDismissRequest = { categoryDropdownExpanded = false },
+                                    modifier = Modifier
+                                        .background(CardWhite)
+                                        .border(2.dp, InkDark, RoundedCornerShape(12.dp))
+                                ) {
+                                    filteredCategories.forEach { cat ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = cat,
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = InkDark
+                                                )
+                                            },
+                                            onClick = {
+                                                onCategoryChange(cat)
+                                                categoryDropdownExpanded = false
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                // 4. Selling price (₹) & Purchase cost (₹)
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // 4. Selling price (₹) & Purchase cost (₹)
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            BoldTextField(
+                                value = uiState.sellingPrice,
+                                onValueChange = onSellingPriceChange,
+                                label = "Selling price (₹)",
+                                placeholderText = "0",
+                                isError = uiState.priceError != null,
+                                errorMessage = uiState.priceError,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Decimal,
+                                    imeAction = ImeAction.Next
+                                ),
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            BoldTextField(
+                                value = uiState.purchaseCost,
+                                onValueChange = onPurchaseCostChange,
+                                label = "Purchase cost (₹)",
+                                placeholderText = "0",
+                                isError = uiState.costError != null,
+                                errorMessage = uiState.costError,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Decimal,
+                                    imeAction = ImeAction.Next
+                                ),
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                        // Soft Warning when purchase cost is higher than selling price
+                        if (uiState.isCostHigherThanPrice) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.WarningAmber,
+                                    contentDescription = null,
+                                    tint = StatusLowStock,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Cost is higher than selling price",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = StatusLowStock,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+
+                    // 5. Opening stock & Minimum stock
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Text(
-                                text = "Selling price (₹)",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = 13.sp
-                            )
-                            OutlinedTextField(
-                                value = uiState.sellingPrice,
-                                onValueChange = onSellingPriceChange,
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = {
-                                    Text(
-                                        text = "0",
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                        fontSize = 14.sp
-                                    )
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                singleLine = true,
-                                isError = uiState.priceError != null,
-                                supportingText = uiState.priceError?.let {
-                                    { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 11.sp) }
-                                },
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                                    focusedBorderColor = primaryColor,
-                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                                ),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next)
-                            )
-                        }
+                        BoldTextField(
+                            value = uiState.stock,
+                            onValueChange = onStockChange,
+                            label = "Opening stock",
+                            placeholderText = "0",
+                            isError = uiState.stockError != null,
+                            errorMessage = uiState.stockError,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Next
+                            ),
+                            modifier = Modifier.weight(1f)
+                        )
 
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Text(
-                                text = "Purchase cost (₹)",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = 13.sp
-                            )
-                            OutlinedTextField(
-                                value = uiState.purchaseCost,
-                                onValueChange = onPurchaseCostChange,
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = {
-                                    Text(
-                                        text = "0",
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                        fontSize = 14.sp
-                                    )
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                singleLine = true,
-                                isError = uiState.costError != null,
-                                supportingText = uiState.costError?.let {
-                                    { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 11.sp) }
-                                },
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                                    focusedBorderColor = primaryColor,
-                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                                ),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next)
-                            )
-                        }
+                        BoldTextField(
+                            value = uiState.minStock,
+                            onValueChange = onMinStockChange,
+                            label = "Minimum stock",
+                            placeholderText = "10",
+                            isError = uiState.minStockError != null,
+                            errorMessage = uiState.minStockError,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            modifier = Modifier.weight(1f)
+                        )
                     }
 
-                    // Soft Warning when purchase cost is higher than selling price
-                    if (uiState.isCostHigherThanPrice) {
+                    // 6. Info Banner Card
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = PaleBlue,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp,
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 2.dp),
+                                .padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = Icons.Default.WarningAmber,
+                                imageVector = Icons.Outlined.Info,
                                 contentDescription = null,
-                                tint = Color(0xFFF59E0B),
-                                modifier = Modifier.size(15.dp)
+                                tint = MainBlue,
+                                modifier = Modifier.size(22.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "Cost is higher than selling price",
+                                text = "You are alerted when stock falls to the minimum. Many products at once? Use Import instead.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFF59E0B),
-                                fontSize = 11.sp
+                                fontWeight = FontWeight.Medium,
+                                color = InkDark,
+                                fontSize = 12.sp,
+                                lineHeight = 17.sp
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                // 5. Opening stock & Minimum stock
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = "Opening stock",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = 13.sp
-                        )
-                        OutlinedTextField(
-                            value = uiState.stock,
-                            onValueChange = onStockChange,
-                            modifier = Modifier.fillMaxWidth(),
-                            placeholder = {
-                                Text(
-                                    text = "0",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                    fontSize = 14.sp
-                                )
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            singleLine = true,
-                            isError = uiState.stockError != null,
-                            supportingText = uiState.stockError?.let {
-                                { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 11.sp) }
-                            },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                                focusedBorderColor = primaryColor,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                            ),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
-                        )
-                    }
-
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = "Minimum stock",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = 13.sp
-                        )
-                        OutlinedTextField(
-                            value = uiState.minStock,
-                            onValueChange = onMinStockChange,
-                            modifier = Modifier.fillMaxWidth(),
-                            placeholder = {
-                                Text(
-                                    text = "10",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                    fontSize = 14.sp
-                                )
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            singleLine = true,
-                            isError = uiState.minStockError != null,
-                            supportingText = uiState.minStockError?.let {
-                                { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 11.sp) }
-                            },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                                focusedBorderColor = primaryColor,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                            ),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done)
-                        )
-                    }
-                }
-
-                // 6. Info Banner Card
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Info,
-                            contentDescription = null,
-                            tint = primaryColor,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "You are alerted when stock falls to the minimum. Many products at once? Use Import instead.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
-                            lineHeight = 17.sp
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            // Fixed Save Button at bottom
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
-            ) {
-                Button(
-                    onClick = onSaveClick,
-                    enabled = !uiState.isSaving,
+                // Fixed Save Button at bottom
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .defaultMinSize(minHeight = 52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = primaryColor,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                        .padding(vertical = 16.dp)
                 ) {
-                    if (uiState.isSaving) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(22.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text(
-                            text = "Save product",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                    BoldButton(
+                        onClick = onSaveClick,
+                        enabled = !uiState.isSaving,
+                        isPrimary = true,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (uiState.isSaving) {
+                            CircularProgressIndicator(
+                                color = InkDark,
+                                modifier = Modifier.size(22.dp),
+                                strokeWidth = 2.5.dp
+                            )
+                        } else {
+                            Text(
+                                text = "Save product",
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 16.sp
+                                ),
+                                color = InkDark,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
             }
         }
     }
-}
 }
 

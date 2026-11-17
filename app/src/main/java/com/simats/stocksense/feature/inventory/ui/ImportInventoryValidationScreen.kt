@@ -26,7 +26,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.data.model.ImportValidationError
@@ -67,7 +68,7 @@ fun ImportInventoryValidationScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         val windowInfo = rememberWindowSizeInfo()
 
@@ -87,483 +88,388 @@ fun ImportInventoryValidationScreen(
             ) {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 1. Header Row
+                // 1. Header with Shared BoldTopBar
+                BoldTopBar(
+                    title = if (errorsRemaining == 1) "One value needs a fix" else "$errorsRemaining values need a fix",
+                    subtitle = "${uiState.selectedFileName ?: "Spreadsheet"} · Validation",
+                    onBackClick = onBackClick
+                )
+
+                // 2. Stepper Indicators (Upload [done], Preview [done], Validate [active], Import)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onBackClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surface)
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
+                    val steps = listOf("Upload", "Preview", "Validate", "Import")
+                    steps.forEachIndexed { index, stepName ->
+                        val isDone = index < 2
+                        val isActive = index == 2
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Canvas(modifier = Modifier.size(16.dp)) {
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.65f, size.height * 0.15f)
-                                    lineTo(size.width * 0.25f, size.height * 0.5f)
-                                    lineTo(size.width * 0.65f, size.height * 0.85f)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                            Text(
+                                text = stepName,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (isActive || isDone) InkDark else MutedInk,
+                                fontWeight = if (isActive || isDone) FontWeight.Black else FontWeight.Bold,
+                                fontSize = 11.sp
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.9f)
+                                    .height(3.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(if (isActive || isDone) MainBlue else PaleBlue)
+                            )
+                        }
+                    }
+                }
+
+                // 3. Summary Cards (Rows checked & Ready rows)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    BoldCard(
+                        modifier = Modifier.weight(1f),
+                        backgroundColor = CardWhite,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp,
+                        contentPadding = PaddingValues(14.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = "Rows checked",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MutedInk,
+                                fontSize = 12.sp
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "$rowsChecked",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = InkDark,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 22.sp
+                            )
+                        }
+                    }
+
+                    BoldCard(
+                        modifier = Modifier.weight(1f),
+                        backgroundColor = CardWhite,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp,
+                        contentPadding = PaddingValues(14.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = "Ready rows",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MutedInk,
+                                fontSize = 12.sp
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "$readyRows",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = InkDark,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 22.sp
+                            )
+                        }
+                    }
+                }
+
+                // 4. Error Alert Banner Box
+                if (uiState.validationError != null) {
+                    val isTimeout = uiState.validationError?.contains("timed out", ignoreCase = true) == true ||
+                            uiState.validationError?.contains("timeout", ignoreCase = true) == true
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = SoftPink,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 2.dp,
+                        contentPadding = PaddingValues(14.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Canvas(modifier = Modifier.size(20.dp)) {
+                                drawCircle(color = StatusDangerRed, radius = size.width / 2f, style = Stroke(width = 1.8.dp.toPx()))
+                                drawLine(
+                                    color = StatusDangerRed,
+                                    start = Offset(size.width * 0.5f, size.height * 0.25f),
+                                    end = Offset(size.width * 0.5f, size.height * 0.6f),
+                                    strokeWidth = 2.dp.toPx(),
+                                    cap = StrokeCap.Round
+                                )
+                                drawCircle(
+                                    color = StatusDangerRed,
+                                    radius = 1.5.dp.toPx(),
+                                    center = Offset(size.width * 0.5f, size.height * 0.75f)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = if (isTimeout) "Connection timed out" else "Validation error",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = StatusDangerRed,
+                                    fontSize = 13.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = uiState.validationError ?: "",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = StatusDangerRed,
+                                    fontSize = 11.sp
+                                )
+                            }
+                            if (isTimeout && fixableError != null) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                BoldButton(
+                                    text = "Retry",
+                                    onClick = {
+                                        viewModel.applyCorrection(
+                                            error = fixableError,
+                                            onSuccess = { ready -> if (ready) onValidationPassed() },
+                                            onError = { }
+                                        )
+                                    },
+                                    isPrimary = true,
+                                    modifier = Modifier.wrapContentWidth()
                                 )
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.width(14.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = if (errorsRemaining == 1) "One value needs a fix" else "$errorsRemaining values need a fix",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "${uiState.selectedFileName ?: "Spreadsheet"} · Validation",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
                 }
 
-            // 2. Stepper Indicators (Upload [done], Preview [done], Validate [active], Import)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val steps = listOf("Upload", "Preview", "Validate", "Import")
-                steps.forEachIndexed { index, stepName ->
-                    val isDone = index < 2
-                    val isActive = index == 2
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = stepName,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (isActive || isDone) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = if (isActive || isDone) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = 11.sp
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.9f)
-                                .height(3.dp)
-                                .clip(RoundedCornerShape(2.dp))
-                                .background(if (isActive || isDone) primaryColor else MaterialTheme.colorScheme.outlineVariant)
-                        )
-                    }
-                }
-            }
-
-            // 3. Summary Cards (Rows checked & Ready rows)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Card(
-                    modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            text = "Rows checked",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "$rowsChecked",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
-                        )
-                    }
-                }
-
-                Card(
-                    modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            text = "Ready rows",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "$readyRows",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
-                        )
-                    }
-                }
-            }
-
-            // 4. Error Alert Banner Box
-            if (uiState.validationError != null) {
-                val isTimeout = uiState.validationError?.contains("timed out", ignoreCase = true) == true ||
-                        uiState.validationError?.contains("timeout", ignoreCase = true) == true
-                Card(
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = errorBgColor),
-                    shape = RoundedCornerShape(14.dp)
+                    backgroundColor = SoftPink,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 2.dp,
+                    contentPadding = PaddingValues(14.dp)
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Canvas(modifier = Modifier.size(20.dp)) {
-                            drawCircle(color = errorColor, radius = size.width / 2f, style = Stroke(width = 1.8.dp.toPx()))
+                        Canvas(modifier = Modifier.size(22.dp)) {
+                            drawCircle(color = StatusDangerRed, radius = size.width / 2f, style = Stroke(width = 1.8.dp.toPx()))
                             drawLine(
-                                color = errorColor,
+                                color = StatusDangerRed,
                                 start = Offset(size.width * 0.5f, size.height * 0.25f),
                                 end = Offset(size.width * 0.5f, size.height * 0.6f),
                                 strokeWidth = 2.dp.toPx(),
                                 cap = StrokeCap.Round
                             )
                             drawCircle(
-                                color = errorColor,
+                                color = StatusDangerRed,
                                 radius = 1.5.dp.toPx(),
                                 center = Offset(size.width * 0.5f, size.height * 0.75f)
                             )
                         }
+
                         Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
+
+                        Column {
                             Text(
-                                text = if (isTimeout) "Connection timed out" else "Validation error",
+                                text = "$errorsRemaining invalid row${if (errorsRemaining > 1) "s" else ""} · Import not ready",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = errorColor,
+                                color = StatusDangerRed,
                                 fontSize = 13.sp
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = uiState.validationError ?: "",
+                                text = "Correct the values below or re-upload your file.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = errorColor.copy(alpha = 0.85f),
+                                color = StatusDangerRed,
                                 fontSize = 11.sp
                             )
                         }
-                        if (isTimeout && fixableError != null) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = {
-                                    viewModel.applyCorrection(
-                                        error = fixableError,
-                                        onSuccess = { ready -> if (ready) onValidationPassed() },
-                                        onError = { }
-                                    )
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = errorColor,
-                                    contentColor = Color.White
-                                ),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.height(34.dp)
+                    }
+                }
+
+                // 5. Dynamic Error Item Cards
+                errors.forEach { err ->
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = CardWhite,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp,
+                        contentPadding = PaddingValues(18.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = SoftPink,
+                                border = BorderStroke(1.dp, InkDark)
                             ) {
                                 Text(
-                                    text = "Retry",
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
+                                    text = err.errorBadge?.takeIf { it.isNotBlank() } ?: "ROW ${err.rowNumber ?: 0} · ERROR",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = StatusDangerRed,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 10.sp,
+                                    letterSpacing = 0.8.sp,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                                 )
                             }
-                        }
-                    }
-                }
-            }
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = errorBgColor),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Canvas(modifier = Modifier.size(22.dp)) {
-                        drawCircle(color = errorColor, radius = size.width / 2f, style = Stroke(width = 1.8.dp.toPx()))
-                        drawLine(
-                            color = errorColor,
-                            start = Offset(size.width * 0.5f, size.height * 0.25f),
-                            end = Offset(size.width * 0.5f, size.height * 0.6f),
-                            strokeWidth = 2.dp.toPx(),
-                            cap = StrokeCap.Round
-                        )
-                        drawCircle(
-                            color = errorColor,
-                            radius = 1.5.dp.toPx(),
-                            center = Offset(size.width * 0.5f, size.height * 0.75f)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column {
-                        Text(
-                            text = "$errorsRemaining invalid row${if (errorsRemaining > 1) "s" else ""} · Import not ready",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = errorColor,
-                            fontSize = 13.sp
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Correct the values below or re-upload your file.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = errorColor.copy(alpha = 0.85f),
-                            fontSize = 11.sp
-                        )
-                    }
-                }
-            }
-
-            // 5. Dynamic Error Item Cards
-            errors.forEach { err ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(18.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = errorBgColor
-                        ) {
                             Text(
-                                text = err.errorBadge?.takeIf { it.isNotBlank() } ?: "ROW ${err.rowNumber ?: 0} · ERROR",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = errorColor,
+                                text = err.productName?.takeIf { it.isNotBlank() } ?: "Product",
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 10.sp,
-                                letterSpacing = 0.8.sp,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                color = InkDark,
+                                fontSize = 18.sp
                             )
-                        }
 
-                        Text(
-                            text = err.productName?.takeIf { it.isNotBlank() } ?: "Product",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 18.sp
-                        )
-
-                        Text(
-                            text = "SKU ${err.sku?.takeIf { it.isNotBlank() } ?: "N/A"} · Excel row ${err.rowNumber ?: 0}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
                             Text(
-                                text = "Imported value",
+                                text = "SKU ${err.sku?.takeIf { it.isNotBlank() } ?: "N/A"} · Excel row ${err.rowNumber ?: 0}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MutedInk,
                                 fontSize = 12.sp
                             )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Imported value",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MutedInk,
+                                    fontSize = 12.sp
+                                )
+                                Text(
+                                    text = err.importedValue?.takeIf { it.isNotBlank() } ?: "—",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = StatusDangerRed,
+                                    fontSize = 14.sp
+                                )
+                            }
+
                             Text(
-                                text = err.importedValue?.takeIf { it.isNotBlank() } ?: "—",
+                                text = err.reason ?: "",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = StatusDangerRed,
+                                fontSize = 12.sp,
+                                lineHeight = 16.sp
+                            )
+                        }
+                    }
+                }
+
+                // 6. Suggested Correction Card (if available)
+                if (fixableError != null) {
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = PaleBlue,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp,
+                        contentPadding = PaddingValues(18.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Suggested correction",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = InkDark,
                                 fontSize = 14.sp
                             )
-                        }
 
-                        Text(
-                            text = err.reason ?: "",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = errorColor,
-                            fontSize = 12.sp,
-                            lineHeight = 16.sp
-                        )
-                    }
-                }
-            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Replace \"${fixableError.importedValue}\" with",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MutedInk,
+                                    fontSize = 12.sp
+                                )
+                                Text(
+                                    text = fixableError.suggestedLabel ?: "${fixableError.suggestedCorrection}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MainBlue,
+                                    fontSize = 13.sp
+                                )
+                            }
 
-            // 6. Suggested Correction Card (if available)
-            if (fixableError != null) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(18.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "Suggested correction",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 14.sp
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
                             Text(
-                                text = "Replace \"${fixableError.importedValue}\" with",
+                                text = "The source appears to have an invalid value or stray letter. Apply the fix to re-validate.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 12.sp
-                            )
-                            Text(
-                                text = fixableError.suggestedLabel ?: "${fixableError.suggestedCorrection}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 13.sp
+                                color = MutedInk,
+                                fontSize = 11.sp,
+                                lineHeight = 15.sp
                             )
                         }
-
-                        Text(
-                            text = "The source appears to have an invalid value or stray letter. Apply the fix to re-validate.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 11.sp,
-                            lineHeight = 15.sp
-                        )
                     }
                 }
-            }
 
-            // 7. Footer Note
-            Text(
-                text = "No products have been imported. $readyRows valid rows are held until all $rowsChecked are ready.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp,
-                lineHeight = 15.sp
-            )
+                // 7. Footer Note
+                Text(
+                    text = "No products have been imported. $readyRows valid rows are held until all $rowsChecked are ready.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MutedInk,
+                    fontSize = 11.sp,
+                    lineHeight = 15.sp
+                )
 
-            // 8. Action Button
-            if (fixableError != null) {
-                Button(
-                    onClick = {
-                        viewModel.applyCorrection(
-                            error = fixableError,
-                            onSuccess = { ready ->
-                                if (ready) onValidationPassed()
-                            },
-                            onError = { }
-                        )
-                    },
-                    enabled = !uiState.isValidating,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = primaryColor,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                // 8. Action Button
+                if (fixableError != null) {
+                    BoldButton(
+                        text = if (uiState.isValidating) "Applying correction..." else "Apply Fix · Use ${fixableError.suggestedLabel ?: fixableError.suggestedCorrection.toString()}",
+                        onClick = {
+                            viewModel.applyCorrection(
+                                error = fixableError,
+                                onSuccess = { ready ->
+                                    if (ready) onValidationPassed()
+                                },
+                                onError = { }
+                            )
+                        },
+                        enabled = !uiState.isValidating,
+                        isPrimary = true,
+                        modifier = Modifier.fillMaxWidth()
                     )
-                ) {
-                    if (uiState.isValidating) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Applying correction...",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
-                        )
-                    } else {
-                        Text(
-                            text = "Apply Fix · Use ${fixableError.suggestedLabel ?: fixableError.suggestedCorrection.toString()}",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
-                        )
-                    }
-                }
-            } else {
-                Button(
-                    onClick = onBackClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = primaryColor,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                ) {
-                    Text(
+                } else {
+                    BoldButton(
                         text = "Fix in Spreadsheet · Upload Again",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
+                        onClick = onBackClick,
+                        isPrimary = true,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(20.dp))
+            }
         }
     }
-}
 }
 
 @Preview(showBackground = true)

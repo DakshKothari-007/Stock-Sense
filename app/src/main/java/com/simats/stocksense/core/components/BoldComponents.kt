@@ -42,8 +42,9 @@ fun BoldCard(
     borderColor: Color = InkDark,
     borderWidth: Dp = 2.5.dp,
     shadowOffset: Dp = 4.dp,
-    shadowColor: Color = InkDark,
+    shadowColor: Color = ShadowColor,
     shape: CornerBasedShape = RoundedCornerShape(16.dp),
+    contentPadding: PaddingValues = PaddingValues(0.dp),
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
@@ -68,7 +69,8 @@ fun BoldCard(
                     if (onClick != null) {
                         Modifier.clickable(onClick = onClick)
                     } else Modifier
-                ),
+                )
+                .padding(contentPadding),
             content = content
         )
     }
@@ -85,50 +87,63 @@ fun BoldButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    isLoading: Boolean = false,
     isPrimary: Boolean = true,
     containerColor: Color = if (isPrimary) MainYellow else CardWhite,
-    contentColor: Color = InkDark,
+    contentColor: Color = if (isPrimary) Color(0xFF0B1230) else InkDark,
     borderColor: Color = InkDark,
     borderWidth: Dp = 2.5.dp,
     shadowOffset: Dp = 4.dp,
+    shadowColor: Color = ShadowColor,
     shape: CornerBasedShape = RoundedCornerShape(14.dp),
+    contentPadding: PaddingValues = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
     content: @Composable RowScope.() -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val translationX = if (isPressed && enabled) (shadowOffset - 1.dp) else 0.dp
-    val translationY = if (isPressed && enabled) (shadowOffset - 1.dp) else 0.dp
+    val isActionable = enabled && !isLoading
+    val translationX = if (isPressed && isActionable) (shadowOffset - 1.dp) else 0.dp
+    val translationY = if (isPressed && isActionable) (shadowOffset - 1.dp) else 0.dp
 
     Box(
-        modifier = modifier.padding(end = shadowOffset, bottom = shadowOffset)
+        modifier = modifier.padding(end = shadowOffset, bottom = shadowOffset),
+        propagateMinConstraints = true
     ) {
         // Hard shadow layer
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .offset(x = shadowOffset, y = shadowOffset)
-                .background(if (enabled) InkDark else InkDark.copy(alpha = 0.35f), shape)
+                .background(if (isActionable) shadowColor else shadowColor.copy(alpha = 0.35f), shape)
         )
         // Foreground button
         Row(
             modifier = Modifier
                 .offset(x = translationX, y = translationY)
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = 52.dp)
-                .background(if (enabled) containerColor else containerColor.copy(alpha = 0.5f), shape)
+                .defaultMinSize(minHeight = 44.dp)
+                .background(if (isActionable) containerColor else containerColor.copy(alpha = 0.5f), shape)
                 .border(borderWidth, borderColor, shape)
                 .clip(shape)
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
-                    enabled = enabled,
+                    enabled = isActionable,
                     onClick = onClick
                 )
-                .padding(horizontal = 18.dp, vertical = 12.dp),
+                .padding(contentPadding),
             horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-            content = content
-        )
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = contentColor,
+                    strokeWidth = 2.5.dp
+                )
+            } else {
+                content()
+            }
+        }
     }
 }
 
@@ -141,25 +156,31 @@ fun BoldButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    isLoading: Boolean = false,
     isPrimary: Boolean = true,
     containerColor: Color = if (isPrimary) MainYellow else CardWhite,
-    contentColor: Color = InkDark,
+    contentColor: Color = if (isPrimary) Color(0xFF0B1230) else InkDark,
     borderColor: Color = InkDark,
     borderWidth: Dp = 2.5.dp,
     shadowOffset: Dp = 4.dp,
-    shape: CornerBasedShape = RoundedCornerShape(14.dp)
+    shadowColor: Color = ShadowColor,
+    shape: CornerBasedShape = RoundedCornerShape(14.dp),
+    contentPadding: PaddingValues = PaddingValues(horizontal = 18.dp, vertical = 12.dp)
 ) {
     BoldButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
+        isLoading = isLoading,
         isPrimary = isPrimary,
         containerColor = containerColor,
         contentColor = contentColor,
         borderColor = borderColor,
         borderWidth = borderWidth,
         shadowOffset = shadowOffset,
-        shape = shape
+        shadowColor = shadowColor,
+        shape = shape,
+        contentPadding = contentPadding
     ) {
         Text(
             text = text,
@@ -184,17 +205,21 @@ fun BoldChip(
     text: String,
     modifier: Modifier = Modifier,
     isSelected: Boolean = false,
-    backgroundColor: Color = if (isSelected) MainYellow else CardWhite,
+    selected: Boolean = false,
+    selectedColor: Color = MainYellow,
+    backgroundColor: Color = CardWhite,
     textColor: Color = InkDark,
     borderColor: Color = InkDark,
     borderWidth: Dp = 2.dp,
     shape: CornerBasedShape = RoundedCornerShape(10.dp),
     onClick: (() -> Unit)? = null
 ) {
+    val chipSelected = isSelected || selected
+    val activeBg = if (chipSelected) selectedColor else backgroundColor
     Box(
         modifier = modifier
             .defaultMinSize(minHeight = 36.dp)
-            .background(backgroundColor, shape)
+            .background(activeBg, shape)
             .border(borderWidth, borderColor, shape)
             .clip(shape)
             .then(
@@ -366,8 +391,74 @@ fun BoldDialog(
 }
 
 /**
+ * BoldDialog with title, text, confirm and dismiss buttons
+ */
+@Composable
+fun BoldDialog(
+    onDismissRequest: () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    dismissButton: (@Composable () -> Unit)? = null,
+    title: String? = null,
+    text: String? = null,
+    properties: DialogProperties = DialogProperties()
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = properties
+    ) {
+        BoldCard(
+            modifier = modifier
+                .fillMaxWidth()
+                .widthIn(max = 520.dp),
+            backgroundColor = CreamBackground,
+            borderColor = InkDark,
+            borderWidth = 2.5.dp,
+            shadowOffset = 4.dp,
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                if (!title.isNullOrBlank()) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            fontSize = 20.sp
+                        ),
+                        color = InkDark
+                    )
+                }
+                if (!text.isNullOrBlank()) {
+                    Text(
+                        text = text,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = InkDark
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (dismissButton != null) {
+                        dismissButton()
+                    }
+                    confirmButton()
+                }
+            }
+        }
+    }
+}
+
+/**
  * BoldTopBar:
- * - Structural top bar with back navigation and bold outline design
+ * - Structural top bar with boxed back navigation (2dp border, 40dp, hard shadow, 48dp touch target)
+ * - Bold outline typography and action slots
  */
 @Composable
 fun BoldTopBar(
@@ -387,9 +478,21 @@ fun BoldTopBar(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clickable(onClick = onBackClick),
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onBackClick
+                    ),
                 contentAlignment = Alignment.Center
             ) {
+                // Hard offset shadow (2dp)
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .offset(x = 2.dp, y = 2.dp)
+                        .background(ShadowColor, RoundedCornerShape(12.dp))
+                )
+                // Boxed button (40dp, 2dp border)
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -437,5 +540,42 @@ fun BoldTopBar(
         if (actions != null) {
             Row(verticalAlignment = Alignment.CenterVertically, content = actions)
         }
+    }
+}
+
+/**
+ * StockSenseLogo:
+ * - Displays official logo asset
+ * - In Dark Mode: places the ink symbol on a cream (#FFF4DC) rounded square with 2dp border so it stays visible
+ */
+@Composable
+fun StockSenseLogo(
+    modifier: Modifier = Modifier,
+    size: Dp = 48.dp
+) {
+    val isDark = ThemeState.currentBoldColors.isDark
+    if (isDark) {
+        Box(
+            modifier = modifier
+                .size(size)
+                .background(Color(0xFFFFF4DC), RoundedCornerShape(12.dp))
+                .border(2.dp, Color(0xFFFFF4DC), RoundedCornerShape(12.dp))
+                .padding(4.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.foundation.Image(
+                painter = androidx.compose.ui.res.painterResource(id = com.simats.stocksense.R.drawable.stocksense_symbol_inkblue),
+                contentDescription = "StockSense Logo",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit
+            )
+        }
+    } else {
+        androidx.compose.foundation.Image(
+            painter = androidx.compose.ui.res.painterResource(id = com.simats.stocksense.R.drawable.stocksense_symbol_inkblue),
+            contentDescription = "StockSense Logo",
+            modifier = modifier.size(size),
+            contentScale = androidx.compose.ui.layout.ContentScale.Fit
+        )
     }
 }

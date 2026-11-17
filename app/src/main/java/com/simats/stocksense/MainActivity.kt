@@ -91,6 +91,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         NetworkClient.initialize(applicationContext)
+        com.simats.stocksense.core.theme.ThemeState.initialize(applicationContext)
         handlePushIntent(intent)
         enableEdgeToEdge()
         setContent {

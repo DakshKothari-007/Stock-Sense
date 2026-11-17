@@ -26,7 +26,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.data.model.ImportStockPreviewItem
@@ -60,7 +61,7 @@ fun ImportInventoryReadyScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         val windowInfo = rememberWindowSizeInfo()
 
@@ -80,396 +81,311 @@ fun ImportInventoryReadyScreen(
             ) {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 1. Header Row
+                // 1. Header with Shared BoldTopBar
+                BoldTopBar(
+                    title = "Ready to import",
+                    subtitle = "${uiState.selectedFileName ?: "Spreadsheet"} · Validation complete",
+                    onBackClick = onBackClick
+                )
+
+                // 2. Stepper Indicators (Upload [done], Preview [done], Validate [done], Import [active])
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onBackClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surface)
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
+                    val steps = listOf("Upload", "Preview", "Validate", "Import")
+                    steps.forEachIndexed { index, stepName ->
+                        val isDone = index < 3
+                        val isActive = index == 3
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Canvas(modifier = Modifier.size(16.dp)) {
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.65f, size.height * 0.15f)
-                                    lineTo(size.width * 0.25f, size.height * 0.5f)
-                                    lineTo(size.width * 0.65f, size.height * 0.85f)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                )
-                            }
+                            Text(
+                                text = stepName,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (isActive || isDone) InkDark else MutedInk,
+                                fontWeight = if (isActive || isDone) FontWeight.Black else FontWeight.Bold,
+                                fontSize = 11.sp
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.9f)
+                                    .height(3.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(if (isActive || isDone) MainBlue else PaleBlue)
+                            )
                         }
                     }
-
-                    Spacer(modifier = Modifier.width(14.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Ready to import",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "${uiState.selectedFileName ?: "Spreadsheet"} · Validation complete",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
                 }
 
-            // 2. Stepper Indicators (Upload [done], Preview [done], Validate [done], Import [active])
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val steps = listOf("Upload", "Preview", "Validate", "Import")
-                steps.forEachIndexed { index, stepName ->
-                    val isDone = index < 3
-                    val isActive = index == 3
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = stepName,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (isActive || isDone) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = if (isActive || isDone) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = 11.sp
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.9f)
-                                .height(3.dp)
-                                .clip(RoundedCornerShape(2.dp))
-                                .background(if (isActive || isDone) primaryColor else MaterialTheme.colorScheme.outlineVariant)
-                        )
-                    }
-                }
-            }
-
-            // 3. Validation Ready / Correction Applied Banner
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Canvas(modifier = Modifier.size(20.dp)) {
-                        drawCircle(
-                            color = primaryColor,
-                            radius = size.width / 2f,
-                            style = Stroke(width = 1.5.dp.toPx())
-                        )
-                        val path = Path().apply {
-                            moveTo(size.width * 0.25f, size.height * 0.5f)
-                            lineTo(size.width * 0.45f, size.height * 0.7f)
-                            lineTo(size.width * 0.75f, size.height * 0.35f)
-                        }
-                        drawPath(
-                            path = path,
-                            color = primaryColor,
-                            style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column {
-                        Text(
-                            text = if (uiState.appliedCorrectionSummary != null) "Correction applied · Zero errors" else "All rows validated · Zero errors",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 13.sp
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = uiState.appliedCorrectionSummary ?: "All $readyRowsCount rows are valid and ready to import.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 11.sp
-                        )
-                    }
-                }
-            }
-
-            // 4. Summary Metric Cards (Ready rows & Errors remaining)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Card(
-                    modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            text = "Ready rows",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "$readyRowsCount / $totalRowsCount",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
-                        )
-                    }
-                }
-
-                Card(
-                    modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            text = "Errors remaining",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "0",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
-                        )
-                    }
-                }
-            }
-
-            // 5. Import Summary Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Text(
-                        text = "Import summary",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 15.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                    SummaryRow("Existing products to update", "$existingCount")
-                    SummaryRow("New products to create", "$newCount")
-                    SummaryRow("Total stock to add", totalStockFormatted)
-                    SummaryRow("Inventory value to add", inventoryValueFormatted)
-                }
-            }
-
-            // 6. New Stock After Import Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Text(
-                        text = "New stock after import",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 15.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                    stockPreviewItems.forEach { item ->
-                        SummaryRow(
-                            label = "${item.name?.takeIf { it.isNotBlank() } ?: "Product"}${if (item.isNew == true) " · New" else ""}",
-                            value = item.displayCalculation ?: ""
-                        )
-                    }
-                }
-            }
-
-            // Error alert if execution failed
-            if (uiState.executeError != null) {
-                val isTimeout = uiState.executeError?.contains("timed out", ignoreCase = true) == true ||
-                        uiState.executeError?.contains("timeout", ignoreCase = true) == true
-                Card(
+                // 3. Validation Ready / Correction Applied Banner
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
-                    shape = RoundedCornerShape(14.dp)
+                    backgroundColor = PaleBlue,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp,
+                    contentPadding = PaddingValues(14.dp)
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Canvas(modifier = Modifier.size(20.dp)) {
-                            drawCircle(color = Color(0xFFC62828), radius = size.width / 2f, style = Stroke(width = 1.8.dp.toPx()))
-                            drawLine(
-                                color = Color(0xFFC62828),
-                                start = Offset(size.width * 0.5f, size.height * 0.25f),
-                                end = Offset(size.width * 0.5f, size.height * 0.6f),
-                                strokeWidth = 2.dp.toPx(),
-                                cap = StrokeCap.Round
-                            )
                             drawCircle(
-                                color = Color(0xFFC62828),
-                                radius = 1.5.dp.toPx(),
-                                center = Offset(size.width * 0.5f, size.height * 0.75f)
+                                color = MainBlue,
+                                radius = size.width / 2f,
+                                style = Stroke(width = 1.5.dp.toPx())
+                            )
+                            val path = Path().apply {
+                                moveTo(size.width * 0.25f, size.height * 0.5f)
+                                lineTo(size.width * 0.45f, size.height * 0.7f)
+                                lineTo(size.width * 0.75f, size.height * 0.35f)
+                            }
+                            drawPath(
+                                path = path,
+                                color = MainBlue,
+                                style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                             )
                         }
+
                         Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
+
+                        Column {
                             Text(
-                                text = if (isTimeout) "Connection timed out" else "Import failed",
+                                text = if (uiState.appliedCorrectionSummary != null) "Correction applied · Zero errors" else "All rows validated · Zero errors",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFC62828),
+                                color = InkDark,
                                 fontSize = 13.sp
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = uiState.executeError ?: "An error occurred while importing.",
+                                text = uiState.appliedCorrectionSummary ?: "All $readyRowsCount rows are valid and ready to import.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFC62828).copy(alpha = 0.85f),
+                                color = MutedInk,
                                 fontSize = 11.sp
                             )
                         }
-                        if (isTimeout) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = {
-                                    viewModel.executeImport(
-                                        onSuccess = onImportProductsClick,
-                                        onError = {}
-                                    )
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFC62828),
-                                    contentColor = Color.White
-                                ),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.height(34.dp)
-                            ) {
+                    }
+                }
+
+                // 4. Summary Metric Cards (Ready rows & Errors remaining)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    BoldCard(
+                        modifier = Modifier.weight(1f),
+                        backgroundColor = CardWhite,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp,
+                        contentPadding = PaddingValues(14.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = "Ready rows",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MutedInk,
+                                fontSize = 12.sp
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "$readyRowsCount / $totalRowsCount",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = InkDark,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 22.sp
+                            )
+                        }
+                    }
+
+                    BoldCard(
+                        modifier = Modifier.weight(1f),
+                        backgroundColor = CardWhite,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp,
+                        contentPadding = PaddingValues(14.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = "Errors remaining",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MutedInk,
+                                fontSize = 12.sp
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "0",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = InkDark,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 22.sp
+                            )
+                        }
+                    }
+                }
+
+                // 5. Import Summary Card
+                BoldCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp,
+                    contentPadding = PaddingValues(18.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = "Import summary",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = InkDark,
+                            fontSize = 15.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        SummaryRow("Existing products to update", "$existingCount")
+                        SummaryRow("New products to create", "$newCount")
+                        SummaryRow("Total stock to add", totalStockFormatted)
+                        SummaryRow("Inventory value to add", inventoryValueFormatted)
+                    }
+                }
+
+                // 6. New Stock After Import Card
+                BoldCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp,
+                    contentPadding = PaddingValues(18.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = "New stock after import",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = InkDark,
+                            fontSize = 15.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        stockPreviewItems.forEach { item ->
+                            SummaryRow(
+                                label = "${item.name?.takeIf { it.isNotBlank() } ?: "Product"}${if (item.isNew == true) " · New" else ""}",
+                                value = item.displayCalculation ?: ""
+                            )
+                        }
+                    }
+                }
+
+                // Error alert if execution failed
+                if (uiState.executeError != null) {
+                    val isTimeout = uiState.executeError?.contains("timed out", ignoreCase = true) == true ||
+                            uiState.executeError?.contains("timeout", ignoreCase = true) == true
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = SoftPink,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 2.dp,
+                        contentPadding = PaddingValues(14.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Canvas(modifier = Modifier.size(20.dp)) {
+                                drawCircle(color = StatusDangerRed, radius = size.width / 2f, style = Stroke(width = 1.8.dp.toPx()))
+                                drawLine(
+                                    color = StatusDangerRed,
+                                    start = Offset(size.width * 0.5f, size.height * 0.25f),
+                                    end = Offset(size.width * 0.5f, size.height * 0.6f),
+                                    strokeWidth = 2.dp.toPx(),
+                                    cap = StrokeCap.Round
+                                )
+                                drawCircle(
+                                    color = StatusDangerRed,
+                                    radius = 1.5.dp.toPx(),
+                                    center = Offset(size.width * 0.5f, size.height * 0.75f)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
+                                    text = if (isTimeout) "Connection timed out" else "Import failed",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = StatusDangerRed,
+                                    fontSize = 13.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = uiState.executeError ?: "An error occurred while importing.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = StatusDangerRed,
+                                    fontSize = 11.sp
+                                )
+                            }
+                            if (isTimeout) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                BoldButton(
                                     text = "Retry",
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
+                                    onClick = {
+                                        viewModel.executeImport(
+                                            onSuccess = onImportProductsClick,
+                                            onError = {}
+                                        )
+                                    },
+                                    isPrimary = true,
+                                    modifier = Modifier.wrapContentWidth()
                                 )
                             }
                         }
                     }
                 }
-            }
 
-            // 7. Footer Note
-            Text(
-                text = "Quantities are added, not replaced. Your store inventory will update immediately.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp,
-                lineHeight = 15.sp
-            )
-
-            // 8. Import Products Button (disabled while executing to prevent double-tap)
-            Button(
-                onClick = {
-                    viewModel.executeImport(
-                        onSuccess = onImportProductsClick,
-                        onError = {}
-                    )
-                },
-                enabled = !uiState.isExecuting,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = primaryColor,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                // 7. Footer Note
+                Text(
+                    text = "Quantities are added, not replaced. Your store inventory will update immediately.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MutedInk,
+                    fontSize = 11.sp,
+                    lineHeight = 15.sp
                 )
-            ) {
-                if (uiState.isExecuting) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        strokeWidth = 2.dp
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Importing Products...",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
-                } else {
-                    Text(
-                        text = "Import Products",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
-                }
-            }
 
-            Spacer(modifier = Modifier.height(20.dp))
+                // 8. Import Products Button (disabled while executing to prevent double-tap)
+                BoldButton(
+                    text = if (uiState.isExecuting) "Importing Products..." else "Import Products",
+                    onClick = {
+                        viewModel.executeImport(
+                            onSuccess = onImportProductsClick,
+                            onError = {}
+                        )
+                    },
+                    isPrimary = true,
+                    enabled = !uiState.isExecuting,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+            }
         }
     }
-}
 }
 
 @Composable
@@ -482,14 +398,14 @@ private fun SummaryRow(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MutedInk,
             fontSize = 12.sp
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = InkDark,
             fontSize = 12.sp
         )
     }

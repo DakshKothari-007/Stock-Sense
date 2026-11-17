@@ -313,8 +313,8 @@ fun OnboardingScreen2(
                     Text(
                         text = "Skip",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = primaryColor,
-                        fontWeight = FontWeight.SemiBold
+                        color = MainBlue,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }

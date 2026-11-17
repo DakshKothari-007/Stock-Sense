@@ -35,7 +35,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
@@ -90,7 +91,7 @@ fun AddProductToBillScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         ResponsiveContainer(
             modifier = Modifier
@@ -107,71 +108,22 @@ fun AddProductToBillScreen(
             ) {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 1. Header Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable { onBackClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surface)
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Canvas(modifier = Modifier.size(16.dp)) {
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.65f, size.height * 0.15f)
-                                    lineTo(size.width * 0.25f, size.height * 0.5f)
-                                    lineTo(size.width * 0.65f, size.height * 0.85f)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Add product",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        val productsCountSubtitle = remember(uiState.totalShopProductsCount, uiState.isSearching) {
-                            if (uiState.totalShopProductsCount > 0) {
-                                "${uiState.totalShopProductsCount} products in your shop"
-                            } else if (uiState.isSearching) {
-                                "Loading products..."
-                            } else {
-                                "— products in your shop"
-                            }
-                        }
-                        Text(
-                            text = productsCountSubtitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                val productsCountSubtitle = remember(uiState.totalShopProductsCount, uiState.isSearching) {
+                    if (uiState.totalShopProductsCount > 0) {
+                        "${uiState.totalShopProductsCount} products in your shop"
+                    } else if (uiState.isSearching) {
+                        "Loading products..."
+                    } else {
+                        "— products in your shop"
                     }
                 }
+
+                // 1. Shared BoldTopBar
+                BoldTopBar(
+                    title = "Add product",
+                    subtitle = productsCountSubtitle,
+                    onBackClick = onBackClick
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -184,7 +136,7 @@ fun AddProductToBillScreen(
                         Text(
                             text = "Search name, SKU or barcode",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MutedInk,
                             fontSize = 14.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -194,15 +146,18 @@ fun AddProductToBillScreen(
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = "Search",
-                            tint = primaryColor
+                            tint = InkDark
                         )
                     },
                     shape = RoundedCornerShape(14.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = primaryColor,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                        focusedBorderColor = InkDark,
+                        unfocusedBorderColor = InkDark,
+                        focusedContainerColor = CardWhite,
+                        unfocusedContainerColor = CardWhite,
+                        focusedTextColor = InkDark,
+                        unfocusedTextColor = InkDark,
+                        cursorColor = InkDark
                     ),
                     singleLine = true
                 )
@@ -216,132 +171,101 @@ fun AddProductToBillScreen(
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                val filterLabels = listOf("All", "Fast selling", "Low stock")
-                filterLabels.forEachIndexed { index, label ->
-                    val isSelected = uiState.selectedFilterIndex == index
-                    Surface(
-                        onClick = { viewModel.selectFilter(index) },
-                        shape = RoundedCornerShape(20.dp),
-                        color = if (isSelected) primaryColor else MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(
-                            1.dp,
-                            if (isSelected) Color.Transparent else MaterialTheme.colorScheme.outlineVariant
-                        )
-                    ) {
-                        Text(
+                    val filterLabels = listOf("ALL", "FAST SELLING", "LOW STOCK")
+                    filterLabels.forEachIndexed { index, label ->
+                        BoldChip(
                             text = label,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                            fontSize = 13.sp
+                            selected = uiState.selectedFilterIndex == index,
+                            onClick = { viewModel.selectFilter(index) },
+                            selectedColor = MainYellow
                         )
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-            // 4. Products List Area
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            ) {
-                if (uiState.isSearching && uiState.searchResults.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = primaryColor, modifier = Modifier.size(36.dp))
-                    }
-                } else if (uiState.searchErrorMessage != null && uiState.searchResults.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Text(
-                                text = uiState.searchErrorMessage ?: "Failed to load products.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Button(
-                                onClick = { viewModel.loadProducts() },
-                                shape = RoundedCornerShape(10.dp)
+                // 4. Products List Area
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    if (uiState.isSearching && uiState.searchResults.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = MainBlue, modifier = Modifier.size(36.dp))
+                        }
+                    } else if (uiState.searchErrorMessage != null && uiState.searchResults.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Text("Retry")
+                                Text(
+                                    text = uiState.searchErrorMessage ?: "Failed to load products.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MutedInk
+                                )
+                                BoldButton(
+                                    text = "Retry",
+                                    onClick = { viewModel.loadProducts() },
+                                    isPrimary = true
+                                )
+                            }
+                        }
+                    } else if (uiState.searchResults.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(
+                                text = "No products found matching your search.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MutedInk
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            contentPadding = PaddingValues(bottom = 16.dp)
+                        ) {
+                            items(uiState.searchResults, key = { it.id?.toString() ?: it.sku ?: "" }) { product ->
+                                AddProductRowCard(
+                                    product = product,
+                                    quantityInBill = uiState.items.find {
+                                        val idInt = when (val id = product.id) {
+                                            is Number -> id.toInt()
+                                            is String -> id.toDoubleOrNull()?.toInt() ?: -1
+                                            else -> -1
+                                        }
+                                        it.productId == idInt
+                                    }?.quantity ?: 0,
+                                    onAddClick = { viewModel.addProductToBill(product) }
+                                )
                             }
                         }
                     }
-                } else if (uiState.searchResults.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "No products found matching your search.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        contentPadding = PaddingValues(bottom = 16.dp)
-                    ) {
-                        items(uiState.searchResults, key = { it.id?.toString() ?: it.sku ?: "" }) { product ->
-                            AddProductRowCard(
-                                product = product,
-                                quantityInBill = uiState.items.find {
-                                    val idInt = when (val id = product.id) {
-                                        is Number -> id.toInt()
-                                        is String -> id.toDoubleOrNull()?.toInt() ?: -1
-                                        else -> -1
-                                    }
-                                    it.productId == idInt
-                                }?.quantity ?: 0,
-                                primaryColor = primaryColor,
-                                onAddClick = { viewModel.addProductToBill(product) }
-                            )
-                        }
-                    }
                 }
-            }
 
-            // 5. Bottom "Done" Action Button
-            Button(
-                onClick = onDoneClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = primaryColor,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
+                // 5. Bottom "Done" Action Button
                 val buttonText = if (uiState.totalUnitsCount > 0) {
                     "Done · ${uiState.totalUnitsCount} units in bill"
                 } else {
                     "Done"
                 }
-                Text(
+                BoldButton(
                     text = buttonText,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    onClick = onDoneClick,
+                    isPrimary = true
                 )
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
     }
-}
 }
 
 @Composable
 private fun AddProductRowCard(
     product: NetworkInventoryProduct,
     quantityInBill: Int,
-    primaryColor: Color,
     onAddClick: () -> Unit
 ) {
     val availableStock = RecordSaleViewModel.extractProductUnits(product)
@@ -361,16 +285,16 @@ private fun AddProductRowCard(
         else -> product.rawPrice?.let { NumberFormatUtil.formatIndianRupees(it) } ?: "—"
     }
 
-    Card(
+    BoldCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        backgroundColor = CardWhite,
+        borderColor = InkDark,
+        borderWidth = 2.dp,
+        shadowOffset = 3.dp,
+        contentPadding = PaddingValues(12.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Product Avatar
@@ -388,7 +312,7 @@ private fun AddProductRowCard(
                     text = product.name ?: "—",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = InkDark,
                     fontSize = 14.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -404,7 +328,7 @@ private fun AddProductRowCard(
                     Text(
                         text = "$skuText · $priceDisplay",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MutedInk,
                         fontSize = 11.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -413,14 +337,15 @@ private fun AddProductRowCard(
                     if (isLowStock) {
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = Color(0xFFFEF3C7)
+                            color = SoftLowStock,
+                            border = BorderStroke(1.dp, InkDark)
                         ) {
                             Text(
                                 text = "Low · $availableStock left",
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFD97706),
+                                color = InkDark,
                                 fontSize = 10.sp
                             )
                         }
@@ -428,7 +353,7 @@ private fun AddProductRowCard(
                         Text(
                             text = "· $availableStock in stock",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MutedInk,
                             fontSize = 11.sp
                         )
                     }
@@ -440,15 +365,16 @@ private fun AddProductRowCard(
             // Action Button: Add, Added · N, or Out of stock
             if (isOutOfStock) {
                 Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    shape = RoundedCornerShape(12.dp),
+                    color = PaleBlue.copy(alpha = 0.5f),
+                    border = BorderStroke(1.dp, InkDark.copy(alpha = 0.3f))
                 ) {
                     Text(
                         text = "Out of stock",
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        color = MutedInk,
                         fontSize = 11.sp
                     )
                 }
@@ -459,34 +385,32 @@ private fun AddProductRowCard(
                             onAddClick()
                         }
                     },
-                    shape = RoundedCornerShape(16.dp),
-                    color = primaryColor.copy(alpha = 0.15f),
-                    border = BorderStroke(1.dp, primaryColor)
+                    shape = RoundedCornerShape(10.dp),
+                    color = SoftLavender,
+                    border = BorderStroke(1.5.dp, InkDark)
                 ) {
                     Text(
                         text = "Added · $quantityInBill",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = primaryColor,
+                        color = InkDark,
                         fontSize = 12.sp
                     )
                 }
             } else {
-                Button(
+                Surface(
                     onClick = onAddClick,
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = primaryColor,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                    modifier = Modifier.height(34.dp)
+                    shape = RoundedCornerShape(10.dp),
+                    color = MainYellow,
+                    border = BorderStroke(1.5.dp, InkDark)
                 ) {
                     Text(
                         text = "Add",
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
+                        color = InkDark,
                         fontSize = 12.sp
                     )
                 }

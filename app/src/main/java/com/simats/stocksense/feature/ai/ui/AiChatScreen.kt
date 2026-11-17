@@ -16,6 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -309,33 +310,36 @@ private fun AiChatHeader(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Back Button
+        // Boxed Back Button (2dp border, 40dp, hard shadow)
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .clickable { onBackClick() },
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onBackClick
+                ),
             contentAlignment = Alignment.Center
         ) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(CardWhite)
+                    .offset(x = 2.dp, y = 2.dp)
+                    .background(ShadowColor, RoundedCornerShape(12.dp))
+            )
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(CardWhite, RoundedCornerShape(12.dp))
                     .border(2.dp, InkDark, RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Canvas(modifier = Modifier.size(16.dp)) {
-                    val path = Path().apply {
-                        moveTo(size.width * 0.65f, size.height * 0.15f)
-                        lineTo(size.width * 0.25f, size.height * 0.5f)
-                        lineTo(size.width * 0.65f, size.height * 0.85f)
-                    }
-                    drawPath(
-                        path = path,
-                        color = InkDark,
-                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                    )
-                }
+                Text(
+                    text = "←",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Black,
+                    color = InkDark
+                )
             }
         }
 

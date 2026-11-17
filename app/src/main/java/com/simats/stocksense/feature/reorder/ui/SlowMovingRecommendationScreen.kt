@@ -95,63 +95,12 @@ fun SlowMovingRecommendationScreen(
             ) {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 1. Header Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable { onBackClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surface)
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Canvas(modifier = Modifier.size(16.dp)) {
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.65f, size.height * 0.15f)
-                                    lineTo(size.width * 0.25f, size.height * 0.5f)
-                                    lineTo(size.width * 0.65f, size.height * 0.85f)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Move slow stock",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "AI INSIGHT · ${NumberFormatUtil.formatCurrentHeaderDate().uppercase(Locale.ENGLISH)}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 10.sp,
-                            letterSpacing = 1.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
+                // 1. Header with Shared BoldTopBar
+                BoldTopBar(
+                    title = "Move slow stock",
+                    subtitle = "AI INSIGHT · ${NumberFormatUtil.formatCurrentHeaderDate().uppercase(Locale.ENGLISH)}",
+                    onBackClick = onBackClick
+                )
 
             if (uiState.isLoading && item == null) {
                 Box(
@@ -160,15 +109,16 @@ fun SlowMovingRecommendationScreen(
                         .height(300.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = primaryColor)
+                    CircularProgressIndicator(color = MainBlue)
                 }
             } else if (!uiState.hasEnoughSlowMovingHistory) {
                 // Not enough sales history state
-                Card(
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp
                 ) {
                     Column(
                         modifier = Modifier
@@ -181,13 +131,13 @@ fun SlowMovingRecommendationScreen(
                             text = "Sales history needed",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = InkDark
                         )
                         Text(
                             text = uiState.slowMovingHistoryMessage
                                 ?: "Need at least 30 days of sales history to calculate slow-moving recommendations accurately.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MutedInk,
                             textAlign = TextAlign.Center,
                             fontSize = 13.sp
                         )
@@ -195,11 +145,12 @@ fun SlowMovingRecommendationScreen(
                 }
             } else if (item == null) {
                 // Empty state
-                Card(
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp
                 ) {
                     Column(
                         modifier = Modifier
@@ -212,12 +163,12 @@ fun SlowMovingRecommendationScreen(
                             text = "Nothing slow-moving right now",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = InkDark
                         )
                         Text(
                             text = "All products in your store are selling within healthy inventory cover thresholds.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MutedInk,
                             textAlign = TextAlign.Center,
                             fontSize = 13.sp
                         )
@@ -242,30 +193,35 @@ fun SlowMovingRecommendationScreen(
 
                     Spacer(modifier = Modifier.width(14.dp))
 
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "Make room for demand",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = 20.sp
+                            fontSize = 20.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "${item.name ?: " — "} · ${item.category ?: item.sku ?: " — "}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
 
                 // 4. What your sales tell us Card
-                Card(
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = CardWhite),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(2.dp, InkDark)
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp
                 ) {
                     Column(
                         modifier = Modifier
@@ -273,32 +229,52 @@ fun SlowMovingRecommendationScreen(
                             .padding(18.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "What your sales tell us",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = InkDark,
-                                fontSize = 15.sp
-                            )
-
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(CardWhite)
-                                    .border(1.5.dp, InkDark, RoundedCornerShape(10.dp))
-                                    .clickable { showWhyDialog = true }
-                                    .padding(horizontal = 12.dp, vertical = 5.dp)
+                        val isNarrow = windowInfo.screenWidthDp < 360.dp
+                        if (isNarrow) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text(
-                                    text = "Why?",
-                                    color = InkDark,
+                                    text = "What your sales tell us",
+                                    style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp
+                                    color = InkDark,
+                                    fontSize = 15.sp
+                                )
+                                BoldButton(
+                                    text = "Why?",
+                                    onClick = { showWhyDialog = true },
+                                    isPrimary = false,
+                                    borderWidth = 1.5.dp,
+                                    shadowOffset = 2.dp,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        } else {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "What your sales tell us",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = InkDark,
+                                    fontSize = 15.sp,
+                                    modifier = Modifier.weight(1f),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                BoldButton(
+                                    text = "Why?",
+                                    onClick = { showWhyDialog = true },
+                                    isPrimary = false,
+                                    borderWidth = 1.5.dp,
+                                    shadowOffset = 2.dp,
+                                    modifier = Modifier.wrapContentWidth()
                                 )
                             }
                         }
@@ -327,11 +303,12 @@ fun SlowMovingRecommendationScreen(
                 val costPrice = item.costPrice
                 val grossMargin = if (suggPrice != null && costPrice != null) suggPrice - costPrice else null
 
-                Card(
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = SoftPeach),
-                    border = BorderStroke(2.dp, InkDark),
-                    shape = RoundedCornerShape(16.dp)
+                    backgroundColor = SoftPeach,
+                    borderColor = InkDark,
+                    borderWidth = 2.5.dp,
+                    shadowOffset = 4.dp
                 ) {
                     Column(
                         modifier = Modifier
@@ -412,11 +389,12 @@ fun SlowMovingRecommendationScreen(
                 }
 
                 // 6. Suggestion Disclaimer Note Card
-                Card(
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = SoftLightBlue),
-                    border = BorderStroke(2.dp, InkDark),
-                    shape = RoundedCornerShape(14.dp)
+                    backgroundColor = PaleBlue,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp
                 ) {
                     Row(
                         modifier = Modifier
@@ -559,7 +537,7 @@ private fun StatRow(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MutedInk,
             fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -570,7 +548,7 @@ private fun StatRow(label: String, value: String) {
             text = value,
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = InkDark,
             fontSize = 12.sp,
             maxLines = 1
         )

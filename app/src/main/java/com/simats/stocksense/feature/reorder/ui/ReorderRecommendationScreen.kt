@@ -8,6 +8,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -33,6 +34,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
@@ -71,7 +73,7 @@ fun ReorderRecommendationScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         when {
             uiState.isLoading && uiState.items.isEmpty() -> {
@@ -84,14 +86,14 @@ fun ReorderRecommendationScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         CircularProgressIndicator(
-                            color = primaryColor,
+                            color = MainBlue,
                             modifier = Modifier.size(36.dp),
                             strokeWidth = 3.dp
                         )
                         Text(
                             text = "Checking reorder recommendations...",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MutedInk
                         )
                     }
                 }
@@ -104,27 +106,37 @@ fun ReorderRecommendationScreen(
                         .padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = SoftPink,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp
                     ) {
-                        Text(
-                            text = "Unable to load recommendations",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = uiState.errorMessage ?: "Unknown error",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        Button(
-                            onClick = { viewModel.refresh() },
-                            shape = RoundedCornerShape(12.dp)
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
-                            Text("Retry")
+                            Text(
+                                text = "Unable to load recommendations",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = StatusDangerRed
+                            )
+                            Text(
+                                text = uiState.errorMessage ?: "Unknown error",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = InkDark,
+                                textAlign = TextAlign.Center
+                            )
+                            BoldButton(
+                                text = "Retry",
+                                onClick = { viewModel.refresh() },
+                                isPrimary = true
+                            )
                         }
                     }
                 }
@@ -137,45 +149,58 @@ fun ReorderRecommendationScreen(
                         .padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = CardWhite,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp
                     ) {
-                        Box(
+                        Column(
                             modifier = Modifier
-                                .size(64.dp)
-                                .clip(RoundedCornerShape(32.dp))
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
-                            Canvas(modifier = Modifier.size(32.dp)) {
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.2f, size.height * 0.52f)
-                                    lineTo(size.width * 0.42f, size.height * 0.74f)
-                                    lineTo(size.width * 0.8f, size.height * 0.26f)
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .background(SoftLightBlue, RoundedCornerShape(28.dp))
+                                    .border(2.dp, InkDark, RoundedCornerShape(28.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Canvas(modifier = Modifier.size(24.dp)) {
+                                    val path = Path().apply {
+                                        moveTo(size.width * 0.2f, size.height * 0.52f)
+                                        lineTo(size.width * 0.42f, size.height * 0.74f)
+                                        lineTo(size.width * 0.8f, size.height * 0.26f)
+                                    }
+                                    drawPath(
+                                        path = path,
+                                        color = InkDark,
+                                        style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                    )
                                 }
-                                drawCircle(color = primaryColor, radius = size.width / 2f, style = Stroke(width = 2.dp.toPx()))
-                                drawPath(path = path, color = primaryColor, style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
                             }
-                        }
-                        Text(
-                            text = "Nothing to reorder right now",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            text = "All inventory items are well-stocked above reorder thresholds.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        Button(
-                            onClick = onBackClick,
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("Back")
+                            Text(
+                                text = "Nothing to reorder right now",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark,
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                text = "All inventory items are well-stocked above reorder thresholds.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MutedInk,
+                                textAlign = TextAlign.Center
+                            )
+                            BoldButton(
+                                text = "Back",
+                                onClick = onBackClick,
+                                isPrimary = true
+                            )
                         }
                     }
                 }
@@ -185,12 +210,6 @@ fun ReorderRecommendationScreen(
                 val rec = uiState.recommendation!!
                 val dateSubtitle = "AI INSIGHT · " + SimpleDateFormat("d MMM yyyy", Locale.ENGLISH).format(Date()).uppercase(Locale.ENGLISH)
                 val windowInfo = rememberWindowSizeInfo()
-
-                val (badgeBg, badgeText) = when (rec.priority) {
-                    "high" -> StatusLowStock to InkDark
-                    "medium" -> SoftLightBlue to InkDark
-                    else -> SoftLavender to InkDark
-                }
 
                 ResponsiveContainer(
                     modifier = Modifier
@@ -209,348 +228,274 @@ fun ReorderRecommendationScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         // 1. Header with Back Button and Title
+                        val isNarrow = windowInfo.screenWidthDp < 360.dp
+                        if (isNarrow) {
+                            BoldTopBar(
+                                title = "Reorder recommendation",
+                                subtitle = dateSubtitle,
+                                onBackClick = onBackClick
+                            )
+                            BoldButton(
+                                text = "View orders",
+                                onClick = onViewOrdersClick,
+                                isPrimary = false,
+                                borderWidth = 2.dp,
+                                shadowOffset = 2.dp,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        } else {
+                            BoldTopBar(
+                                title = "Reorder recommendation",
+                                subtitle = dateSubtitle,
+                                onBackClick = onBackClick,
+                                actions = {
+                                    BoldButton(
+                                        text = "View orders",
+                                        onClick = onViewOrdersClick,
+                                        isPrimary = false,
+                                        borderWidth = 2.dp,
+                                        shadowOffset = 2.dp,
+                                        modifier = Modifier.wrapContentWidth()
+                                    )
+                                }
+                            )
+                        }
+
+                        // 2. High Priority Badge & Why Button
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            BoldStatusChip(status = rec.priorityText)
+
+                            BoldButton(
+                                text = "Why?",
+                                onClick = { showWhyDialog = true },
+                                isPrimary = false,
+                                borderWidth = 2.dp,
+                                shadowOffset = 2.dp,
+                                modifier = Modifier.wrapContentWidth()
+                            )
+                        }
+
+                        // 3. Product Info Header Row
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clickable { onBackClick() },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(MaterialTheme.colorScheme.surface)
-                                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Canvas(modifier = Modifier.size(16.dp)) {
-                                        val path = Path().apply {
-                                            moveTo(size.width * 0.65f, size.height * 0.15f)
-                                            lineTo(size.width * 0.25f, size.height * 0.5f)
-                                            lineTo(size.width * 0.65f, size.height * 0.85f)
-                                        }
-                                        drawPath(
-                                            path = path,
-                                            color = primaryColor,
-                                            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                        )
-                                    }
-                                }
-                            }
+                            ProductAvatar(
+                                name = rec.title,
+                                category = "General",
+                                size = 48.dp
+                            )
 
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(14.dp))
 
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Reorder recommendation",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onBackground,
+                                    text = rec.title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = InkDark,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 20.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = dateSubtitle,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    letterSpacing = 0.5.sp,
+                                    text = rec.productName,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MutedInk,
+                                    fontSize = 14.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }
+                        }
 
-                            Spacer(modifier = Modifier.width(6.dp))
+                        // 4. Recommended Action Card
+                        BoldCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = SoftLavender,
+                            borderColor = InkDark,
+                            borderWidth = 2.5.dp,
+                            shadowOffset = 4.dp
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(18.dp)
+                            ) {
+                                Text(
+                                    text = "RECOMMENDED ACTION",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MainBlue,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp,
+                                    letterSpacing = 1.sp
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "Reorder ${rec.recommendedUnits} units",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = InkDark,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 26.sp
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = rec.estimatedPurchaseText,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MutedInk,
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
 
-                            // "View orders" button in header
-                            Surface(
-                                onClick = onViewOrdersClick,
-                                shape = RoundedCornerShape(12.dp),
-                                color = primaryColor.copy(alpha = 0.12f),
-                                border = BorderStroke(1.dp, primaryColor.copy(alpha = 0.35f)),
-                                modifier = Modifier.defaultMinSize(minHeight = 44.dp)
+                        // 5. Why This Recommendation Card
+                        BoldCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = CardWhite,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(18.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = "Why this recommendation?",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = InkDark,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
+
+                                Spacer(modifier = Modifier.height(2.dp))
+
+                                MetricRow("Current stock / minimum", rec.currentStockText)
+                                MetricRow("Sales · last 30 days", rec.salesLast7DaysText)
+                                MetricRow("Average daily demand", rec.avgDailyDemandText)
+                                MetricRow("Stock cover now", rec.stockCoverNowText)
+                                MetricRow("After adding ${rec.recommendedUnits} units", rec.stockCoverAfterText)
+                            }
+                        }
+
+                        // 6. Demand Description Text
+                        Text(
+                            text = rec.demandDescription,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = InkDark,
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp
+                        )
+
+                        // 7. Order Placement Info Box
+                        BoldCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = PaleBlue,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Box(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .background(CardWhite, CircleShape)
+                                        .border(2.dp, InkDark, CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
+                                    Canvas(modifier = Modifier.size(14.dp)) {
+                                        val path = Path().apply {
+                                            moveTo(size.width * 0.2f, size.height * 0.52f)
+                                            lineTo(size.width * 0.42f, size.height * 0.74f)
+                                            lineTo(size.width * 0.8f, size.height * 0.26f)
+                                        }
+                                        drawPath(
+                                            path = path,
+                                            color = InkDark,
+                                            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Column {
                                     Text(
-                                        text = "View orders",
-                                        style = MaterialTheme.typography.labelMedium,
+                                        text = "Order is placed directly",
+                                        style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = primaryColor,
-                                        fontSize = 12.sp,
-                                        maxLines = 1
+                                        color = InkDark,
+                                        fontSize = 13.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "A purchase order will be created and saved to your store.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MutedInk,
+                                        fontSize = 11.sp
                                     )
                                 }
                             }
                         }
 
-                    // 2. High Priority Badge & Why Button
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = badgeBg
-                        ) {
-                            Text(
-                                text = rec.priorityText,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = badgeText,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                            )
-                        }
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                        Surface(
-                            onClick = { showWhyDialog = true },
-                            shape = RoundedCornerShape(16.dp),
-                            color = primaryColor.copy(alpha = 0.12f),
-                            border = BorderStroke(1.dp, primaryColor.copy(alpha = 0.35f))
-                        ) {
-                            Text(
-                                text = "Why?",
-                                color = primaryColor,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
-                            )
-                        }
-                    }
-
-                    // 3. Product Info Header Row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        ProductAvatar(
-                            name = rec.title,
-                            category = "General",
-                            size = 48.dp
-                        )
-
-                        Spacer(modifier = Modifier.width(14.dp))
-
-                        Column {
-                            Text(
-                                text = rec.title,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp
-                            )
-                            Text(
-                                text = rec.productName,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 14.sp
-                            )
-                        }
-                    }
-
-                    // 4. Recommended Action Card
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(18.dp)
-                        ) {
-                            Text(
-                                text = "RECOMMENDED ACTION",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = primaryColor,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp,
-                                letterSpacing = 1.sp
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "Reorder ${rec.recommendedUnits} units",
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 26.sp
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = rec.estimatedPurchaseText,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 13.sp
-                            )
-                        }
-                    }
-
-                    // 5. Why This Recommendation Card
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(18.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Text(
-                                text = "Why this recommendation?",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-
-                            Spacer(modifier = Modifier.height(2.dp))
-
-                            MetricRow("Current stock / minimum", rec.currentStockText)
-                            MetricRow("Sales · last 30 days", rec.salesLast7DaysText)
-                            MetricRow("Average daily demand", rec.avgDailyDemandText)
-                            MetricRow("Stock cover now", rec.stockCoverNowText)
-                            MetricRow("After adding ${rec.recommendedUnits} units", rec.stockCoverAfterText)
-                        }
-                    }
-
-                    // 6. Demand Description Text
-                    Text(
-                        text = rec.demandDescription,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 13.sp,
-                        lineHeight = 18.sp
-                    )
-
-                    // 7. Order Placement Info Box
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
+                        // 8. Action Buttons (Accept / Dismiss)
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Canvas(modifier = Modifier.size(20.dp)) {
-                                drawCircle(
-                                    color = primaryColor,
-                                    radius = size.width / 2f,
-                                    style = Stroke(width = 1.5.dp.toPx())
-                                )
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.25f, size.height * 0.5f)
-                                    lineTo(size.width * 0.45f, size.height * 0.7f)
-                                    lineTo(size.width * 0.75f, size.height * 0.35f)
+                            BoldButton(
+                                onClick = {
+                                    viewModel.acceptReorder(
+                                        onSuccess = { onAcceptClick() },
+                                        onError = { msg ->
+                                            Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                        }
+                                    )
+                                },
+                                enabled = !uiState.isOrdering && rec.recommendedUnits > 0,
+                                isPrimary = true,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                if (uiState.isOrdering) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = InkDark,
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Accept",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = InkDark,
+                                        fontSize = 15.sp
+                                    )
                                 }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                )
                             }
 
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Column {
-                                Text(
-                                    text = "Order is placed directly",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 13.sp
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "A purchase order will be created and saved to your store.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // 8. Action Buttons (Accept / Dismiss)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Button(
-                            onClick = {
-                                viewModel.acceptReorder(
-                                    onSuccess = { onAcceptClick() },
-                                    onError = { msg ->
-                                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                                    }
-                                )
-                            },
-                            enabled = !uiState.isOrdering && rec.recommendedUnits > 0,
-                            modifier = Modifier
-                                .weight(1f)
-                                .defaultMinSize(minHeight = 48.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = primaryColor,
-                                contentColor = Color.White
-                            )
-                        ) {
-                            if (uiState.isOrdering) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    color = Color.White,
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Text(
-                                    text = "Accept",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp
-                                )
-                            }
-                        }
-
-                        OutlinedButton(
-                            onClick = {
-                                viewModel.dismissReorder()
-                                onDismissClick()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .defaultMinSize(minHeight = 48.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                contentColor = primaryColor
-                            )
-                        ) {
-                            Text(
+                            BoldButton(
                                 text = "Dismiss",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp
+                                onClick = {
+                                    viewModel.dismissReorder()
+                                    onDismissClick()
+                                },
+                                isPrimary = false,
+                                modifier = Modifier.weight(1f)
                             )
                         }
-                    }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
@@ -579,7 +524,7 @@ private fun MetricRow(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MutedInk,
             fontSize = 13.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -589,7 +534,7 @@ private fun MetricRow(label: String, value: String) {
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = InkDark,
             fontWeight = FontWeight.Bold,
             fontSize = 13.sp,
             maxLines = 1

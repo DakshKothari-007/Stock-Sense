@@ -78,7 +78,7 @@ fun ProductAvatar(
     }
 
     // Determine theme background
-    val isDark = isSystemInDarkTheme() || MaterialTheme.colorScheme.surface == DarkSurface
+    val isDark = com.simats.stocksense.core.theme.ThemeState.currentBoldColors.isDark
     val bgColor = if (isDark) department.darkBg else department.lightBg
     val cornerRadius = if (size < 40.dp) 12.dp else 16.dp
 

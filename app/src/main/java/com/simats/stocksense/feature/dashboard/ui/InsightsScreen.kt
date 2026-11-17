@@ -34,6 +34,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
@@ -182,27 +184,26 @@ fun InsightsContent(
                         Text(
                             text = "AI recommendations",
                             style = MaterialTheme.typography.headlineSmall,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
+                            color = InkDark,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 24.sp
                         )
                         val storeDisplay = storeName?.takeIf { it.isNotBlank() } ?: "Store"
                         Text(
                             text = "$storeDisplay · ${NumberFormatUtil.formatCurrentHeaderDate()}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MutedInk,
                             fontSize = 12.sp
                         )
                     }
 
                     // Summary Opportunities Banner
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp)),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = RoundedCornerShape(14.dp)
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = SoftPeach,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp
                     ) {
                         Row(
                             modifier = Modifier
@@ -210,14 +211,25 @@ fun InsightsContent(
                                 .padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Canvas(modifier = Modifier.size(20.dp)) {
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.2f, size.height * 0.52f)
-                                    lineTo(size.width * 0.42f, size.height * 0.74f)
-                                    lineTo(size.width * 0.8f, size.height * 0.26f)
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .background(CardWhite, CircleShape)
+                                    .border(2.dp, InkDark, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Canvas(modifier = Modifier.size(16.dp)) {
+                                    val path = Path().apply {
+                                        moveTo(size.width * 0.2f, size.height * 0.52f)
+                                        lineTo(size.width * 0.42f, size.height * 0.74f)
+                                        lineTo(size.width * 0.8f, size.height * 0.26f)
+                                    }
+                                    drawPath(
+                                        path = path,
+                                        color = InkDark,
+                                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                    )
                                 }
-                                drawCircle(color = primaryColor, radius = size.width / 2f, style = Stroke(width = 1.5.dp.toPx()))
-                                drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
                             }
 
                             Spacer(modifier = Modifier.width(12.dp))
@@ -227,7 +239,7 @@ fun InsightsContent(
                                     text = oppText,
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    color = InkDark,
                                     fontSize = 14.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -236,8 +248,8 @@ fun InsightsContent(
                                 Text(
                                     text = "Based on stock levels and recent sales.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp,
+                                    color = MutedInk,
+                                    fontSize = 12.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -255,22 +267,11 @@ fun InsightsContent(
                     ) {
                         InsightFilterCategory.values().forEach { filter ->
                             val isSelected = selectedFilter == filter
-                            Surface(
-                                onClick = { selectedFilter = filter },
-                                shape = RoundedCornerShape(20.dp),
-                                color = if (isSelected) primaryColor else MaterialTheme.colorScheme.surface,
-                                border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                                modifier = Modifier.defaultMinSize(minHeight = 40.dp)
-                            ) {
-                                Text(
-                                    text = filter.label,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    fontSize = 12.sp,
-                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-                                )
-                            }
+                            BoldChip(
+                                text = filter.label,
+                                isSelected = isSelected,
+                                onClick = { selectedFilter = filter }
+                            )
                         }
                     }
                 }
@@ -285,16 +286,17 @@ fun InsightsContent(
                         .height(200.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = primaryColor)
+                    CircularProgressIndicator(color = MainBlue)
                 }
             }
         } else if (uiState.errorMessage != null && allInsights.isEmpty()) {
             item(key = "error_state") {
-                Card(
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    backgroundColor = SoftPink,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp
                 ) {
                     Column(
                         modifier = Modifier
@@ -306,25 +308,26 @@ fun InsightsContent(
                         Text(
                             text = uiState.errorMessage ?: "Failed to load insights.",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error,
+                            color = StatusDangerRed,
+                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
-                        Button(
+                        BoldButton(
+                            text = "Retry",
                             onClick = { viewModel.refresh() },
-                            colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
-                        ) {
-                            Text("Retry", fontWeight = FontWeight.Bold)
-                        }
+                            isPrimary = true
+                        )
                     }
                 }
             }
         } else if (filteredInsights.isEmpty()) {
             item(key = "empty_state") {
-                Card(
+                BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp
                 ) {
                     Column(
                         modifier = Modifier
@@ -337,7 +340,7 @@ fun InsightsContent(
                             text = "No opportunities right now",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = InkDark
                         )
                         val emptyMessage = when (selectedFilter) {
                             InsightFilterCategory.ALL -> "Everything is well stocked and selling normally. Check back as new sales occur."
@@ -358,7 +361,7 @@ fun InsightsContent(
                         Text(
                             text = emptyMessage,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MutedInk,
                             textAlign = TextAlign.Center,
                             fontSize = 12.sp
                         )
@@ -408,7 +411,7 @@ fun InsightsContent(
             Text(
                 text = "AI suggests. You decide. Review the evidence before taking action.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MutedInk,
                 fontSize = 11.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
@@ -429,18 +432,18 @@ fun ReorderInsightCard(
     primaryColor: Color,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(14.dp)
+    BoldCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = CardWhite,
+        borderColor = InkDark,
+        borderWidth = 2.dp,
+        shadowOffset = 3.dp,
+        onClick = onClick
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
@@ -455,7 +458,7 @@ fun ReorderInsightCard(
                     ProductAvatar(
                         name = reorder.product?.name,
                         category = reorder.product?.category,
-                        size = 40.dp
+                        size = 42.dp
                     )
 
                     Spacer(modifier = Modifier.width(12.dp))
@@ -466,8 +469,8 @@ fun ReorderInsightCard(
                             text = "Reorder $productName",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 14.sp,
+                            color = InkDark,
+                            fontSize = 15.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -480,10 +483,10 @@ fun ReorderInsightCard(
                         Text(
                             text = priorityTag,
                             style = MaterialTheme.typography.labelSmall,
-                            color = primaryColor,
+                            color = MainBlue,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 10.sp,
-                            letterSpacing = 1.sp,
+                            fontSize = 11.sp,
+                            letterSpacing = 0.5.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -492,14 +495,12 @@ fun ReorderInsightCard(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Canvas(modifier = Modifier.size(12.dp)) {
-                    val path = Path().apply {
-                        moveTo(size.width * 0.2f, size.height * 0.1f)
-                        lineTo(size.width * 0.8f, size.height * 0.5f)
-                        lineTo(size.width * 0.2f, size.height * 0.9f)
-                    }
-                    drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-                }
+                Text(
+                    text = "→",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black,
+                    color = InkDark
+                )
             }
 
             val currentStock = reorder.currentStock ?: 0
@@ -510,7 +511,7 @@ fun ReorderInsightCard(
             Text(
                 text = stockText,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MutedInk,
                 fontSize = 12.sp,
                 lineHeight = 17.sp
             )
@@ -527,18 +528,18 @@ fun SlowMovingInsightCard(
     primaryColor: Color,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(14.dp)
+    BoldCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = CardWhite,
+        borderColor = InkDark,
+        borderWidth = 2.dp,
+        shadowOffset = 3.dp,
+        onClick = onClick
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
@@ -553,7 +554,7 @@ fun SlowMovingInsightCard(
                     ProductAvatar(
                         name = item.name,
                         category = null,
-                        size = 40.dp
+                        size = 42.dp
                     )
 
                     Spacer(modifier = Modifier.width(12.dp))
@@ -564,8 +565,8 @@ fun SlowMovingInsightCard(
                             text = "Move $itemName faster",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 14.sp,
+                            color = InkDark,
+                            fontSize = 15.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -574,10 +575,10 @@ fun SlowMovingInsightCard(
                         Text(
                             text = slowTag,
                             style = MaterialTheme.typography.labelSmall,
-                            color = primaryColor,
+                            color = StatusLowStock,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 10.sp,
-                            letterSpacing = 1.sp,
+                            fontSize = 11.sp,
+                            letterSpacing = 0.5.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -586,21 +587,19 @@ fun SlowMovingInsightCard(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Canvas(modifier = Modifier.size(12.dp)) {
-                    val path = Path().apply {
-                        moveTo(size.width * 0.2f, size.height * 0.1f)
-                        lineTo(size.width * 0.8f, size.height * 0.5f)
-                        lineTo(size.width * 0.2f, size.height * 0.9f)
-                    }
-                    drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-                }
+                Text(
+                    text = "→",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black,
+                    color = InkDark
+                )
             }
 
             val slowText = "${item.effectiveStock} packs left; only ${item.unitsSold30Days ?: 0} sold in 30 days. Try ${item.effectiveDiscountPct}% off or a clearance offer."
             Text(
                 text = slowText,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MutedInk,
                 fontSize = 12.sp,
                 lineHeight = 17.sp
             )
@@ -617,18 +616,18 @@ fun ProductPairInsightCard(
     primaryColor: Color,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(14.dp)
+    BoldCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = CardWhite,
+        borderColor = InkDark,
+        borderWidth = 2.dp,
+        shadowOffset = 3.dp,
+        onClick = onClick
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
@@ -643,7 +642,7 @@ fun ProductPairInsightCard(
                     ProductAvatar(
                         name = pair.product1?.name ?: pair.product2?.name,
                         category = null,
-                        size = 40.dp
+                        size = 42.dp
                     )
 
                     Spacer(modifier = Modifier.width(12.dp))
@@ -656,18 +655,18 @@ fun ProductPairInsightCard(
                             text = pairTitle,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 14.sp,
+                            color = InkDark,
+                            fontSize = 15.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = "FREQUENTLY BOUGHT TOGETHER",
                             style = MaterialTheme.typography.labelSmall,
-                            color = primaryColor,
+                            color = MainBlue,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 10.sp,
-                            letterSpacing = 1.sp,
+                            fontSize = 11.sp,
+                            letterSpacing = 0.5.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -676,14 +675,12 @@ fun ProductPairInsightCard(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Canvas(modifier = Modifier.size(12.dp)) {
-                    val path = Path().apply {
-                        moveTo(size.width * 0.2f, size.height * 0.1f)
-                        lineTo(size.width * 0.8f, size.height * 0.5f)
-                        lineTo(size.width * 0.2f, size.height * 0.9f)
-                    }
-                    drawPath(path = path, color = primaryColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-                }
+                Text(
+                    text = "→",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black,
+                    color = InkDark
+                )
             }
 
             val p1Name = pair.product1?.name ?: "Product 1"
@@ -694,7 +691,7 @@ fun ProductPairInsightCard(
             Text(
                 text = pairDetail,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MutedInk,
                 fontSize = 12.sp,
                 lineHeight = 17.sp
             )

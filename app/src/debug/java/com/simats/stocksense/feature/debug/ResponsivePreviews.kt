@@ -98,7 +98,7 @@ fun InventoryScreenResponsivePreview() {
                     sku = "DAI-001",
                     price = "₹30",
                     status = "Low stock · Minimum 24",
-                    statusColorHex = 0xFF98621A,
+                    statusColorHex = 0xFFFF9F5A,
                     units = "8",
                     iconType = 0
                 ),
@@ -108,7 +108,7 @@ fun InventoryScreenResponsivePreview() {
                     sku = "ATT-002",
                     price = "₹280",
                     status = "Healthy stock",
-                    statusColorHex = 0xFF1B6B2F,
+                    statusColorHex = 0xFFC9B8FF,
                     units = "45",
                     iconType = 0
                 )

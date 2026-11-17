@@ -1,8 +1,8 @@
 package com.simats.stocksense.feature.auth.ui
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -22,17 +22,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 
 @Composable
 fun SignOutScreen(
     onBackToLoginClick: () -> Unit = {}
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
-
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         Column(
             modifier = Modifier
@@ -51,25 +50,27 @@ fun SignOutScreen(
                 Text(
                     text = "StockSense",
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = InkDark,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp
                 )
                 Text(
                     text = "SMARTER STOCK. BETTER BUSINESS.",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MutedInk,
                     letterSpacing = 1.2.sp,
                     fontSize = 10.sp
                 )
             }
 
             // 2. Centered Card
-            Card(
+            BoldCard(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(24.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                backgroundColor = CardWhite,
+                borderColor = InkDark,
+                borderWidth = 2.5.dp,
+                shadowOffset = 4.dp,
+                shape = RoundedCornerShape(20.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -83,12 +84,13 @@ fun SignOutScreen(
                         modifier = Modifier
                             .size(56.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
+                            .background(SoftLightBlue)
+                            .border(2.dp, InkDark, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Canvas(modifier = Modifier.size(26.dp)) {
                             drawCircle(
-                                color = primaryColor,
+                                color = InkDark,
                                 radius = size.width / 2f,
                                 style = Stroke(width = 1.8.dp.toPx())
                             )
@@ -99,7 +101,7 @@ fun SignOutScreen(
                             }
                             drawPath(
                                 path = path,
-                                color = primaryColor,
+                                color = InkDark,
                                 style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                             )
                         }
@@ -110,7 +112,7 @@ fun SignOutScreen(
                         text = "Signed out successfully",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = InkDark,
                         fontSize = 20.sp,
                         textAlign = TextAlign.Center
                     )
@@ -119,7 +121,7 @@ fun SignOutScreen(
                     Text(
                         text = "You're signed out of StockSense. Log in again whenever you're ready.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MutedInk,
                         textAlign = TextAlign.Center,
                         fontSize = 13.sp,
                         lineHeight = 17.sp
@@ -128,21 +130,16 @@ fun SignOutScreen(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     // Back to Login Button
-                    Button(
+                    BoldButton(
                         onClick = onBackToLoginClick,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = primaryColor,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                        modifier = Modifier.fillMaxWidth(),
+                        isPrimary = true
                     ) {
                         Text(
                             text = "Back to Login",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
+                            color = InkDark,
                             fontSize = 15.sp
                         )
                     }
@@ -153,7 +150,7 @@ fun SignOutScreen(
             Text(
                 text = "StockSense v1.0 · Smarter Stock. Better Business.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MutedInk,
                 fontSize = 11.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier

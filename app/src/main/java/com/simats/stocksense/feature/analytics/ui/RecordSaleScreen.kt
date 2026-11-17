@@ -37,7 +37,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
@@ -110,7 +111,7 @@ fun RecordSaleScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         ResponsiveContainer(
             modifier = Modifier
@@ -128,458 +129,384 @@ fun RecordSaleScreen(
                 ) {
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // 1. Header Row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clickable { handleBack() },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(MaterialTheme.colorScheme.surface)
-                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Canvas(modifier = Modifier.size(16.dp)) {
-                                    val path = Path().apply {
-                                        moveTo(size.width * 0.65f, size.height * 0.15f)
-                                        lineTo(size.width * 0.25f, size.height * 0.5f)
-                                        lineTo(size.width * 0.65f, size.height * 0.85f)
-                                    }
-                                    drawPath(
-                                        path = path,
-                                        color = primaryColor,
-                                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Record sale",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            val headerSubtitle = remember(uiState.storeName, todayFormattedDate) {
-                                if (uiState.storeName.isNotBlank() && uiState.storeName != "—") {
-                                    "${uiState.storeName} · $todayFormattedDate"
-                                } else {
-                                    todayFormattedDate
-                                }
-                            }
-                            Text(
-                                text = headerSubtitle,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 12.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                    val headerSubtitle = remember(uiState.storeName, todayFormattedDate) {
+                        if (uiState.storeName.isNotBlank() && uiState.storeName != "—") {
+                            "${uiState.storeName} · $todayFormattedDate"
+                        } else {
+                            todayFormattedDate
                         }
                     }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // 2. Clickable Search Bar Row (Navigates directly to Add Product screen)
-                Surface(
-                    onClick = onAddProductClick,
-                    shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "Search name, SKU or barcode",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 14.sp
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(18.dp))
-
-                // 3. Section Title Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Items in this bill",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 14.sp
+                    // 1. Shared BoldTopBar
+                    BoldTopBar(
+                        title = "Record sale",
+                        subtitle = headerSubtitle,
+                        onBackClick = { handleBack() }
                     )
 
-                    Text(
-                        text = "${uiState.totalItemsCount} items",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
-                    )
-                }
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Inline Error Banner if save failed (shows real backend message e.g. insufficient stock)
-                if (uiState.errorMessage != null) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 10.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-                        shape = RoundedCornerShape(12.dp)
+                    // 2. Clickable Search Bar Row (Navigates directly to Add Product screen)
+                    Surface(
+                        onClick = onAddProductClick,
+                        shape = RoundedCornerShape(14.dp),
+                        color = CardWhite,
+                        border = BorderStroke(2.dp, InkDark),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = uiState.errorMessage ?: "Failed to save sale.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                modifier = Modifier.weight(1f)
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search",
+                                tint = InkDark,
+                                modifier = Modifier.size(20.dp)
                             )
-                            TextButton(onClick = { viewModel.clearErrorMessage() }) {
-                                Text("Dismiss", color = MaterialTheme.colorScheme.onErrorContainer)
-                            }
-                        }
-                    }
-                }
-
-                // Inline Stock Adjustment Notice Banner
-                if (uiState.stockNoticeMessage != null) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 10.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF3C7)),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
+                            Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = uiState.stockNoticeMessage ?: "",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Medium,
-                                color = Color(0xFF92400E),
-                                modifier = Modifier.weight(1f)
+                                text = "Search name, SKU or barcode",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MutedInk,
+                                fontSize = 14.sp
                             )
-                            TextButton(onClick = { viewModel.clearStockNoticeMessage() }) {
-                                Text("Dismiss", color = Color(0xFF92400E))
-                            }
                         }
                     }
-                }
 
-                // 4. Bill Items List or Empty State
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                ) {
-                    if (uiState.items.isEmpty()) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 24.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 36.dp, horizontal = 20.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Text(
-                                    text = "Add a product to start a bill",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 16.sp,
-                                    textAlign = TextAlign.Center
-                                )
-                                Text(
-                                    text = "Tap search or the button below to browse products and build your sales receipt.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 13.sp
-                                )
-                                Button(
-                                    onClick = onAddProductClick,
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
-                                ) {
-                                    Text("Add Product")
-                                }
-                            }
-                        }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(bottom = 16.dp)
-                        ) {
-                            items(uiState.items, key = { it.productId }) { item ->
-                                BillItemCard(
-                                    item = item,
-                                    onIncrement = { viewModel.incrementQuantity(item.productId) },
-                                    onDecrement = { viewModel.decrementQuantity(item.productId) },
-                                    primaryColor = primaryColor
-                                )
-                            }
-                        }
-                    }
-                }
+                    Spacer(modifier = Modifier.height(18.dp))
 
-                // 5. Bottom Total Summary & Save Sale Button
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    // Total Row
+                    // 3. Section Title Row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text(
-                                text = "Total",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 12.sp
-                            )
-                            Text(
-                                text = "${uiState.totalItemsCount} items · ${uiState.totalUnitsCount} units",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 12.sp
-                            )
-                        }
+                        Text(
+                            text = "Items in this bill",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = InkDark,
+                            fontSize = 14.sp
+                        )
 
                         Text(
-                            text = NumberFormatUtil.formatIndianRupees(uiState.totalAmount),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = 26.sp
+                            text = "${uiState.totalItemsCount} items",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MutedInk,
+                            fontSize = 12.sp
                         )
                     }
 
-                    // Save Sale Button (Disabled when bill is empty or saving)
-                    Button(
-                        onClick = { viewModel.saveSale() },
-                        enabled = uiState.items.isNotEmpty() && !uiState.isSaving,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .defaultMinSize(minHeight = 52.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = primaryColor,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                    ) {
-                        if (uiState.isSaving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text(
-                                text = "Save sale",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Inline Error Banner if save failed (shows real backend message e.g. insufficient stock)
+                    if (uiState.errorMessage != null) {
+                        BoldCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp),
+                            backgroundColor = SoftPink,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 2.dp,
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = uiState.errorMessage ?: "Failed to save sale.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = StatusDangerRed,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TextButton(onClick = { viewModel.clearErrorMessage() }) {
+                                    Text("Dismiss", color = InkDark, fontWeight = FontWeight.Bold)
+                                }
+                            }
                         }
                     }
 
-                    Text(
-                        text = "Stock goes down when you save. Date and time are added automatically.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    // Inline Stock Adjustment Notice Banner
+                    if (uiState.stockNoticeMessage != null) {
+                        BoldCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp),
+                            backgroundColor = SoftPeach,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 2.dp,
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = uiState.stockNoticeMessage ?: "",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = InkDark,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TextButton(onClick = { viewModel.clearStockNoticeMessage() }) {
+                                    Text("Dismiss", color = InkDark, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    // 4. Bill Items List or Empty State
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    ) {
+                        if (uiState.items.isEmpty()) {
+                            BoldCard(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 24.dp),
+                                backgroundColor = CardWhite,
+                                borderColor = InkDark,
+                                borderWidth = 2.dp,
+                                shadowOffset = 3.dp,
+                                contentPadding = PaddingValues(vertical = 32.dp, horizontal = 20.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Text(
+                                        text = "Add a product to start a bill",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = InkDark,
+                                        fontSize = 16.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Text(
+                                        text = "Tap search or the button below to browse products and build your sales receipt.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MutedInk,
+                                        textAlign = TextAlign.Center,
+                                        fontSize = 13.sp
+                                    )
+                                    BoldButton(
+                                        text = "Add Product",
+                                        onClick = onAddProductClick,
+                                        isPrimary = true
+                                    )
+                                }
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                contentPadding = PaddingValues(bottom = 16.dp)
+                            ) {
+                                items(uiState.items, key = { it.productId }) { item ->
+                                    BillItemCard(
+                                        item = item,
+                                        onIncrement = { viewModel.incrementQuantity(item.productId) },
+                                        onDecrement = { viewModel.decrementQuantity(item.productId) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // 5. Bottom Total Summary & Save Sale Button
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // Total Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Total",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MutedInk,
+                                    fontSize = 12.sp
+                                )
+                                Text(
+                                    text = "${uiState.totalItemsCount} items · ${uiState.totalUnitsCount} units",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MutedInk,
+                                    fontSize = 12.sp
+                                )
+                            }
+
+                            Text(
+                                text = NumberFormatUtil.formatIndianRupees(uiState.totalAmount),
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark,
+                                fontSize = 26.sp
+                            )
+                        }
+
+                        // Save Sale Button (Disabled when bill is empty or saving)
+                        BoldButton(
+                            text = "Save sale",
+                            onClick = { viewModel.saveSale() },
+                            enabled = uiState.items.isNotEmpty() && !uiState.isSaving,
+                            isLoading = uiState.isSaving,
+                            isPrimary = true
+                        )
+
+                        Text(
+                            text = "Stock goes down when you save. Date and time are added automatically.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MutedInk,
+                            fontSize = 11.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
                 }
-            }
 
             // Success Overlay State (Requirement 4)
             if (uiState.savedSaleData != null) {
                 val savedData = uiState.savedSaleData!!
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    color = CreamBackground
                 ) {
-                    Column(
+                    ResponsiveContainer(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.SpaceBetween,
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .statusBarsPadding()
+                            .navigationBarsPadding(),
+                        maxWidth = 520.dp
                     ) {
-                        Spacer(modifier = Modifier.height(30.dp))
-
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(24.dp),
+                            verticalArrangement = Arrangement.SpaceBetween,
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            // Circular checkmark icon
-                            Box(
-                                modifier = Modifier
-                                    .size(80.dp)
-                                    .clip(CircleShape)
-                                    .background(primaryColor.copy(alpha = 0.15f))
-                                    .border(2.dp, primaryColor, CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Canvas(modifier = Modifier.size(36.dp)) {
-                                    val checkPath = Path().apply {
-                                        moveTo(size.width * 0.2f, size.height * 0.52f)
-                                        lineTo(size.width * 0.42f, size.height * 0.74f)
-                                        lineTo(size.width * 0.8f, size.height * 0.26f)
-                                    }
-                                    drawPath(
-                                        path = checkPath,
-                                        color = primaryColor,
-                                        style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                    )
-                                }
-                            }
+                            Spacer(modifier = Modifier.height(20.dp))
 
-                            Text(
-                                text = "Sale Recorded Successfully",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = 20.sp,
-                                textAlign = TextAlign.Center
-                            )
-
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                Column(
+                                // Circular checkmark icon
+                                Box(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(18.dp),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                                        .size(80.dp)
+                                        .clip(CircleShape)
+                                        .background(SoftLavender)
+                                        .border(2.5.dp, InkDark, CircleShape),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text("Bill Number", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Text(savedData.billNo ?: "—", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                                    Canvas(modifier = Modifier.size(36.dp)) {
+                                        val checkPath = Path().apply {
+                                            moveTo(size.width * 0.2f, size.height * 0.52f)
+                                            lineTo(size.width * 0.42f, size.height * 0.74f)
+                                            lineTo(size.width * 0.8f, size.height * 0.26f)
+                                        }
+                                        drawPath(
+                                            path = checkPath,
+                                            color = InkDark,
+                                            style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                        )
                                     }
-                                    Row(
+                                }
+
+                                Text(
+                                    text = "Sale Recorded Successfully",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = InkDark,
+                                    fontSize = 20.sp,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                BoldCard(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    backgroundColor = CardWhite,
+                                    borderColor = InkDark,
+                                    borderWidth = 2.dp,
+                                    shadowOffset = 3.dp,
+                                    contentPadding = PaddingValues(18.dp)
+                                ) {
+                                    Column(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
-                                        Text("Total Amount", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Text(NumberFormatUtil.formatIndianRupees(savedData.totalAmount), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = primaryColor)
-                                    }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text("Items & Units", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Text("${savedData.totalItems} items · ${savedData.totalQuantity} units", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
-                                    }
-                                    if (!savedData.saleDate.isNullOrBlank()) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
-                                            Text("Date & Time", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                            Text(savedData.saleDate, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Bill Number", style = MaterialTheme.typography.bodySmall, color = MutedInk)
+                                            Text(savedData.billNo ?: "—", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = InkDark)
+                                        }
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text("Total Amount", style = MaterialTheme.typography.bodySmall, color = MutedInk)
+                                            Text(NumberFormatUtil.formatIndianRupees(savedData.totalAmount), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MainBlue)
+                                        }
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text("Items & Units", style = MaterialTheme.typography.bodySmall, color = MutedInk)
+                                            Text("${savedData.totalItems} items · ${savedData.totalQuantity} units", style = MaterialTheme.typography.bodySmall, color = InkDark)
+                                        }
+                                        if (!savedData.saleDate.isNullOrBlank()) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Text("Date & Time", style = MaterialTheme.typography.bodySmall, color = MutedInk)
+                                                Text(savedData.saleDate, style = MaterialTheme.typography.bodySmall, color = MutedInk)
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
 
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Button(
-                                onClick = { viewModel.dismissSuccessState() },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .defaultMinSize(minHeight = 50.dp),
-                                shape = RoundedCornerShape(14.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Text("Record Another Sale", fontWeight = FontWeight.Bold)
-                            }
+                                BoldButton(
+                                    text = "Record Another Sale",
+                                    onClick = { viewModel.dismissSuccessState() },
+                                    isPrimary = true
+                                )
 
-                            OutlinedButton(
-                                onClick = {
-                                    viewModel.dismissSuccessState()
-                                    onBackClick()
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .defaultMinSize(minHeight = 50.dp),
-                                shape = RoundedCornerShape(14.dp)
-                            ) {
-                                Text("Back to Sales Analytics", color = MaterialTheme.colorScheme.onSurface)
+                                BoldButton(
+                                    text = "Back to Sales Analytics",
+                                    onClick = {
+                                        viewModel.dismissSuccessState()
+                                        onBackClick()
+                                    },
+                                    isPrimary = false
+                                )
                             }
                         }
                     }
@@ -588,34 +515,30 @@ fun RecordSaleScreen(
 
             // Discard Confirmation Dialog (Requirement 10)
             if (showDiscardDialog) {
-                AlertDialog(
+                BoldDialog(
                     onDismissRequest = { showDiscardDialog = false },
-                    modifier = Modifier.widthIn(max = 520.dp),
-                    title = {
-                        Text("Discard current bill?", fontWeight = FontWeight.Bold)
-                    },
-                    text = {
-                        Text("You have ${uiState.totalItemsCount} item(s) in this bill. If you discard, all added items will be cleared.")
-                    },
+                    title = "Discard current bill?",
+                    text = "You have ${uiState.totalItemsCount} item(s) in this bill. If you discard, all added items will be cleared.",
                     confirmButton = {
-                        Button(
+                        BoldButton(
+                            text = "Discard",
                             onClick = {
                                 showDiscardDialog = false
                                 viewModel.clearBill()
                                 onBackClick()
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                        ) {
-                            Text("Discard", color = MaterialTheme.colorScheme.onError)
-                        }
+                            isPrimary = false,
+                            containerColor = StatusDangerRed,
+                            contentColor = Color.White
+                        )
                     },
                     dismissButton = {
-                        TextButton(onClick = { showDiscardDialog = false }) {
-                            Text("Keep editing", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    },
-                    shape = RoundedCornerShape(16.dp),
-                    containerColor = MaterialTheme.colorScheme.surface
+                        BoldButton(
+                            text = "Keep editing",
+                            onClick = { showDiscardDialog = false },
+                            isPrimary = false
+                        )
+                    }
                 )
             }
         }
@@ -627,21 +550,20 @@ fun RecordSaleScreen(
 private fun BillItemCard(
     item: BillItem,
     onIncrement: () -> Unit,
-    onDecrement: () -> Unit,
-    primaryColor: Color
+    onDecrement: () -> Unit
 ) {
     val isAtStockLimit = item.quantity >= item.availableStock
 
-    Card(
+    BoldCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        backgroundColor = CardWhite,
+        borderColor = InkDark,
+        borderWidth = 2.dp,
+        shadowOffset = 3.dp,
+        contentPadding = PaddingValues(14.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // Top Row: Product Avatar, Name & Line Total
@@ -667,7 +589,7 @@ private fun BillItemCard(
                             text = item.name,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = InkDark,
                             fontSize = 15.sp,
                             modifier = Modifier.weight(1f),
                             maxLines = 1,
@@ -678,7 +600,7 @@ private fun BillItemCard(
                             text = NumberFormatUtil.formatIndianRupees(item.lineTotal),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = InkDark,
                             fontSize = 16.sp
                         )
                     }
@@ -687,7 +609,7 @@ private fun BillItemCard(
                     Text(
                         text = "${item.sku} · ${NumberFormatUtil.formatIndianRupees(item.unitPrice)} each",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MutedInk,
                         fontSize = 12.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -704,8 +626,8 @@ private fun BillItemCard(
                 // Stepper Capsule
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant)
+                    color = CardWhite,
+                    border = BorderStroke(1.5.dp, InkDark)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
@@ -715,7 +637,7 @@ private fun BillItemCard(
                             Icon(
                                 imageVector = Icons.Default.Remove,
                                 contentDescription = "Decrease",
-                                tint = MaterialTheme.colorScheme.onSurface,
+                                tint = InkDark,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -724,7 +646,7 @@ private fun BillItemCard(
                             text = item.quantity.toString(),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = InkDark,
                             fontSize = 14.sp,
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
@@ -737,7 +659,7 @@ private fun BillItemCard(
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Increase",
-                                tint = if (isAtStockLimit) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f) else primaryColor,
+                                tint = if (isAtStockLimit) MutedInk.copy(alpha = 0.35f) else InkDark,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -750,14 +672,14 @@ private fun BillItemCard(
                         text = "Only ${item.availableStock} in stock",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFD97706),
+                        color = StatusLowStock,
                         fontSize = 12.sp
                     )
                 } else {
                     Text(
                         text = "${item.availableStock} in stock",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MutedInk,
                         fontSize = 12.sp
                     )
                 }

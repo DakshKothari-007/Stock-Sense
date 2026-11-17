@@ -32,7 +32,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.feature.inventory.viewmodel.ImportViewModel
@@ -94,7 +95,7 @@ fun ImportInventoryUploadScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         val windowInfo = rememberWindowSizeInfo()
 
@@ -114,441 +115,346 @@ fun ImportInventoryUploadScreen(
             ) {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 1. Header with Back Arrow and Title
+                // 1. Header with Shared BoldTopBar
+                BoldTopBar(
+                    title = "Import inventory",
+                    subtitle = "Add stock from a spreadsheet",
+                    onBackClick = onBackClick
+                )
+
+                // 2. Stepper Indicators (Upload, Preview, Validate, Import)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onBackClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surface)
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
+                    val steps = listOf("Upload", "Preview", "Validate", "Import")
+                    steps.forEachIndexed { index, stepName ->
+                        val isActive = index == 0
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Canvas(modifier = Modifier.size(16.dp)) {
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.65f, size.height * 0.15f)
-                                    lineTo(size.width * 0.25f, size.height * 0.5f)
-                                    lineTo(size.width * 0.65f, size.height * 0.85f)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Import inventory",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "ADD STOCK FROM A SPREADSHEET",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 10.sp,
-                            letterSpacing = 1.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-
-            // 2. Stepper Indicators (Upload, Preview, Validate, Import)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val steps = listOf("Upload", "Preview", "Validate", "Import")
-                steps.forEachIndexed { index, stepName ->
-                    val isActive = index == 0
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = stepName,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (isActive) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = 11.sp
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.9f)
-                                .height(3.dp)
-                                .clip(RoundedCornerShape(2.dp))
-                                .background(if (isActive) primaryColor else MaterialTheme.colorScheme.outlineVariant)
-                        )
-                    }
-                }
-            }
-
-            // 3. Stock Sheet Drop/Upload Area Card (Tappable)
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .clickable {
-                        filePickerLauncher.launch(allowedMimeTypes)
-                    },
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Text(
-                        text = "Start with your stock sheet",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 16.sp
-                    )
-
-                    Text(
-                        text = "CSV or Excel (.xlsx) · Up to 5 MB · One product per row",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        fontSize = 11.sp
-                    )
-
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Text(
-                            text = if (isFileChosen) "File selected · Tap to change" else "Tap here to select file",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = primaryColor,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                        )
-                    }
-                }
-            }
-
-            // 4. File Selected Details Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = uiState.selectedFileName ?: "No file selected",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isFileChosen) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 14.sp
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = uiState.selectedFileSize ?: "Select a .csv, .xls, or .xlsx file",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-            }
-
-            // Upload Error Alert Card (if any error occurred)
-            if (uiState.uploadError != null) {
-                val isTimeout = uiState.uploadError?.contains("timed out", ignoreCase = true) == true ||
-                        uiState.uploadError?.contains("timeout", ignoreCase = true) == true
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Canvas(modifier = Modifier.size(20.dp)) {
-                            drawCircle(color = Color(0xFFC62828), radius = size.width / 2f, style = Stroke(width = 1.8.dp.toPx()))
-                            drawLine(
-                                color = Color(0xFFC62828),
-                                start = Offset(size.width * 0.5f, size.height * 0.25f),
-                                end = Offset(size.width * 0.5f, size.height * 0.6f),
-                                strokeWidth = 2.dp.toPx(),
-                                cap = StrokeCap.Round
-                            )
-                            drawCircle(
-                                color = Color(0xFFC62828),
-                                radius = 1.5.dp.toPx(),
-                                center = Offset(size.width * 0.5f, size.height * 0.75f)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = if (isTimeout) "Connection timed out" else "Upload error",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFC62828),
-                                fontSize = 13.sp
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = uiState.uploadError ?: "An error occurred while uploading file.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFC62828).copy(alpha = 0.85f),
+                                text = stepName,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (isActive) InkDark else MutedInk,
+                                fontWeight = if (isActive) FontWeight.Black else FontWeight.Bold,
                                 fontSize = 11.sp
                             )
-                        }
-                        if (isTimeout) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = {
-                                    viewModel.uploadAndPreview(
-                                        context = context,
-                                        onSuccess = onPreviewImportClick,
-                                        onError = {}
-                                    )
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFC62828),
-                                    contentColor = Color.White
-                                ),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.height(34.dp)
-                            ) {
-                                Text(
-                                    text = "Retry",
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.9f)
+                                    .height(3.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(if (isActive) MainBlue else PaleBlue)
+                            )
                         }
                     }
                 }
-            }
 
-            // 5. Your sheet should include Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                // 3. Stock Sheet Drop/Upload Area Card (Tappable)
+                BoldCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp,
+                    onClick = { filePickerLauncher.launch(allowedMimeTypes) },
+                    contentPadding = PaddingValues(20.dp)
                 ) {
-                    Text(
-                        text = "Your sheet should include",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 14.sp
-                    )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = "Start with your stock sheet",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = InkDark,
+                            fontSize = 16.sp
+                        )
 
-                    RequirementRow("Product identity", "SKU + Product name")
-                    RequirementRow("Stock receipt", "Quantity to add")
-                    RequirementRow("Prices in ₹", "Cost + Selling price")
+                        Text(
+                            text = "CSV or Excel (.xlsx) · Up to 5 MB · One product per row",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MutedInk,
+                            textAlign = TextAlign.Center,
+                            fontSize = 11.sp
+                        )
 
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                    Text(
-                        text = "Existing SKUs gain stock. A new SKU creates a product. Nothing is overwritten.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp,
-                        lineHeight = 15.sp
-                    )
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isFileChosen) PaleBlue else SoftLavender,
+                            border = BorderStroke(1.5.dp, InkDark)
+                        ) {
+                            Text(
+                                text = if (isFileChosen) "File selected · Tap to change" else "Tap here to select file",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = InkDark,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
+                    }
                 }
-            }
 
-            // 6. Preview Import Button
-            Button(
-                onClick = {
-                    viewModel.uploadAndPreview(
-                        context = context,
-                        onSuccess = onPreviewImportClick,
-                        onError = {}
-                    )
-                },
-                enabled = isFileChosen && !uiState.isUploading,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = primaryColor,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            ) {
-                if (uiState.isUploading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        strokeWidth = 2.dp
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Uploading & Parsing...",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
-                } else {
-                    Text(
-                        text = "Preview Import",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
-                }
-            }
-
-            // 7. Recent Imports / History Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                // 4. File Selected Details Card
+                BoldCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp,
+                    contentPadding = PaddingValues(16.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Recent Imports",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 14.sp
-                        )
-                        if (uiState.isLoadingHistory) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                color = primaryColor,
-                                strokeWidth = 2.dp
+                        Column {
+                            Text(
+                                text = uiState.selectedFileName ?: "No file selected",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isFileChosen) InkDark else MutedInk,
+                                fontSize = 14.sp
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = uiState.selectedFileSize ?: "Select a .csv, .xls, or .xlsx file",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MutedInk,
+                                fontSize = 12.sp
                             )
                         }
                     }
+                }
 
-                    if (!uiState.isLoadingHistory && uiState.historyList.isEmpty()) {
-                        Text(
-                            text = "No imports yet",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
-                    } else {
-                        uiState.historyList.take(5).forEachIndexed { index, item ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = item.fileName?.takeIf { it.isNotBlank() } ?: "Spreadsheet",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontSize = 12.sp
-                                    )
-                                    Text(
-                                        text = item.createdAt ?: "",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 10.sp
-                                    )
-                                }
+                // Upload Error Alert Card (if any error occurred)
+                if (uiState.uploadError != null) {
+                    val isTimeout = uiState.uploadError?.contains("timed out", ignoreCase = true) == true ||
+                            uiState.uploadError?.contains("timeout", ignoreCase = true) == true
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = SoftPink,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 2.dp,
+                        contentPadding = PaddingValues(14.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Canvas(modifier = Modifier.size(20.dp)) {
+                                drawCircle(color = StatusDangerRed, radius = size.width / 2f, style = Stroke(width = 1.8.dp.toPx()))
+                                drawLine(
+                                    color = StatusDangerRed,
+                                    start = Offset(size.width * 0.5f, size.height * 0.25f),
+                                    end = Offset(size.width * 0.5f, size.height * 0.6f),
+                                    strokeWidth = 2.dp.toPx(),
+                                    cap = StrokeCap.Round
+                                )
+                                drawCircle(
+                                    color = StatusDangerRed,
+                                    radius = 1.5.dp.toPx(),
+                                    center = Offset(size.width * 0.5f, size.height * 0.75f)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "${item.successCount ?: 0} / ${item.totalRows ?: 0} rows",
+                                    text = if (isTimeout) "Connection timed out" else "Upload error",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = StatusDangerRed,
+                                    fontSize = 13.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = uiState.uploadError ?: "An error occurred while uploading file.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (item.status == "completed") primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = StatusDangerRed,
                                     fontSize = 11.sp
                                 )
                             }
-                            if (index < minOf(uiState.historyList.size, 5) - 1) {
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
+                            if (isTimeout) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                BoldButton(
+                                    text = "Retry",
+                                    onClick = {
+                                        viewModel.uploadAndPreview(
+                                            context = context,
+                                            onSuccess = onPreviewImportClick,
+                                            onError = {}
+                                        )
+                                    },
+                                    isPrimary = true,
+                                    modifier = Modifier.wrapContentWidth()
+                                )
                             }
                         }
                     }
                 }
-            }
 
-            // 8. Cancel - Back to Inventory Text Button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 48.dp)
-                    .clickable { onBackClick() }
-                    .padding(vertical = 4.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Cancel · Back to Inventory",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = primaryColor,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
+                // 5. Your sheet should include Card
+                BoldCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp,
+                    contentPadding = PaddingValues(18.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = "Your sheet should include",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = InkDark,
+                            fontSize = 14.sp
+                        )
+
+                        RequirementRow("Product identity", "SKU + Product name")
+                        RequirementRow("Stock receipt", "Quantity to add")
+                        RequirementRow("Prices in ₹", "Cost + Selling price")
+
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        Text(
+                            text = "Existing SKUs gain stock. A new SKU creates a product. Nothing is overwritten.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MutedInk,
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
+
+                // 6. Preview Import Button
+                BoldButton(
+                    text = if (uiState.isUploading) "Uploading & Parsing..." else "Preview Import",
+                    onClick = {
+                        viewModel.uploadAndPreview(
+                            context = context,
+                            onSuccess = onPreviewImportClick,
+                            onError = {}
+                        )
+                    },
+                    isPrimary = true,
+                    enabled = isFileChosen && !uiState.isUploading,
+                    modifier = Modifier.fillMaxWidth()
                 )
-            }
 
-            Spacer(modifier = Modifier.height(20.dp))
+                // 7. Recent Imports / History Card
+                BoldCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp,
+                    contentPadding = PaddingValues(18.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Recent Imports",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark,
+                                fontSize = 14.sp
+                            )
+                            if (uiState.isLoadingHistory) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    color = MainBlue,
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        }
+
+                        if (!uiState.isLoadingHistory && uiState.historyList.isEmpty()) {
+                            Text(
+                                text = "No imports yet",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MutedInk,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        } else {
+                            uiState.historyList.take(5).forEachIndexed { index, item ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = item.fileName?.takeIf { it.isNotBlank() } ?: "Spreadsheet",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = InkDark,
+                                            fontSize = 12.sp
+                                        )
+                                        Text(
+                                            text = item.createdAt ?: "",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MutedInk,
+                                            fontSize = 10.sp
+                                        )
+                                    }
+                                    Text(
+                                        text = "${item.successCount ?: 0} / ${item.totalRows ?: 0} rows",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (item.status == "completed") MainBlue else MutedInk,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                                if (index < minOf(uiState.historyList.size, 5) - 1) {
+                                    HorizontalDivider(color = InkDark.copy(alpha = 0.15f), thickness = 1.dp)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 8. Cancel - Back to Inventory Text Button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = 48.dp)
+                        .clickable { onBackClick() }
+                        .padding(vertical = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Cancel · Back to Inventory",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = InkDark,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+            }
         }
     }
-}
 }
 
 @Composable
@@ -561,14 +467,14 @@ private fun RequirementRow(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MutedInk,
             fontSize = 12.sp
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = InkDark,
             fontSize = 12.sp
         )
     }

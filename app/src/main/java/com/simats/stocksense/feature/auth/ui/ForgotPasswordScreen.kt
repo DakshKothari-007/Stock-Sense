@@ -101,76 +101,17 @@ fun ForgotPasswordScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.Start
                 ) {
-                    // 1. Top Header with Back Button
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { onBackToLoginClick() },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .border(2.dp, InkDark, RoundedCornerShape(12.dp))
-                                .background(CardWhite),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Canvas(modifier = Modifier.size(16.dp)) {
-                                    val path = Path().apply {
-                                        moveTo(size.width * 0.7f, size.height * 0.2f)
-                                        lineTo(size.width * 0.3f, size.height * 0.5f)
-                                        lineTo(size.width * 0.7f, size.height * 0.8f)
-                                    }
-                                    drawPath(
-                                        path = path,
-                                        color = InkDark,
-                                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Reset password",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = "ACCOUNT RECOVERY",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                letterSpacing = 1.5.sp,
-                                fontSize = 10.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
+                    // 1. Top Header with Shared BoldTopBar
+                    BoldTopBar(
+                        title = "Reset password",
+                        subtitle = "Account recovery",
+                        onBackClick = onBackToLoginClick
+                    )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // 2. Logo Icon
-                Image(
-                    painter = painterResource(id = R.drawable.stocksense_symbol_inkblue),
-                    contentDescription = "StockSense",
-                    modifier = Modifier.size(64.dp)
-                )
+                // 2. Logo Icon (adapts with cream badge in dark mode)
+                StockSenseLogo(size = 64.dp)
 
                 Spacer(modifier = Modifier.height(18.dp))
 

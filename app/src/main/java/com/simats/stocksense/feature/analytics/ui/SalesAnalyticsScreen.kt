@@ -33,6 +33,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
@@ -64,7 +65,7 @@ fun SalesAnalyticsScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         when {
             uiState.isLoading && uiState.dailySalesPoints.isEmpty() && uiState.todaySalesTotal == "₹0" -> {
@@ -77,14 +78,14 @@ fun SalesAnalyticsScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         CircularProgressIndicator(
-                            color = primaryColor,
+                            color = MainBlue,
                             modifier = Modifier.size(36.dp),
                             strokeWidth = 3.dp
                         )
                         Text(
                             text = "Loading sales analytics...",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MutedInk
                         )
                     }
                 }
@@ -105,20 +106,19 @@ fun SalesAnalyticsScreen(
                             text = "Unable to load sales analytics",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = InkDark
                         )
                         Text(
                             text = uiState.errorMessage ?: "Unknown error",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MutedInk,
                             textAlign = TextAlign.Center
                         )
-                        Button(
+                        BoldButton(
+                            text = "Retry",
                             onClick = { viewModel.refresh() },
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("Retry")
-                        }
+                            isPrimary = true
+                        )
                     }
                 }
             }
@@ -142,92 +142,68 @@ fun SalesAnalyticsScreen(
                     ) {
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // 1. Header with Back Button and Title
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clickable { onBackClick() },
-                                contentAlignment = Alignment.Center
+                        // 1. Header with Shared BoldTopBar & Record sale button
+                        val isNarrow = windowInfo.screenWidthDp < 360.dp
+                        if (isNarrow) {
+                            BoldTopBar(
+                                title = "Sales analytics",
+                                subtitle = uiState.periodHeaderSubtitle,
+                                onBackClick = onBackClick
+                            )
+                            BoldButton(
+                                onClick = onRecordSaleClick,
+                                isPrimary = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(MaterialTheme.colorScheme.surface)
-                                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Canvas(modifier = Modifier.size(16.dp)) {
-                                        val path = Path().apply {
-                                            moveTo(size.width * 0.65f, size.height * 0.15f)
-                                            lineTo(size.width * 0.25f, size.height * 0.5f)
-                                            lineTo(size.width * 0.65f, size.height * 0.85f)
-                                        }
-                                        drawPath(
-                                            path = path,
-                                            color = primaryColor,
-                                            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = null,
+                                    tint = Color(0xFF0B1230),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Record sale",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF0B1230),
+                                    fontSize = 13.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        } else {
+                            BoldTopBar(
+                                title = "Sales analytics",
+                                subtitle = uiState.periodHeaderSubtitle,
+                                onBackClick = onBackClick,
+                                actions = {
+                                    BoldButton(
+                                        onClick = onRecordSaleClick,
+                                        isPrimary = true,
+                                        modifier = Modifier.wrapContentWidth(),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = null,
+                                            tint = Color(0xFF0B1230),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Record sale",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF0B1230),
+                                            fontSize = 13.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
-                            }
-
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Sales analytics",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = uiState.periodHeaderSubtitle,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 12.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-
-                            // "+ Record sale" button (minimum 44dp height touch target)
-                            Surface(
-                                onClick = onRecordSaleClick,
-                                shape = RoundedCornerShape(12.dp),
-                                color = primaryColor,
-                                modifier = Modifier.defaultMinSize(minHeight = 44.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onPrimary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "Record sale",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        fontSize = 13.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            }
+                            )
                         }
 
                         // 2. Filter Segmented Chips (Today, 7 days, 30 days)
@@ -238,373 +214,432 @@ fun SalesAnalyticsScreen(
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                        val periods = listOf("Today", "7 days", "30 days")
-                        periods.forEachIndexed { index, label ->
-                            val isSelected = uiState.selectedPeriodIndex == index
-                            Surface(
-                                onClick = { viewModel.selectPeriod(index) },
-                                shape = RoundedCornerShape(20.dp),
-                                color = if (isSelected) primaryColor else MaterialTheme.colorScheme.surface,
-                                border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                            ) {
-                                Text(
+                            val periods = listOf("TODAY", "7 DAYS", "30 DAYS")
+                            periods.forEachIndexed { index, label ->
+                                BoldChip(
                                     text = label,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    fontSize = 12.sp,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    // 3. Metric Summary Cards (Today's sales & Sales 7 days connected)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        // Today's Sales Card -> Connected to Today button (index 0)
-                        val isTodaySelected = uiState.selectedPeriodIndex == 0
-                        Card(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { viewModel.selectPeriod(0) },
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isTodaySelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
-                            ),
-                            shape = RoundedCornerShape(14.dp),
-                            border = BorderStroke(
-                                if (isTodaySelected) 2.dp else 1.dp,
-                                if (isTodaySelected) primaryColor else MaterialTheme.colorScheme.outlineVariant
-                            )
-                        ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Text(
-                                    text = "Today's sales",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = if (isTodaySelected) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontWeight = if (isTodaySelected) FontWeight.Bold else FontWeight.Normal,
-                                    fontSize = 12.sp
-                                )
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = uiState.todaySalesTotal,
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = uiState.todayBillsText,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp
+                                    selected = uiState.selectedPeriodIndex == index,
+                                    onClick = { viewModel.selectPeriod(index) },
+                                    selectedColor = MainYellow
                                 )
                             }
                         }
 
-                        // Sales · 7 days Card -> Connected to 7 days button (index 1)
-                        val is7DaysSelected = uiState.selectedPeriodIndex == 1
-                        Card(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { viewModel.selectPeriod(1) },
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (is7DaysSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
-                            ),
-                            shape = RoundedCornerShape(14.dp),
-                            border = BorderStroke(
-                                if (is7DaysSelected) 2.dp else 1.dp,
-                                if (is7DaysSelected) primaryColor else MaterialTheme.colorScheme.outlineVariant
-                            )
-                        ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Text(
-                                    text = "Sales · 7 days",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = if (is7DaysSelected) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontWeight = if (is7DaysSelected) FontWeight.Bold else FontWeight.Normal,
-                                    fontSize = 12.sp
-                                )
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = uiState.sales7DaysTotal,
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "7-day total",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp
-                                )
-                            }
-                        }
-                    }
-
-                    // 30 Days Full Screen Overview Banner -> Connected to 30 days button (index 2)
-                    val is30DaysSelected = uiState.selectedPeriodIndex == 2
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { viewModel.selectPeriod(2) },
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (is30DaysSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
-                        ),
-                        shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(
-                            if (is30DaysSelected) 2.dp else 1.dp,
-                            if (is30DaysSelected) primaryColor else MaterialTheme.colorScheme.outlineVariant
-                        )
-                    ) {
+                        // 3. Metric Summary Cards (Today's sales & Sales 7 days connected)
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Column {
-                                Text(
-                                    text = "Sales · 30 days (Full overview)",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = if (is30DaysSelected) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontWeight = if (is30DaysSelected) FontWeight.Bold else FontWeight.Normal,
-                                    fontSize = 12.sp
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = uiState.sales30DaysTotal,
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp
-                                )
-                            }
-                            Text(
-                                text = uiState.sales30DaysBillsText,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 11.sp
-                            )
-                        }
-                    }
-
-                    // 4. Sales Chart Card (Updates dynamically per period)
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        ) {
-                            Text(
-                                text = uiState.chartTitle,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 16.sp
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            if (uiState.dailySalesPoints.isEmpty()) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(110.dp),
-                                    contentAlignment = Alignment.Center
+                            // Today's Sales Card -> Connected to Today button (index 0)
+                            val isTodaySelected = uiState.selectedPeriodIndex == 0
+                            Box(modifier = Modifier.weight(1f).clickable { viewModel.selectPeriod(0) }) {
+                                BoldCard(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    backgroundColor = if (isTodaySelected) SoftLavender else CardWhite,
+                                    borderColor = InkDark,
+                                    borderWidth = 2.dp,
+                                    shadowOffset = 3.dp,
+                                    contentPadding = PaddingValues(14.dp)
                                 ) {
+                                    Column {
+                                        Text(
+                                            text = "Today's sales",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = if (isTodaySelected) InkDark else MutedInk,
+                                            fontWeight = if (isTodaySelected) FontWeight.Bold else FontWeight.Normal,
+                                            fontSize = 12.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(
+                                            text = uiState.todaySalesTotal,
+                                            style = MaterialTheme.typography.titleLarge,
+                                            color = InkDark,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = uiState.todayBillsText,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MutedInk,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Sales · 7 days Card -> Connected to 7 days button (index 1)
+                            val is7DaysSelected = uiState.selectedPeriodIndex == 1
+                            Box(modifier = Modifier.weight(1f).clickable { viewModel.selectPeriod(1) }) {
+                                BoldCard(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    backgroundColor = if (is7DaysSelected) SoftPeach else CardWhite,
+                                    borderColor = InkDark,
+                                    borderWidth = 2.dp,
+                                    shadowOffset = 3.dp,
+                                    contentPadding = PaddingValues(14.dp)
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "Sales · 7 days",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = if (is7DaysSelected) InkDark else MutedInk,
+                                            fontWeight = if (is7DaysSelected) FontWeight.Bold else FontWeight.Normal,
+                                            fontSize = 12.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(
+                                            text = uiState.sales7DaysTotal,
+                                            style = MaterialTheme.typography.titleLarge,
+                                            color = InkDark,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = "7-day total",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MutedInk,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // 30 Days Full Screen Overview Banner -> Connected to 30 days button (index 2)
+                        val is30DaysSelected = uiState.selectedPeriodIndex == 2
+                        Box(modifier = Modifier.fillMaxWidth().clickable { viewModel.selectPeriod(2) }) {
+                            BoldCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                backgroundColor = if (is30DaysSelected) PaleBlue else CardWhite,
+                                borderColor = InkDark,
+                                borderWidth = 2.dp,
+                                shadowOffset = 3.dp,
+                                contentPadding = PaddingValues(14.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "Sales · 30 days (Full overview)",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = if (is30DaysSelected) MainBlue else MutedInk,
+                                            fontWeight = if (is30DaysSelected) FontWeight.Bold else FontWeight.Normal,
+                                            fontSize = 12.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = uiState.sales30DaysTotal,
+                                            style = MaterialTheme.typography.titleLarge,
+                                            color = InkDark,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp
+                                        )
+                                    }
                                     Text(
-                                        text = "No sales yet",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        text = uiState.sales30DaysBillsText,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MutedInk,
+                                        fontSize = 11.sp
                                     )
                                 }
-                            } else {
-                                BoxWithConstraints(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(110.dp)
-                                ) {
-                                    val totalWidth = maxWidth
-                                    val pointCount = uiState.dailySalesPoints.size
-                                    val barWidth = if (pointCount > 0) {
-                                        ((totalWidth / pointCount) * 0.45f).coerceIn(4.dp, 20.dp)
-                                    } else 12.dp
+                            }
+                        }
 
-                                    val step = if (pointCount > 14) (pointCount / 5).coerceAtLeast(1)
-                                        else if (pointCount > 7 && totalWidth < 360.dp) 2
-                                        else 1
+                        // 4. Sales Chart Card (Updates dynamically per period)
+                        BoldCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = CardWhite,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp,
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = uiState.chartTitle,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = InkDark,
+                                    fontSize = 16.sp
+                                )
 
-                                    Row(
-                                        modifier = Modifier.fillMaxSize(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.Bottom
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                if (uiState.dailySalesPoints.isEmpty()) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(110.dp),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        uiState.dailySalesPoints.forEachIndexed { index, point ->
-                                            val showLabel = (index % step == 0) || (index == pointCount - 1)
-                                            Column(
-                                                horizontalAlignment = Alignment.CenterHorizontally,
-                                                verticalArrangement = Arrangement.Bottom,
-                                                modifier = Modifier.weight(1f)
+                                        Text(
+                                            text = "No sales yet",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MutedInk
+                                        )
+                                    }
+                                } else {
+                                    BoxWithConstraints(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(110.dp)
+                                    ) {
+                                        val totalWidth = maxWidth
+                                        val pointCount = uiState.dailySalesPoints.size
+                                        val barWidth = if (pointCount > 0) {
+                                            ((totalWidth / pointCount) * 0.45f).coerceIn(4.dp, 20.dp)
+                                        } else 12.dp
+
+                                        val step = if (pointCount > 14) (pointCount / 5).coerceAtLeast(1)
+                                            else if (pointCount > 7 && totalWidth < 360.dp) 2
+                                            else 1
+
+                                        Row(
+                                            modifier = Modifier.fillMaxSize(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.Bottom
+                                        ) {
+                                            uiState.dailySalesPoints.forEachIndexed { index, point ->
+                                                val showLabel = (index % step == 0) || (index == pointCount - 1)
+                                                Column(
+                                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                                    verticalArrangement = Arrangement.Bottom,
+                                                    modifier = Modifier.weight(1f)
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .width(barWidth)
+                                                            .fillMaxHeight(point.heightRatio)
+                                                            .clip(RoundedCornerShape(4.dp))
+                                                            .background(if (point.isCurrentDay) MainBlue else SoftLightBlue)
+                                                            .border(1.dp, InkDark, RoundedCornerShape(4.dp))
+                                                    )
+                                                    Spacer(modifier = Modifier.height(6.dp))
+                                                    Text(
+                                                        text = if (showLabel) point.dayLabel else " ",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MutedInk,
+                                                        fontSize = 11.sp,
+                                                        maxLines = 1,
+                                                        textAlign = TextAlign.Center
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Text(
+                                    text = uiState.chartSubtitle,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MutedInk,
+                                    fontSize = 10.sp
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+                                HorizontalDivider(color = InkDark.copy(alpha = 0.15f), thickness = 1.dp)
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = uiState.highestDayLabel,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MutedInk,
+                                        fontSize = 13.sp
+                                    )
+                                    Text(
+                                        text = uiState.highestDayAmount,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = InkDark,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        // 5. Category Breakdown Card (Updates dynamically per period)
+                        BoldCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = CardWhite,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp,
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = "Category breakdown",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = InkDark,
+                                    fontSize = 16.sp
+                                )
+
+                                if (uiState.categoryBreakdowns.isEmpty()) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 12.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "No sales yet",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MutedInk
+                                        )
+                                    }
+                                } else {
+                                    uiState.categoryBreakdowns.forEach { cat ->
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = cat.name,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MutedInk,
+                                                fontSize = 12.sp,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.weight(0.35f)
+                                            )
+
+                                            Spacer(modifier = Modifier.width(8.dp))
+
+                                            Box(
+                                                modifier = Modifier
+                                                    .weight(0.35f)
+                                                    .height(8.dp)
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .background(PaleBlue)
+                                                    .border(1.dp, InkDark, RoundedCornerShape(4.dp))
                                             ) {
                                                 Box(
                                                     modifier = Modifier
-                                                        .width(barWidth)
-                                                        .fillMaxHeight(point.heightRatio)
+                                                        .fillMaxHeight()
+                                                        .fillMaxWidth(cat.percentage)
                                                         .clip(RoundedCornerShape(4.dp))
-                                                        .background(if (point.isCurrentDay) primaryColor else accentColor)
+                                                        .background(MainBlue)
                                                 )
-                                                Spacer(modifier = Modifier.height(6.dp))
+                                            }
+
+                                            Spacer(modifier = Modifier.width(8.dp))
+
+                                            Row(
+                                                horizontalArrangement = Arrangement.End,
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.weight(0.3f)
+                                            ) {
                                                 Text(
-                                                    text = if (showLabel) point.dayLabel else " ",
+                                                    text = cat.amountText,
                                                     style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = InkDark,
+                                                    fontSize = 12.sp,
                                                     maxLines = 1,
-                                                    textAlign = TextAlign.Center
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(
+                                                    text = cat.percentLabel,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MutedInk,
+                                                    fontSize = 10.sp,
+                                                    maxLines = 1
                                                 )
                                             }
                                         }
                                     }
                                 }
                             }
+                        }
 
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            Text(
-                                text = uiState.chartSubtitle,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 10.sp
-                            )
-
-                            Spacer(modifier = Modifier.height(12.dp))
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                        // 6. Best Sellers · By Revenue Card (Updates dynamically per period)
+                        BoldCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = CardWhite,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp,
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 Text(
-                                    text = uiState.highestDayLabel,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 13.sp
-                                )
-                                Text(
-                                    text = uiState.highestDayAmount,
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    text = "Best sellers · by revenue",
+                                    style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 14.sp
+                                    color = InkDark,
+                                    fontSize = 16.sp
                                 )
-                            }
-                        }
-                    }
 
-                    // 5. Category Breakdown Card (Updates dynamically per period)
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Text(
-                                text = "Category breakdown",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 16.sp
-                            )
-
-                            if (uiState.categoryBreakdowns.isEmpty()) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 12.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "No sales yet",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            } else {
-                                uiState.categoryBreakdowns.forEach { cat ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically
+                                if (uiState.bestSellers.isEmpty()) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 12.dp),
+                                        contentAlignment = Alignment.Center
                                     ) {
                                         Text(
-                                            text = cat.name,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            fontSize = 12.sp,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                            modifier = Modifier.weight(0.35f)
+                                            text = "No sales yet",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MutedInk
                                         )
-
-                                        Spacer(modifier = Modifier.width(8.dp))
-
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(0.35f)
-                                                .height(6.dp)
-                                                .clip(RoundedCornerShape(3.dp))
-                                                .background(MaterialTheme.colorScheme.primaryContainer)
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxHeight()
-                                                    .fillMaxWidth(cat.percentage)
-                                                    .clip(RoundedCornerShape(3.dp))
-                                                    .background(primaryColor)
-                                            )
-                                        }
-
-                                        Spacer(modifier = Modifier.width(8.dp))
-
+                                    }
+                                } else {
+                                    uiState.bestSellers.forEach { item ->
                                         Row(
-                                            horizontalArrangement = Arrangement.End,
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.weight(0.3f)
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                ProductAvatar(
+                                                    name = item.nameWithUnits,
+                                                    category = null,
+                                                    size = 32.dp
+                                                )
+                                                Spacer(modifier = Modifier.width(10.dp))
+                                                Text(
+                                                    text = item.nameWithUnits,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = InkDark,
+                                                    fontSize = 13.sp,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                text = cat.amountText,
-                                                style = MaterialTheme.typography.bodySmall,
+                                                text = item.revenueText,
+                                                style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                fontSize = 12.sp,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Text(
-                                                text = cat.percentLabel,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                fontSize = 10.sp,
+                                                color = InkDark,
+                                                fontSize = 13.sp,
                                                 maxLines = 1
                                             )
                                         }
@@ -612,85 +647,9 @@ fun SalesAnalyticsScreen(
                                 }
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(20.dp))
                     }
-
-                    // 6. Best Sellers · By Revenue Card (Updates dynamically per period)
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Text(
-                                text = "Best sellers · by revenue",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 16.sp
-                            )
-
-                            if (uiState.bestSellers.isEmpty()) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 12.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "No sales yet",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            } else {
-                                uiState.bestSellers.forEach { item ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.weight(1f)
-                                        ) {
-                                            ProductAvatar(
-                                                name = item.nameWithUnits,
-                                                category = null,
-                                                size = 32.dp
-                                            )
-                                            Spacer(modifier = Modifier.width(10.dp))
-                                            Text(
-                                                text = item.nameWithUnits,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                fontSize = 13.sp,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = item.revenueText,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            fontSize = 13.sp,
-                                            maxLines = 1
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-                }
             }
         }
     }

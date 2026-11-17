@@ -34,8 +34,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.theme.DarkBackground
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.feature.auth.viewmodel.AuthViewModel
@@ -86,16 +86,10 @@ fun DeleteAccountScreenContent(
     onConfirmTextChange: (String) -> Unit,
     onDeleteClick: () -> Unit
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val iconStrokeColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val primaryColor = MainYellow
+    val iconStrokeColor = InkDark
     val focusManager = LocalFocusManager.current
     var passwordVisible by remember { mutableStateOf(false) }
-
-    val isDark = MaterialTheme.colorScheme.background == DarkBackground || isSystemInDarkTheme()
-    val warningContainer = if (isDark) Color(0xFF2E1A1D) else Color(0xFFFDF2F2)
-    val warningBorder = if (isDark) Color(0xFF5A2A30) else Color(0xFFF8D7DA)
-    val warningTagColor = if (isDark) Color(0xFFF28B82) else Color(0xFFD32F2F)
-    val deleteButtonColor = Color(0xFFF28B82)
 
     val isDeleteButtonEnabled = uiState.password.isNotBlank() &&
             uiState.confirmText == "DELETE" &&
@@ -103,7 +97,7 @@ fun DeleteAccountScreenContent(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         val windowInfo = rememberWindowSizeInfo()
 
@@ -123,72 +117,25 @@ fun DeleteAccountScreenContent(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 1. Header with Back Button
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable { onBackClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surface),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Canvas(modifier = Modifier.size(16.dp)) {
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.7f, size.height * 0.2f)
-                                    lineTo(size.width * 0.3f, size.height * 0.5f)
-                                    lineTo(size.width * 0.7f, size.height * 0.8f)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                )
-                            }
-                        }
-                    }
+                val formattedShopName = shopName.trim().ifBlank { "Store" }
 
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Delete account",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        val formattedShopName = shopName.trim().ifBlank { "Store" }
-                        Text(
-                            text = "$formattedShopName · owner account",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
+                // 1. Header with Shared BoldTopBar
+                BoldTopBar(
+                    title = "Delete account",
+                    subtitle = "$formattedShopName · owner account",
+                    onBackClick = onBackClick
+                )
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // 2. Warning Card ("THIS CANNOT BE UNDONE")
-            Card(
+            BoldCard(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = warningContainer),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, warningBorder)
+                backgroundColor = SoftPink,
+                borderColor = InkDark,
+                borderWidth = 2.5.dp,
+                shadowOffset = 4.dp,
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -200,7 +147,7 @@ fun DeleteAccountScreenContent(
                         text = "THIS CANNOT BE UNDONE",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.ExtraBold,
-                        color = warningTagColor,
+                        color = StatusDangerRed,
                         fontSize = 11.sp,
                         letterSpacing = 1.sp
                     )
@@ -208,13 +155,13 @@ fun DeleteAccountScreenContent(
                         text = "Your shop and all its data will be removed",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = InkDark,
                         fontSize = 16.sp
                     )
                     Text(
                         text = "Products, sales, orders, insights and settings are deleted. You are signed out on every device.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MutedInk,
                         fontSize = 13.sp,
                         lineHeight = 18.sp
                     )
@@ -316,8 +263,8 @@ fun DeleteAccountScreenContent(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedBorderColor = if (uiState.confirmText == "DELETE") deleteButtonColor else primaryColor,
-                    unfocusedBorderColor = if (uiState.confirmText == "DELETE") deleteButtonColor.copy(alpha = 0.8f) else MaterialTheme.colorScheme.outlineVariant
+                    focusedBorderColor = if (uiState.confirmText == "DELETE") StatusDangerRed else primaryColor,
+                    unfocusedBorderColor = if (uiState.confirmText == "DELETE") StatusDangerRed.copy(alpha = 0.8f) else MaterialTheme.colorScheme.outlineVariant
                 )
             )
 
@@ -402,23 +349,16 @@ fun DeleteAccountScreenContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Delete My Account Button (Disabled until password is non-empty & confirmText == "DELETE")
-                Button(
+                BoldButton(
                     onClick = onDeleteClick,
                     enabled = isDeleteButtonEnabled,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = deleteButtonColor,
-                        contentColor = Color(0xFF1A1A1A),
-                        disabledContainerColor = deleteButtonColor.copy(alpha = 0.35f),
-                        disabledContentColor = Color(0xFF1A1A1A).copy(alpha = 0.5f)
-                    )
+                    modifier = Modifier.fillMaxWidth(),
+                    containerColor = StatusDangerRed,
+                    contentColor = Color.White
                 ) {
                     if (uiState.isLoading) {
                         CircularProgressIndicator(
-                            color = Color(0xFF1A1A1A),
+                            color = Color.White,
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp
                         )
@@ -427,29 +367,24 @@ fun DeleteAccountScreenContent(
                             text = "Delete my account",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
+                            color = Color.White,
                             fontSize = 15.sp
                         )
                     }
                 }
 
                 // Keep My Account Button
-                Button(
+                BoldButton(
                     onClick = onBackClick,
                     enabled = !uiState.isLoading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    modifier = Modifier.fillMaxWidth(),
+                    isPrimary = false
                 ) {
                     Text(
                         text = "Keep my account",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
+                        color = InkDark,
                         fontSize = 15.sp
                     )
                 }

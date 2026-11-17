@@ -6,6 +6,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -37,6 +38,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.core.util.ResponsiveContainer
@@ -98,12 +100,12 @@ fun ProductDetailScreenContent(
     onReorderClick: () -> Unit = {},
     onSalesAnalyticsClick: () -> Unit = {}
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val primaryColor = MainYellow
     val accentColor = SoftLightBlue
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         when {
             uiState.isLoading -> {
@@ -117,14 +119,14 @@ fun ProductDetailScreenContent(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         CircularProgressIndicator(
-                            color = primaryColor,
+                            color = MainBlue,
                             modifier = Modifier.size(36.dp),
                             strokeWidth = 3.dp
                         )
                         Text(
                             text = "Loading product details...",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MutedInk
                         )
                     }
                 }
@@ -138,27 +140,36 @@ fun ProductDetailScreenContent(
                         .padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth().widthIn(max = 480.dp),
+                        backgroundColor = CardWhite,
+                        borderColor = InkDark,
+                        borderWidth = 2.5.dp,
+                        shadowOffset = 4.dp
                     ) {
-                        Text(
-                            text = "Unable to load product details",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = uiState.errorMessage ?: "Product details could not be loaded. Please check your connection and retry.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        Button(
-                            onClick = onRetryClick,
-                            shape = RoundedCornerShape(12.dp)
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Text("Retry")
+                            Text(
+                                text = "Unable to load product details",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark
+                            )
+                            Text(
+                                text = uiState.errorMessage ?: "Product details could not be loaded. Please check your connection and retry.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MutedInk,
+                                textAlign = TextAlign.Center
+                            )
+                            BoldButton(
+                                text = "Retry",
+                                onClick = onRetryClick,
+                                modifier = Modifier.fillMaxWidth(),
+                                isPrimary = true
+                            )
                         }
                     }
                 }
@@ -187,104 +198,55 @@ fun ProductDetailScreenContent(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // 1. Header with Back Button and Edit Action (minimum 48dp touch target)
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.weight(1f)
-                            ) {
+                        // 1. Header with Back Button, Title in middle, Edit small icon button on right
+                        BoldTopBar(
+                            title = "Product details",
+                            subtitle = "${uiState.product.sku} · ${uiState.categoryName}",
+                            onBackClick = onBackClick,
+                            actions = {
                                 Box(
                                     modifier = Modifier
                                         .size(48.dp)
-                                        .clickable(onClick = onBackClick),
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null,
+                                            onClick = onEditClick
+                                        ),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Box(
                                         modifier = Modifier
                                             .size(40.dp)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
-                                            .background(MaterialTheme.colorScheme.surface),
+                                            .offset(x = 2.dp, y = 2.dp)
+                                            .background(ShadowColor, RoundedCornerShape(12.dp))
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .background(CardWhite, RoundedCornerShape(12.dp))
+                                            .border(2.dp, InkDark, RoundedCornerShape(12.dp)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Canvas(modifier = Modifier.size(16.dp)) {
-                                            val path = Path().apply {
-                                                moveTo(size.width * 0.7f, size.height * 0.2f)
-                                                lineTo(size.width * 0.3f, size.height * 0.5f)
-                                                lineTo(size.width * 0.7f, size.height * 0.8f)
-                                            }
-                                            drawPath(
-                                                path = path,
-                                                color = primaryColor,
-                                                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                            )
-                                        }
+                                        Text(
+                                            text = "✎",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Black,
+                                            color = InkDark
+                                        )
                                     }
                                 }
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
-                                    Text(
-                                        text = "Product details",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onBackground,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 18.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Text(
-                                        text = "${uiState.product.sku} · ${uiState.categoryName}",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 12.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
                             }
-
-                            // Edit Button
-                            OutlinedButton(
-                                onClick = onEditClick,
-                                modifier = Modifier.defaultMinSize(minHeight = 44.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = primaryColor
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "Edit",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 14.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
+                        )
 
                         Spacer(modifier = Modifier.height(4.dp))
 
                         // 2. Product Summary Card
-                        Card(
+                        BoldCard(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            backgroundColor = CardWhite,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp,
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             Row(
@@ -307,7 +269,7 @@ fun ProductDetailScreenContent(
                                         text = uiState.product.name,
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
+                                        color = InkDark,
                                         fontSize = 20.sp,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
@@ -315,7 +277,7 @@ fun ProductDetailScreenContent(
                                     Text(
                                         text = uiState.description,
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = MutedInk,
                                         fontSize = 13.sp,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
@@ -325,36 +287,14 @@ fun ProductDetailScreenContent(
                                         Text(
                                             text = "SKU: ${uiState.product.sku}",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            color = MutedInk,
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Medium
                                         )
                                     }
-                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Spacer(modifier = Modifier.height(6.dp))
                                     val statusText = uiState.product.status?.takeIf { it.isNotBlank() } ?: "In stock"
-                                    val isLowStock = statusText.contains("low", ignoreCase = true)
-                                    val isOutOfStock = statusText.contains("out of stock", ignoreCase = true)
-
-                                    val (chipBg, chipTextColor) = when {
-                                        isOutOfStock -> StatusDangerRed to CardWhite
-                                        isLowStock -> StatusLowStock to InkDark
-                                        else -> StatusInStock to InkDark
-                                    }
-
-                                    Surface(
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = chipBg,
-                                        border = BorderStroke(1.5.dp, InkDark)
-                                    ) {
-                                        Text(
-                                            text = statusText,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = chipTextColor,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 11.sp,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                        )
-                                    }
+                                    BoldStatusChip(status = statusText)
                                 }
                             }
                         }
@@ -365,23 +305,26 @@ fun ProductDetailScreenContent(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             // Available Stock Card
-                            Card(
+                            BoldCard(
                                 modifier = Modifier.weight(1f),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                backgroundColor = SoftLightBlue,
+                                borderColor = InkDark,
+                                borderWidth = 2.dp,
+                                shadowOffset = 3.dp,
                                 shape = RoundedCornerShape(14.dp)
                             ) {
                                 Column(modifier = Modifier.padding(14.dp)) {
                                     Text(
                                         text = "Available stock",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = InkDark,
                                         fontSize = 12.sp
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = "${uiState.product.units} units",
                                         style = MaterialTheme.typography.titleLarge,
-                                        color = MaterialTheme.colorScheme.onSurface,
+                                        color = InkDark,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 20.sp
                                     )
@@ -389,30 +332,33 @@ fun ProductDetailScreenContent(
                                     Text(
                                         text = "Minimum: ${uiState.minimumStockThreshold} units",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = MutedInk,
                                         fontSize = 11.sp
                                     )
                                 }
                             }
 
                             // Selling Price Card
-                            Card(
+                            BoldCard(
                                 modifier = Modifier.weight(1f),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                backgroundColor = SoftPeach,
+                                borderColor = InkDark,
+                                borderWidth = 2.dp,
+                                shadowOffset = 3.dp,
                                 shape = RoundedCornerShape(14.dp)
                             ) {
                                 Column(modifier = Modifier.padding(14.dp)) {
                                     Text(
                                         text = "Selling price",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = InkDark,
                                         fontSize = 12.sp
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = uiState.product.price,
                                         style = MaterialTheme.typography.titleLarge,
-                                        color = MaterialTheme.colorScheme.onSurface,
+                                        color = InkDark,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 20.sp
                                     )
@@ -420,7 +366,7 @@ fun ProductDetailScreenContent(
                                     Text(
                                         text = "Purchase cost: ${uiState.costPrice}",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = MutedInk,
                                         fontSize = 11.sp
                                     )
                                 }
@@ -428,13 +374,14 @@ fun ProductDetailScreenContent(
                         }
 
                         // 4. Sales History Card
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .clickable { onSalesAnalyticsClick() },
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            shape = RoundedCornerShape(16.dp)
+                        BoldCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = CardWhite,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp,
+                            shape = RoundedCornerShape(16.dp),
+                            onClick = { onSalesAnalyticsClick() }
                         ) {
                             Column(
                                 modifier = Modifier
@@ -445,8 +392,8 @@ fun ProductDetailScreenContent(
                                     text = "Sales history",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 15.sp
+                                    color = InkDark,
+                                    fontSize = 16.sp
                                 )
 
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -458,14 +405,14 @@ fun ProductDetailScreenContent(
                                     Text(
                                         text = "Past 7 days",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = MutedInk,
                                         fontSize = 12.sp
                                     )
                                     Text(
                                         text = "${uiState.product.units} units in stock",
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
+                                        color = InkDark,
                                         fontSize = 12.sp
                                     )
                                 }
@@ -490,7 +437,7 @@ fun ProductDetailScreenContent(
                                         Text(
                                             text = "No sales yet",
                                             style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            color = MutedInk,
                                             fontSize = 13.sp
                                         )
                                     }
@@ -529,7 +476,7 @@ fun ProductDetailScreenContent(
                                                 Text(
                                                     text = topYLabel,
                                                     style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    color = MutedInk,
                                                     fontSize = 10.sp,
                                                     fontWeight = FontWeight.Medium,
                                                     maxLines = 1,
@@ -539,7 +486,7 @@ fun ProductDetailScreenContent(
                                                 Text(
                                                     text = midYLabel,
                                                     style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                                    color = MutedInk,
                                                     fontSize = 10.sp,
                                                     fontWeight = FontWeight.Medium,
                                                     maxLines = 1,
@@ -549,7 +496,7 @@ fun ProductDetailScreenContent(
                                                 Text(
                                                     text = zeroYLabel,
                                                     style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    color = MutedInk,
                                                     fontSize = 10.sp,
                                                     fontWeight = FontWeight.Medium,
                                                     maxLines = 1,
@@ -566,9 +513,9 @@ fun ProductDetailScreenContent(
                                                     .weight(1f)
                                                     .fillMaxHeight()
                                             ) {
-                                                val gridColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                                val gridColor = InkDark.copy(alpha = 0.15f)
                                                 Canvas(modifier = Modifier.fillMaxSize()) {
-                                                    val strokeW = 0.8.dp.toPx()
+                                                    val strokeW = 1.dp.toPx()
                                                     // Top line
                                                     drawLine(
                                                         color = gridColor,
@@ -585,10 +532,10 @@ fun ProductDetailScreenContent(
                                                     )
                                                     // Baseline
                                                     drawLine(
-                                                        color = gridColor,
+                                                        color = InkDark,
                                                         start = Offset(0f, size.height - 1.dp.toPx()),
                                                         end = Offset(size.width, size.height - 1.dp.toPx()),
-                                                        strokeWidth = strokeW
+                                                        strokeWidth = 1.5.dp.toPx()
                                                     )
                                                 }
 
@@ -620,7 +567,8 @@ fun ProductDetailScreenContent(
                                                                     .widthIn(min = 6.dp, max = 18.dp)
                                                                     .fillMaxHeight(ratio)
                                                                     .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                                                                    .background(if (isLast) primaryColor else accentColor)
+                                                                    .background(if (isLast) MainBlue else SoftLightBlue)
+                                                                    .border(1.dp, InkDark, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                                                             )
                                                         }
                                                     }
@@ -669,7 +617,7 @@ fun ProductDetailScreenContent(
                                                             Text(
                                                                 text = displayLabel,
                                                                 style = MaterialTheme.typography.bodySmall,
-                                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                color = MutedInk,
                                                                 fontSize = 10.sp,
                                                                 maxLines = 1,
                                                                 softWrap = false,
@@ -688,13 +636,13 @@ fun ProductDetailScreenContent(
                                 Text(
                                     text = "Daily sales · Tap for detailed analytics",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = MutedInk,
                                     fontSize = 10.sp
                                 )
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.8.dp)
+                                HorizontalDivider(color = InkDark.copy(alpha = 0.15f), thickness = 1.dp)
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -706,14 +654,14 @@ fun ProductDetailScreenContent(
                                     Text(
                                         text = "Stock cover pace",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = MutedInk,
                                         fontSize = 12.sp
                                     )
                                     Text(
                                         text = uiState.stockCoverDaysText,
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
+                                        color = InkDark,
                                         fontSize = 13.sp
                                     )
                                 }
@@ -721,13 +669,13 @@ fun ProductDetailScreenContent(
                         }
 
                         // 5. Suggested Reorder Box
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(14.dp))
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp)),
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            shape = RoundedCornerShape(14.dp)
+                        BoldCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = SoftLavender,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp,
+                            shape = RoundedCornerShape(16.dp)
                         ) {
                             Column(
                                 modifier = Modifier.padding(16.dp),
@@ -738,9 +686,10 @@ fun ProductDetailScreenContent(
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .size(32.dp)
+                                            .size(36.dp)
                                             .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.surface),
+                                            .background(CardWhite)
+                                            .border(2.dp, InkDark, CircleShape),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Canvas(modifier = Modifier.size(16.dp)) {
@@ -755,8 +704,8 @@ fun ProductDetailScreenContent(
                                             }
                                             drawPath(
                                                 path = path,
-                                                color = primaryColor,
-                                                style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                                color = MainBlue,
+                                                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                                             )
                                         }
                                     }
@@ -772,7 +721,7 @@ fun ProductDetailScreenContent(
                                             },
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface,
+                                            color = InkDark,
                                             fontSize = 14.sp,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
@@ -784,7 +733,7 @@ fun ProductDetailScreenContent(
                                                 "Estimated purchase: ${uiState.estimatedCost}"
                                             },
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            color = MutedInk,
                                             fontSize = 12.sp,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
@@ -798,7 +747,7 @@ fun ProductDetailScreenContent(
                                     Text(
                                         text = "Your $currentStockUnits units cover ${uiState.stockCoverDaysText}. ${uiState.onOrderUnits} units on order will bring stock to $totalWithOnOrder units.",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = InkDark,
                                         fontSize = 12.sp,
                                         lineHeight = 16.sp
                                     )
@@ -807,7 +756,7 @@ fun ProductDetailScreenContent(
                                     Text(
                                         text = "Your $currentStockUnits units cover ${uiState.stockCoverDaysText}. Adding ${uiState.unitsToReorder} brings stock to $targetStock units.",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = InkDark,
                                         fontSize = 12.sp,
                                         lineHeight = 16.sp
                                     )
@@ -821,12 +770,13 @@ fun ProductDetailScreenContent(
 
                     // 7. Bottom Reorder Button
                     if (uiState.onOrderUnits > 0 && uiState.unitsToReorder <= 0) {
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = 52.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant
+                        BoldCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = CardWhite,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp,
+                            shape = RoundedCornerShape(14.dp)
                         ) {
                             Box(
                                 modifier = Modifier
@@ -838,47 +788,25 @@ fun ProductDetailScreenContent(
                                     text = "${uiState.onOrderUnits} units already on order",
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 16.sp,
+                                    color = InkDark,
+                                    fontSize = 15.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
                     } else {
-                        Button(
+                        BoldButton(
+                            text = if (uiState.unitsToReorder > 0) {
+                                "Reorder ${uiState.unitsToReorder} units · ${uiState.estimatedCost}"
+                            } else {
+                                "Stock is sufficient"
+                            },
                             onClick = onReorderClick,
                             enabled = !uiState.isOrdering && uiState.unitsToReorder > 0,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = 52.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = primaryColor,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            )
-                        ) {
-                            if (uiState.isOrdering) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(22.dp),
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Text(
-                                    text = if (uiState.unitsToReorder > 0) {
-                                        "Reorder ${uiState.unitsToReorder} units · ${uiState.estimatedCost}"
-                                    } else {
-                                        "Stock is sufficient"
-                                    },
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
+                            modifier = Modifier.fillMaxWidth(),
+                            isPrimary = true
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -890,7 +818,7 @@ fun ProductDetailScreenContent(
                     Text(
                         text = "Last updated · $footerDate",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MutedInk,
                         fontSize = 12.sp,
                         textAlign = TextAlign.Center,
                         modifier = Modifier

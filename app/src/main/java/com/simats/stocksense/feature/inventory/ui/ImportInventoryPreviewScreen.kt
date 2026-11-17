@@ -27,7 +27,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.data.model.ImportPreviewRow
@@ -103,7 +104,7 @@ fun ImportInventoryPreviewScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         val windowInfo = rememberWindowSizeInfo()
 
@@ -123,433 +124,343 @@ fun ImportInventoryPreviewScreen(
             ) {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 1. Header with Back Button
+                // 1. Header with Shared BoldTopBar
+                BoldTopBar(
+                    title = "Preview & Map",
+                    subtitle = "${uiState.selectedFileName ?: "Spreadsheet"} · Preview",
+                    onBackClick = onBackClick
+                )
+
+                // 2. Stepper Indicators (Upload [complete], Preview [active], Validate, Import)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onBackClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surface)
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
+                    val steps = listOf("Upload", "Preview", "Validate", "Import")
+                    steps.forEachIndexed { index, stepName ->
+                        val isDone = index == 0
+                        val isActive = index == 1
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Canvas(modifier = Modifier.size(16.dp)) {
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.65f, size.height * 0.15f)
-                                    lineTo(size.width * 0.25f, size.height * 0.5f)
-                                    lineTo(size.width * 0.65f, size.height * 0.85f)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                            Text(
+                                text = stepName,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (isActive || isDone) InkDark else MutedInk,
+                                fontWeight = if (isActive || isDone) FontWeight.Black else FontWeight.Bold,
+                                fontSize = 11.sp
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.9f)
+                                    .height(3.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(if (isActive || isDone) MainBlue else PaleBlue)
+                            )
+                        }
+                    }
+                }
+
+                // 3. Interactive Column Mapping Card with Dropdowns
+                BoldCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp,
+                    contentPadding = PaddingValues(18.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "We matched $mappedCount of $totalColumns columns",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = InkDark,
+                                    fontSize = 15.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = if (requiredMatched) "Verify or adjust column assignments from your spreadsheet." else "Required columns (Name, Quantity) need mapping.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (requiredMatched) MutedInk else StatusDangerRed,
+                                    fontSize = 11.sp
                                 )
                             }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(14.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Preview & Map",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "${uiState.selectedFileName ?: "Spreadsheet"} · Preview",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-
-            // 2. Stepper Indicators (Upload [complete], Preview [active], Validate, Import)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val steps = listOf("Upload", "Preview", "Validate", "Import")
-                steps.forEachIndexed { index, stepName ->
-                    val isDone = index == 0
-                    val isActive = index == 1
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = stepName,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (isActive || isDone) primaryColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = if (isActive || isDone) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = 11.sp
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.9f)
-                                .height(3.dp)
-                                .clip(RoundedCornerShape(2.dp))
-                                .background(if (isActive || isDone) primaryColor else MaterialTheme.colorScheme.outlineVariant)
-                        )
-                    }
-                }
-            }
-
-            // 3. Interactive Column Mapping Card with Dropdowns
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "We matched $mappedCount of $totalColumns columns",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 15.sp
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = if (requiredMatched) "Verify or adjust column assignments from your spreadsheet." else "Required columns (Name, Quantity) need mapping.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (requiredMatched) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFFC62828),
-                                fontSize = 11.sp
-                            )
-                        }
-                        TextButton(
-                            onClick = { isMappingExpanded = !isMappingExpanded }
-                        ) {
-                            Text(
-                                text = if (isMappingExpanded) "Hide" else "Change",
-                                color = primaryColor,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp
-                            )
-                        }
-                    }
-
-                    if (isMappingExpanded) {
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
-
-                        // Required Fields
-                        ColumnMappingDropdownRow(
-                            label = "Product Name",
-                            isRequired = true,
-                            currentValue = currentMapping["name"],
-                            availableHeaders = availableHeaders,
-                            onSelectHeader = { viewModel.updateColumnMapping("name", it) }
-                        )
-
-                        ColumnMappingDropdownRow(
-                            label = "Quantity to add",
-                            isRequired = true,
-                            currentValue = currentMapping["units"],
-                            availableHeaders = availableHeaders,
-                            onSelectHeader = { viewModel.updateColumnMapping("units", it) }
-                        )
-
-                        // Optional Fields
-                        ColumnMappingDropdownRow(
-                            label = "SKU",
-                            isRequired = false,
-                            currentValue = currentMapping["sku"],
-                            availableHeaders = availableHeaders,
-                            onSelectHeader = { viewModel.updateColumnMapping("sku", it) }
-                        )
-
-                        ColumnMappingDropdownRow(
-                            label = "Selling Price (₹)",
-                            isRequired = false,
-                            currentValue = currentMapping["price"],
-                            availableHeaders = availableHeaders,
-                            onSelectHeader = { viewModel.updateColumnMapping("price", it) }
-                        )
-
-                        ColumnMappingDropdownRow(
-                            label = "Unit Cost (₹)",
-                            isRequired = false,
-                            currentValue = currentMapping["cost_price"],
-                            availableHeaders = availableHeaders,
-                            onSelectHeader = { viewModel.updateColumnMapping("cost_price", it) }
-                        )
-
-                        ColumnMappingDropdownRow(
-                            label = "Category",
-                            isRequired = false,
-                            currentValue = currentMapping["category"],
-                            availableHeaders = availableHeaders,
-                            onSelectHeader = { viewModel.updateColumnMapping("category", it) }
-                        )
-
-                        ColumnMappingDropdownRow(
-                            label = "Minimum Stock Threshold",
-                            isRequired = false,
-                            currentValue = currentMapping["minimum_stock"],
-                            availableHeaders = availableHeaders,
-                            onSelectHeader = { viewModel.updateColumnMapping("minimum_stock", it) }
-                        )
-                    }
-                }
-            }
-
-            // Validation Error Alert Banner (e.g. if required columns are unmapped or timeout)
-            if (uiState.validationError != null) {
-                val isTimeout = uiState.validationError?.contains("timed out", ignoreCase = true) == true ||
-                        uiState.validationError?.contains("timeout", ignoreCase = true) == true
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Canvas(modifier = Modifier.size(20.dp)) {
-                            drawCircle(color = Color(0xFFC62828), radius = size.width / 2f, style = Stroke(width = 1.8.dp.toPx()))
-                            drawLine(
-                                color = Color(0xFFC62828),
-                                start = Offset(size.width * 0.5f, size.height * 0.25f),
-                                end = Offset(size.width * 0.5f, size.height * 0.6f),
-                                strokeWidth = 2.dp.toPx(),
-                                cap = StrokeCap.Round
-                            )
-                            drawCircle(
-                                color = Color(0xFFC62828),
-                                radius = 1.5.dp.toPx(),
-                                center = Offset(size.width * 0.5f, size.height * 0.75f)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = if (isTimeout) "Connection timed out" else "Mapping required",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFC62828),
-                                fontSize = 13.sp
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = uiState.validationError ?: "Required columns must be mapped.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFC62828).copy(alpha = 0.85f),
-                                fontSize = 11.sp
-                            )
-                        }
-                        if (isTimeout) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = onContinueToValidationClick,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFC62828),
-                                    contentColor = Color.White
-                                ),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.height(34.dp)
+                            TextButton(
+                                onClick = { isMappingExpanded = !isMappingExpanded }
                             ) {
                                 Text(
-                                    text = "Retry",
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
+                                    text = if (isMappingExpanded) "Hide" else "Change",
+                                    color = MainBlue,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp
                                 )
                             }
                         }
+
+                        if (isMappingExpanded) {
+                            HorizontalDivider(color = InkDark.copy(alpha = 0.15f), thickness = 1.dp)
+
+                            // Required Fields
+                            ColumnMappingDropdownRow(
+                                label = "Product Name",
+                                isRequired = true,
+                                currentValue = currentMapping["name"],
+                                availableHeaders = availableHeaders,
+                                onSelectHeader = { viewModel.updateColumnMapping("name", it) }
+                            )
+
+                            ColumnMappingDropdownRow(
+                                label = "Quantity to add",
+                                isRequired = true,
+                                currentValue = currentMapping["units"],
+                                availableHeaders = availableHeaders,
+                                onSelectHeader = { viewModel.updateColumnMapping("units", it) }
+                            )
+
+                            // Optional Fields
+                            ColumnMappingDropdownRow(
+                                label = "SKU",
+                                isRequired = false,
+                                currentValue = currentMapping["sku"],
+                                availableHeaders = availableHeaders,
+                                onSelectHeader = { viewModel.updateColumnMapping("sku", it) }
+                            )
+
+                            ColumnMappingDropdownRow(
+                                label = "Selling Price (₹)",
+                                isRequired = false,
+                                currentValue = currentMapping["price"],
+                                availableHeaders = availableHeaders,
+                                onSelectHeader = { viewModel.updateColumnMapping("price", it) }
+                            )
+
+                            ColumnMappingDropdownRow(
+                                label = "Unit Cost (₹)",
+                                isRequired = false,
+                                currentValue = currentMapping["cost_price"],
+                                availableHeaders = availableHeaders,
+                                onSelectHeader = { viewModel.updateColumnMapping("cost_price", it) }
+                            )
+
+                            ColumnMappingDropdownRow(
+                                label = "Category",
+                                isRequired = false,
+                                currentValue = currentMapping["category"],
+                                availableHeaders = availableHeaders,
+                                onSelectHeader = { viewModel.updateColumnMapping("category", it) }
+                            )
+
+                            ColumnMappingDropdownRow(
+                                label = "Minimum Stock Threshold",
+                                isRequired = false,
+                                currentValue = currentMapping["minimum_stock"],
+                                availableHeaders = availableHeaders,
+                                onSelectHeader = { viewModel.updateColumnMapping("minimum_stock", it) }
+                            )
+                        }
                     }
                 }
-            }
 
-            // 4. Products Table Preview Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Table Header
-                    Row(
+                // Validation Error Alert Banner (e.g. if required columns are unmapped or timeout)
+                if (uiState.validationError != null) {
+                    val isTimeout = uiState.validationError?.contains("timed out", ignoreCase = true) == true ||
+                            uiState.validationError?.contains("timeout", ignoreCase = true) == true
+                    BoldCard(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        backgroundColor = SoftPink,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 2.dp,
+                        contentPadding = PaddingValues(14.dp)
                     ) {
-                        Text(
-                            text = "PRODUCT / SKU",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            modifier = Modifier.weight(2.4f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "ADD",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            textAlign = TextAlign.End,
-                            modifier = Modifier.weight(0.8f)
-                        )
-                        Text(
-                            text = "COST",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            textAlign = TextAlign.End,
-                            modifier = Modifier.weight(0.8f)
-                        )
-                    }
-
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                    // Product Rows
-                    displayedRows.forEach { row ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(modifier = Modifier.weight(2.4f)) {
-                                Text(
-                                    text = row.name?.takeIf { it.isNotBlank() } ?: "Unknown Product",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 13.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                            Canvas(modifier = Modifier.size(20.dp)) {
+                                drawCircle(color = StatusDangerRed, radius = size.width / 2f, style = Stroke(width = 1.8.dp.toPx()))
+                                drawLine(
+                                    color = StatusDangerRed,
+                                    start = Offset(size.width * 0.5f, size.height * 0.25f),
+                                    end = Offset(size.width * 0.5f, size.height * 0.6f),
+                                    strokeWidth = 2.dp.toPx(),
+                                    cap = StrokeCap.Round
                                 )
-                                Text(
-                                    text = row.skuWithSellPrice?.takeIf { it.isNotBlank() } ?: (row.sku ?: ""),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                drawCircle(
+                                    color = StatusDangerRed,
+                                    radius = 1.5.dp.toPx(),
+                                    center = Offset(size.width * 0.5f, size.height * 0.75f)
                                 )
                             }
-
-                            Text(
-                                text = row.unitsToAdd?.takeIf { it.isNotBlank() } ?: "0",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = if (row.isHighlighted == true) Color(0xFFC62828) else MaterialTheme.colorScheme.onSurface,
-                                fontSize = 13.sp,
-                                textAlign = TextAlign.End,
-                                modifier = Modifier.weight(0.8f)
-                            )
-
-                            Text(
-                                text = row.costPrice?.takeIf { it.isNotBlank() } ?: "₹0",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 12.sp,
-                                textAlign = TextAlign.End,
-                                modifier = Modifier.weight(0.8f)
-                            )
-                        }
-
-                        if (row != displayedRows.lastOrNull()) {
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = if (isTimeout) "Connection timed out" else "Mapping required",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = StatusDangerRed,
+                                    fontSize = 13.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = uiState.validationError ?: "Required columns must be mapped.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = StatusDangerRed,
+                                    fontSize = 11.sp
+                                )
+                            }
+                            if (isTimeout) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                BoldButton(
+                                    text = "Retry",
+                                    onClick = onContinueToValidationClick,
+                                    isPrimary = true,
+                                    modifier = Modifier.wrapContentWidth()
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            // 5. Note text
-            Text(
-                text = "This is a stock receipt: quantities will be added to the current stock. Validation checks values next.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp,
-                lineHeight = 15.sp
-            )
+                // 4. Products Table Preview Card
+                BoldCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp,
+                    contentPadding = PaddingValues(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Table Header
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "PRODUCT / SKU",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MutedInk,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                modifier = Modifier.weight(2.4f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = "ADD",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MutedInk,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                textAlign = TextAlign.End,
+                                modifier = Modifier.weight(0.8f)
+                            )
+                            Text(
+                                text = "COST",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MutedInk,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                textAlign = TextAlign.End,
+                                modifier = Modifier.weight(0.8f)
+                            )
+                        }
 
-            // 6. Action Button
-            Button(
-                onClick = onContinueToValidationClick,
-                enabled = !uiState.isValidating,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = primaryColor,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            ) {
-                if (uiState.isValidating) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        strokeWidth = 2.dp
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Validating rows...",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
-                } else {
-                    Text(
-                        text = "Continue to Validation",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
+                        HorizontalDivider(color = InkDark.copy(alpha = 0.15f), thickness = 1.dp)
+
+                        // Product Rows
+                        displayedRows.forEach { row ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(2.4f)) {
+                                    Text(
+                                        text = row.name?.takeIf { it.isNotBlank() } ?: "Unknown Product",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = InkDark,
+                                        fontSize = 13.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = row.skuWithSellPrice?.takeIf { it.isNotBlank() } ?: (row.sku ?: ""),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MutedInk,
+                                        fontSize = 11.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+
+                                Text(
+                                    text = row.unitsToAdd?.takeIf { it.isNotBlank() } ?: "0",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (row.isHighlighted == true) StatusDangerRed else InkDark,
+                                    fontSize = 13.sp,
+                                    textAlign = TextAlign.End,
+                                    modifier = Modifier.weight(0.8f)
+                                )
+
+                                Text(
+                                    text = row.costPrice?.takeIf { it.isNotBlank() } ?: "₹0",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MutedInk,
+                                    fontSize = 12.sp,
+                                    textAlign = TextAlign.End,
+                                    modifier = Modifier.weight(0.8f)
+                                )
+                            }
+
+                            if (row != displayedRows.lastOrNull()) {
+                                HorizontalDivider(color = InkDark.copy(alpha = 0.15f), thickness = 0.5.dp)
+                            }
+                        }
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(20.dp))
+                // 5. Note text
+                Text(
+                    text = "This is a stock receipt: quantities will be added to the current stock. Validation checks values next.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MutedInk,
+                    fontSize = 11.sp,
+                    lineHeight = 15.sp
+                )
+
+                // 6. Action Button
+                BoldButton(
+                    text = if (uiState.isValidating) "Validating rows..." else "Continue to Validation",
+                    onClick = onContinueToValidationClick,
+                    enabled = !uiState.isValidating,
+                    isPrimary = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+            }
         }
     }
-}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -563,7 +474,6 @@ private fun ColumnMappingDropdownRow(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val displayValue = currentValue ?: "— Not Mapped —"
-    val primaryColor = MaterialTheme.colorScheme.primary
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -578,14 +488,14 @@ private fun ColumnMappingDropdownRow(
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    color = InkDark,
                     fontSize = 12.sp
                 )
                 if (isRequired) {
                     Text(
                         text = " *",
-                        color = Color(0xFFC62828),
+                        color = StatusDangerRed,
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp
                     )
@@ -593,21 +503,35 @@ private fun ColumnMappingDropdownRow(
             }
 
             if (!currentValue.isNullOrBlank()) {
-                Text(
-                    text = "Mapped",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = primaryColor,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 10.sp
-                )
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = SoftLavender,
+                    border = BorderStroke(1.dp, InkDark)
+                ) {
+                    Text(
+                        text = "Mapped",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = InkDark,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
             } else if (isRequired) {
-                Text(
-                    text = "Required",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFFC62828),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 10.sp
-                )
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = SoftPink,
+                    border = BorderStroke(1.dp, InkDark)
+                ) {
+                    Text(
+                        text = "Required",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = StatusDangerRed,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
             }
         }
 
@@ -626,21 +550,25 @@ private fun ColumnMappingDropdownRow(
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedBorderColor = primaryColor,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                    focusedContainerColor = CardWhite,
+                    unfocusedContainerColor = CardWhite,
+                    focusedBorderColor = InkDark,
+                    unfocusedBorderColor = InkDark.copy(alpha = 0.5f),
+                    cursorColor = InkDark
                 ),
                 textStyle = MaterialTheme.typography.bodySmall.copy(
                     fontSize = 13.sp,
                     fontWeight = if (!currentValue.isNullOrBlank()) FontWeight.Bold else FontWeight.Normal,
-                    color = if (!currentValue.isNullOrBlank()) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (!currentValue.isNullOrBlank()) InkDark else MutedInk
                 ),
                 singleLine = true
             )
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                modifier = Modifier
+                    .background(CardWhite)
+                    .border(2.dp, InkDark, RoundedCornerShape(12.dp))
             ) {
                 if (!isRequired) {
                     DropdownMenuItem(
@@ -648,7 +576,7 @@ private fun ColumnMappingDropdownRow(
                             Text(
                                 "— Not Mapped —",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MutedInk
                             )
                         },
                         onClick = {
@@ -665,7 +593,7 @@ private fun ColumnMappingDropdownRow(
                                 header,
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) primaryColor else MaterialTheme.colorScheme.onSurface
+                                color = if (isSelected) MainBlue else InkDark
                             )
                         },
                         onClick = {

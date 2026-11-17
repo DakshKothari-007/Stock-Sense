@@ -25,7 +25,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.feature.inventory.viewmodel.ImportViewModel
@@ -51,7 +52,7 @@ fun InventoryImportedScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
         val windowInfo = rememberWindowSizeInfo()
 
@@ -71,262 +72,204 @@ fun InventoryImportedScreen(
             ) {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 1. Header with Back Arrow Button
+                // 1. Header with Shared BoldTopBar
+                BoldTopBar(
+                    title = "Import complete",
+                    subtitle = "$fileName · Complete",
+                    onBackClick = onBackClick
+                )
+
+                // 2. Stepper Indicators (All 4 complete)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val steps = listOf("Upload", "Preview", "Validate", "Import")
+                    steps.forEach { stepName ->
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = stepName,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = InkDark,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.9f)
+                                    .height(3.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(MainBlue)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // 3. Success Icon & Headline
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onBackClick() },
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(SoftLavender)
+                            .border(2.dp, InkDark, RoundedCornerShape(16.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surface)
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Canvas(modifier = Modifier.size(16.dp)) {
-                                val path = Path().apply {
-                                    moveTo(size.width * 0.65f, size.height * 0.15f)
-                                    lineTo(size.width * 0.25f, size.height * 0.5f)
-                                    lineTo(size.width * 0.65f, size.height * 0.85f)
-                                }
-                                drawPath(
-                                    path = path,
-                                    color = primaryColor,
-                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                )
+                        Canvas(modifier = Modifier.size(30.dp)) {
+                            drawCircle(
+                                color = InkDark,
+                                radius = size.width / 2f,
+                                style = Stroke(width = 1.8.dp.toPx())
+                            )
+                            val path = Path().apply {
+                                moveTo(size.width * 0.25f, size.height * 0.5f)
+                                lineTo(size.width * 0.45f, size.height * 0.7f)
+                                lineTo(size.width * 0.75f, size.height * 0.35f)
                             }
+                            drawPath(
+                                path = path,
+                                color = InkDark,
+                                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(14.dp))
+                    Text(
+                        text = "Your shelves are up to date.",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
+                        color = InkDark,
+                        textAlign = TextAlign.Center,
+                        fontSize = 24.sp,
+                        lineHeight = 30.sp
+                    )
 
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Import complete",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "$fileName · Complete",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                    Text(
+                        text = "$fileName · Import complete",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MutedInk,
+                        textAlign = TextAlign.Center,
+                        fontSize = 12.sp
+                    )
                 }
 
-            // 2. Stepper Indicators (All 4 complete)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val steps = listOf("Upload", "Preview", "Validate", "Import")
-                steps.forEach { stepName ->
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
+                // 4. Metric Summary Cards
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    BoldCard(
+                        modifier = Modifier.weight(1f),
+                        backgroundColor = CardWhite,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp,
+                        contentPadding = PaddingValues(14.dp)
                     ) {
-                        Text(
-                            text = stepName,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = primaryColor,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.9f)
-                                .height(3.dp)
-                                .clip(RoundedCornerShape(2.dp))
-                                .background(primaryColor)
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // 3. Success Icon & Headline
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Canvas(modifier = Modifier.size(28.dp)) {
-                        drawCircle(
-                            color = primaryColor,
-                            radius = size.width / 2f,
-                            style = Stroke(width = 1.8.dp.toPx())
-                        )
-                        val path = Path().apply {
-                            moveTo(size.width * 0.25f, size.height * 0.5f)
-                            lineTo(size.width * 0.45f, size.height * 0.7f)
-                            lineTo(size.width * 0.75f, size.height * 0.35f)
+                        Column {
+                            Text(
+                                text = "Products updated",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MutedInk,
+                                fontSize = 12.sp
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "$productsUpdated",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = InkDark,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 22.sp
+                            )
                         }
-                        drawPath(
-                            path = path,
-                            color = primaryColor,
-                            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                        )
+                    }
+
+                    BoldCard(
+                        modifier = Modifier.weight(1f),
+                        backgroundColor = CardWhite,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp,
+                        contentPadding = PaddingValues(14.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = "Product added",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MutedInk,
+                                fontSize = 12.sp
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "$productsAdded",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = InkDark,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 22.sp
+                            )
+                        }
                     }
                 }
 
-                Text(
-                    text = "Your shelves are up to date.",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center,
-                    fontSize = 24.sp,
-                    lineHeight = 30.sp
-                )
-
-                Text(
-                    text = "$fileName · Import complete",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    fontSize = 12.sp
-                )
-            }
-
-            // 4. Metric Summary Cards
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Card(
-                    modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                // 5. Statistics Card
+                BoldCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp,
+                    contentPadding = PaddingValues(18.dp)
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            text = "Products updated",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "$productsUpdated",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
-                        )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        StatRow("Data rows imported", dataRowsImported)
+                        StatRow("Stock added", stockAdded)
+                        StatRow("Corrected / skipped", correctedSkipped)
+                        StatRow("Total active products", totalActiveProducts)
+                        StatRow("New inventory value", newInventoryValue)
                     }
                 }
 
-                Card(
-                    modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            text = "Product added",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "$productsAdded",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
-                        )
-                    }
-                }
-            }
+                Spacer(modifier = Modifier.height(4.dp))
 
-            // 5. Statistics Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    StatRow("Data rows imported", dataRowsImported)
-                    StatRow("Stock added", stockAdded)
-                    StatRow("Corrected / skipped", correctedSkipped)
-                    StatRow("Total active products", totalActiveProducts)
-                    StatRow("New inventory value", newInventoryValue)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // 6. Done Button
-            Button(
-                onClick = {
-                    viewModel.clearSession()
-                    onDoneClick()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = primaryColor,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
-                Text(
+                // 6. Done Button
+                BoldButton(
                     text = "Done · View Inventory",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
+                    onClick = {
+                        viewModel.clearSession()
+                        onDoneClick()
+                    },
+                    isPrimary = true,
+                    modifier = Modifier.fillMaxWidth()
                 )
+
+                // 7. Footer Note
+                Text(
+                    text = "Inventory successfully updated in your store",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MutedInk,
+                    fontSize = 11.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
             }
-
-            // 7. Footer Note
-            Text(
-                text = "Inventory successfully updated in your store",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
         }
     }
-}
 }
 
 @Composable
@@ -339,14 +282,14 @@ private fun StatRow(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MutedInk,
             fontSize = 12.sp
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = InkDark,
             fontSize = 12.sp
         )
     }

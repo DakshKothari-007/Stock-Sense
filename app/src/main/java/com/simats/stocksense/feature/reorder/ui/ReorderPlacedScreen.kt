@@ -3,6 +3,7 @@ package com.simats.stocksense.feature.reorder.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,8 +25,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.simats.stocksense.core.theme.StockSenseTheme
+import com.simats.stocksense.core.components.BoldButton
+import com.simats.stocksense.core.components.BoldCard
+import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
+import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.data.model.PurchaseOrderDto
 import com.simats.stocksense.feature.reorder.viewmodel.ReorderViewModel
 
@@ -38,7 +42,6 @@ fun ReorderPlacedScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val order = placedOrder ?: uiState.lastPlacedOrder
-    val primaryColor = MaterialTheme.colorScheme.primary
 
     val statusBadgeText = if (!order?.orderNo.isNullOrBlank()) {
         "ORDER ${order?.orderNo}"
@@ -66,142 +69,132 @@ fun ReorderPlacedScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = CreamBackground
     ) {
-        Column(
+        ResponsiveContainer(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(20.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .statusBarsPadding()
+                .navigationBarsPadding(),
+            maxWidth = 520.dp
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(24.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                BoldCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = CardWhite,
+                    borderColor = InkDark,
+                    borderWidth = 2.5.dp,
+                    shadowOffset = 4.dp,
+                    contentPadding = PaddingValues(24.dp)
                 ) {
-                    // Checkmark Circle Icon Box
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Canvas(modifier = Modifier.size(26.dp)) {
-                            drawCircle(
-                                color = primaryColor,
-                                radius = size.width / 2f,
-                                style = Stroke(width = 1.8.dp.toPx())
-                            )
-                            val path = Path().apply {
-                                moveTo(size.width * 0.25f, size.height * 0.5f)
-                                lineTo(size.width * 0.45f, size.height * 0.7f)
-                                lineTo(size.width * 0.75f, size.height * 0.35f)
-                            }
-                            drawPath(
-                                path = path,
-                                color = primaryColor,
-                                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                            )
-                        }
-                    }
-
-                    // Title
-                    Text(
-                        text = "Reorder recorded",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 22.sp,
-                        textAlign = TextAlign.Center
-                    )
-
-                    // Badge
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Text(
-                            text = statusBadgeText,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = primaryColor,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 10.sp,
-                            letterSpacing = 1.sp,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                        )
-                    }
-
-                    // Details
-                    Text(
-                        text = detailsText,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center,
-                        fontSize = 13.sp
-                    )
-
-                    Text(
-                        text = descText,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        fontSize = 12.sp,
-                        lineHeight = 16.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Buttons: Back to Home & View orders
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        OutlinedButton(
-                            onClick = onDoneClick,
+                        // Checkmark Circle Icon Box
+                        Box(
                             modifier = Modifier
-                                .weight(1f)
-                                .height(52.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                .size(56.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(SoftLavender)
+                                .border(2.dp, InkDark, RoundedCornerShape(16.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Canvas(modifier = Modifier.size(26.dp)) {
+                                drawCircle(
+                                    color = InkDark,
+                                    radius = size.width / 2f,
+                                    style = Stroke(width = 1.8.dp.toPx())
+                                )
+                                val path = Path().apply {
+                                    moveTo(size.width * 0.25f, size.height * 0.5f)
+                                    lineTo(size.width * 0.45f, size.height * 0.7f)
+                                    lineTo(size.width * 0.75f, size.height * 0.35f)
+                                }
+                                drawPath(
+                                    path = path,
+                                    color = InkDark,
+                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                )
+                            }
+                        }
+
+                        // Title
+                        Text(
+                            text = "Reorder recorded",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = InkDark,
+                            fontSize = 22.sp,
+                            textAlign = TextAlign.Center
+                        )
+
+                        // Badge
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = PaleBlue,
+                            border = BorderStroke(1.5.dp, InkDark)
                         ) {
                             Text(
-                                text = "Back to Home",
-                                style = MaterialTheme.typography.labelLarge,
+                                text = statusBadgeText,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MainBlue,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 14.sp
+                                fontSize = 11.sp,
+                                letterSpacing = 1.sp,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )
                         }
 
-                        Button(
-                            onClick = onViewOrdersClick,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(52.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = primaryColor,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            )
+                        // Details
+                        Text(
+                            text = detailsText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = InkDark,
+                            textAlign = TextAlign.Center,
+                            fontSize = 13.sp
+                        )
+
+                        Text(
+                            text = descText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MutedInk,
+                            textAlign = TextAlign.Center,
+                            fontSize = 12.sp,
+                            lineHeight = 16.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Buttons: Back to Home & View orders
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Text(
-                                text = "View orders",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
+                            Box(modifier = Modifier.weight(1f)) {
+                                BoldButton(
+                                    text = "Back to Home",
+                                    onClick = onDoneClick,
+                                    isPrimary = false
+                                )
+                            }
+
+                            Box(modifier = Modifier.weight(1f)) {
+                                BoldButton(
+                                    text = "View orders",
+                                    onClick = onViewOrdersClick,
+                                    isPrimary = true
+                                )
+                            }
                         }
                     }
                 }
