@@ -28,6 +28,9 @@ data class NotificationItem(
     @SerializedName("numbers_used") val numbersUsed: Map<String, Any?>? = null,
     @SerializedName("created_for_date") val createdForDate: String? = null,
     @SerializedName("product_id") val productId: Int? = null,
+    @SerializedName("product_name") val productName: String? = null,
+    @SerializedName("category") val category: String? = null,
+    @SerializedName("icon_key") val iconKey: String? = null,
     @SerializedName("is_read") val isRead: Boolean? = false,
     @SerializedName("read_at") val readAt: String? = null
 )

@@ -52,7 +52,7 @@ class ThemeTest {
         assertEquals(Color(0xFF2B3F8F), colors.softLightBlue)
         assertEquals(Color(0xFF2B3F8F), colors.paleBlue)
         assertEquals(Color(0xFF7A4A1E), colors.softPeach)
-        assertEquals(Color(0xFF7A2E4C), colors.softPink)
+        assertEquals(Color(0xFF5A2D6E), colors.softPink)
         assertEquals(Color(0xFF4B3A8C), colors.softLavender)
         assertEquals(Color(0xFFC9B8FF), colors.statusInStock)
         assertEquals(Color(0xFFFF9F5A), colors.statusLowStock)

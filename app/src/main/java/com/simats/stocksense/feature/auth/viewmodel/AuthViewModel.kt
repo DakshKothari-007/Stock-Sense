@@ -4,6 +4,9 @@ import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simats.stocksense.data.repository.AuthRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +26,10 @@ data class LoginUiState(
     val email: String = "",
     val password: String = "",
     val isLoading: Boolean = false,
+    val emailError: String? = null,
+    val passwordError: String? = null,
+    val bannerError: String? = null,
+    val lockRetryAfterSeconds: Int = 0,
     val errorMessage: String? = null,
     val isSuccess: Boolean = false
 )
@@ -75,18 +82,159 @@ class AuthViewModel(
     private val _deleteAccountState = MutableStateFlow(DeleteAccountUiState())
     val deleteAccountState: StateFlow<DeleteAccountUiState> = _deleteAccountState.asStateFlow()
 
+    private var lockoutJob: Job? = null
+
     // -------------------------------------------------------------
     // Input State Modifiers
     // -------------------------------------------------------------
 
     fun updateLoginEmail(email: String) {
-        _loginState.update { it.copy(email = email, errorMessage = null) }
+        _loginState.update { it.copy(email = email, emailError = null, errorMessage = null) }
         _authUiState.update { it.copy(errorMessage = null) }
     }
 
     fun updateLoginPassword(password: String) {
-        _loginState.update { it.copy(password = password, errorMessage = null) }
+        _loginState.update { it.copy(password = password, passwordError = null, errorMessage = null) }
         _authUiState.update { it.copy(errorMessage = null) }
+    }
+
+    fun startLockoutCountdown(seconds: Int) {
+        lockoutJob?.cancel()
+        if (seconds <= 0) {
+            _loginState.update { it.copy(lockRetryAfterSeconds = 0, bannerError = null) }
+            return
+        }
+        _loginState.update {
+            it.copy(
+                lockRetryAfterSeconds = seconds,
+                bannerError = formatLockoutMessage(seconds)
+            )
+        }
+        lockoutJob = viewModelScope.launch(Dispatchers.Default) {
+            var remaining = seconds
+            while (remaining > 0) {
+                delay(1000L)
+                remaining--
+                if (remaining > 0) {
+                    _loginState.update {
+                        it.copy(
+                            lockRetryAfterSeconds = remaining,
+                            bannerError = formatLockoutMessage(remaining)
+                        )
+                    }
+                } else {
+                    _loginState.update {
+                        it.copy(
+                            lockRetryAfterSeconds = 0,
+                            bannerError = null
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun formatLockoutMessage(seconds: Int): String {
+        val mins = seconds / 60
+        val secs = seconds % 60
+        val timeStr = String.format("%d:%02d", mins, secs)
+        return "Too many failed attempts. Try again in $timeStr"
+    }
+
+    // -------------------------------------------------------------
+    // Login Operations
+    // -------------------------------------------------------------
+
+    /**
+     * Executes login with input validation, viewModelScope coroutine, and real backend authentication.
+     */
+    fun onLogin(email: String, password: String, onSuccess: () -> Unit = {}) {
+        // Prevent submission if currently locked out
+        if (_loginState.value.lockRetryAfterSeconds > 0) {
+            return
+        }
+
+        val trimmedEmail = email.trim().lowercase()
+
+        // 1. Phone-side validation
+        if (trimmedEmail.isBlank() || !isValidEmail(trimmedEmail)) {
+            val error = "Enter a valid email"
+            _loginState.update { it.copy(emailError = error, isLoading = false) }
+            _authUiState.update { it.copy(errorMessage = error, isLoading = false) }
+            return
+        }
+
+        if (password.isBlank()) {
+            val error = "Please enter your password"
+            _loginState.update { it.copy(passwordError = error, isLoading = false) }
+            _authUiState.update { it.copy(errorMessage = error, isLoading = false) }
+            return
+        }
+
+        _loginState.update {
+            it.copy(
+                email = trimmedEmail,
+                isLoading = true,
+                emailError = null,
+                passwordError = null,
+                errorMessage = null
+            )
+        }
+        _authUiState.update { it.copy(isLoading = true, errorMessage = null, isSuccess = false) }
+
+        viewModelScope.launch {
+            val result = authRepository.login(trimmedEmail, password)
+            result.fold(
+                onSuccess = {
+                    lockoutJob?.cancel()
+                    _loginState.update {
+                        it.copy(
+                            isLoading = false,
+                            isSuccess = true,
+                            emailError = null,
+                            passwordError = null,
+                            bannerError = null,
+                            lockRetryAfterSeconds = 0,
+                            errorMessage = null
+                        )
+                    }
+                    _authUiState.update { it.copy(isLoading = false, isSuccess = true, errorMessage = null) }
+                    onSuccess()
+                },
+                onFailure = { err ->
+                    _loginState.update { it.copy(isLoading = false, isSuccess = false) }
+                    _authUiState.update { it.copy(isLoading = false, isSuccess = false) }
+
+                    if (err is com.simats.stocksense.data.model.LoginApiException) {
+                        when (err.errorCode) {
+                            "EMAIL_NOT_FOUND" -> {
+                                val msg = err.message ?: "No account found with this email"
+                                _loginState.update { it.copy(emailError = msg) }
+                            }
+                            "WRONG_PASSWORD" -> {
+                                val attempts = err.attemptsLeft ?: 0
+                                val attemptsText = if (attempts == 1) "1 attempt left" else "$attempts attempts left"
+                                val msg = "Invalid password. $attemptsText"
+                                _loginState.update { it.copy(passwordError = msg) }
+                            }
+                            "ACCOUNT_LOCKED" -> {
+                                val retrySecs = err.retryAfterSeconds ?: 300
+                                startLockoutCountdown(retrySecs)
+                            }
+                            else -> {
+                                val msg = err.message ?: "Login failed."
+                                _loginState.update { it.copy(errorMessage = msg) }
+                                _authUiState.update { it.copy(errorMessage = msg) }
+                            }
+                        }
+                    } else {
+                        val errorMsg = err.message ?: "Login failed. Please check your credentials."
+                        _loginState.update { it.copy(errorMessage = errorMsg) }
+                        _authUiState.update { it.copy(errorMessage = errorMsg) }
+                    }
+                }
+            )
+        }
     }
 
     fun updateSignUpFullName(name: String) {
@@ -131,51 +279,6 @@ class AuthViewModel(
 
     fun updateForgotPasswordEmail(email: String) {
         _forgotPasswordState.update { it.copy(email = email, errorMessage = null) }
-    }
-
-    // -------------------------------------------------------------
-    // Login Operations
-    // -------------------------------------------------------------
-
-    /**
-     * Executes login with input validation, viewModelScope coroutine, and real backend authentication.
-     */
-    fun onLogin(email: String, password: String, onSuccess: () -> Unit = {}) {
-        val trimmedEmail = email.trim().lowercase()
-
-        // Validation
-        if (trimmedEmail.isBlank() || password.isBlank()) {
-            val error = "Please enter both email and password."
-            _loginState.update { it.copy(errorMessage = error, isLoading = false) }
-            _authUiState.update { it.copy(errorMessage = error, isLoading = false) }
-            return
-        }
-
-        if (!isValidEmail(trimmedEmail)) {
-            val error = "Please enter a valid email address."
-            _loginState.update { it.copy(errorMessage = error, isLoading = false) }
-            _authUiState.update { it.copy(errorMessage = error, isLoading = false) }
-            return
-        }
-
-        _loginState.update { it.copy(isLoading = true, errorMessage = null) }
-        _authUiState.update { it.copy(isLoading = true, errorMessage = null, isSuccess = false) }
-
-        viewModelScope.launch {
-            val result = authRepository.login(trimmedEmail, password)
-            result.fold(
-                onSuccess = {
-                    _loginState.update { it.copy(isLoading = false, isSuccess = true, errorMessage = null) }
-                    _authUiState.update { it.copy(isLoading = false, isSuccess = true, errorMessage = null) }
-                    onSuccess()
-                },
-                onFailure = { err ->
-                    val errorMsg = err.message ?: "Login failed. Please check your credentials."
-                    _loginState.update { it.copy(isLoading = false, errorMessage = errorMsg, isSuccess = false) }
-                    _authUiState.update { it.copy(isLoading = false, errorMessage = errorMsg, isSuccess = false) }
-                }
-            )
-        }
     }
 
     /**
@@ -370,6 +473,12 @@ class AuthViewModel(
     }
 
     private fun isValidEmail(email: String): Boolean {
-        return email.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        if (email.isBlank()) return false
+        val regex = Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
+        return try {
+            Patterns.EMAIL_ADDRESS?.matcher(email)?.matches() ?: regex.matches(email)
+        } catch (_: Throwable) {
+            regex.matches(email)
+        }
     }
 }

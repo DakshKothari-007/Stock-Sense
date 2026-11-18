@@ -38,6 +38,7 @@ import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.data.model.NotificationItem
 import com.simats.stocksense.feature.dashboard.viewmodel.NotificationsViewModel
+import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -231,7 +232,7 @@ fun NotificationsScreen(
 
                                 pendingTarget = {
                                     when (item.type) {
-                                        "low_stock" -> {
+                                        "low_stock", "reorder_suggestion" -> {
                                             if (onReorderClick != null) {
                                                 onReorderClick(item.productId)
                                             } else {
@@ -310,69 +311,88 @@ private fun NotificationCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    val iconBg = when (item.type) {
-                        "low_stock" -> SoftLowStock
-                        "slow_moving" -> SoftPeach
-                        "sales" -> SoftLightBlue
-                        else -> PaleBlue
-                    }
+                    val isProductNotification = (item.productId != null && item.productId > 0) || !item.productName.isNullOrBlank()
 
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(iconBg)
-                            .border(1.5.dp, InkDark, RoundedCornerShape(12.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        when (item.type) {
-                            "low_stock" -> {
-                                Canvas(modifier = Modifier.size(20.dp)) {
-                                    drawRect(
-                                        color = InkDark,
-                                        topLeft = Offset(size.width * 0.15f, size.height * 0.15f),
-                                        size = Size(size.width * 0.7f, size.height * 0.7f),
-                                        style = Stroke(width = 1.8.dp.toPx())
-                                    )
-                                    drawLine(
-                                        color = InkDark,
-                                        start = Offset(size.width * 0.5f, size.height * 0.15f),
-                                        end = Offset(size.width * 0.5f, size.height * 0.85f),
-                                        strokeWidth = 1.5.dp.toPx()
-                                    )
+                    if (isProductNotification) {
+                        val resolvedProductName = item.productName?.takeIf { it.isNotBlank() }
+                            ?: item.title?.replace(" is running low", "")
+                                ?.replace(" is out of stock", "")
+                                ?.replace(" needs attention", "")
+                                ?: "Product"
+
+                        ProductAvatar(
+                            name = resolvedProductName,
+                            category = item.category,
+                            iconKey = item.iconKey,
+                            size = 40.dp
+                        )
+                    } else {
+                        val iconBg = when (item.type) {
+                            "sales" -> SoftLightBlue
+                            "weekly_digest", "digest" -> SoftPeach
+                            "import" -> SoftLavender
+                            else -> PaleBlue
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(iconBg)
+                                .border(2.dp, InkDark, RoundedCornerShape(12.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            when (item.type) {
+                                "sales" -> {
+                                    Canvas(modifier = Modifier.size(20.dp)) {
+                                        drawLine(color = InkDark, start = Offset(size.width * 0.2f, size.height * 0.8f), end = Offset(size.width * 0.2f, size.height * 0.5f), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                                        drawLine(color = InkDark, start = Offset(size.width * 0.5f, size.height * 0.8f), end = Offset(size.width * 0.5f, size.height * 0.2f), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                                        drawLine(color = InkDark, start = Offset(size.width * 0.8f, size.height * 0.8f), end = Offset(size.width * 0.8f, size.height * 0.4f), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                                    }
                                 }
-                            }
-                            "slow_moving" -> {
-                                Canvas(modifier = Modifier.size(20.dp)) {
-                                    drawCircle(
-                                        color = InkDark,
-                                        radius = size.width * 0.45f,
-                                        center = Offset(size.width / 2f, size.height / 2f),
-                                        style = Stroke(width = 1.5.dp.toPx())
-                                    )
-                                    drawCircle(color = InkDark, radius = size.width * 0.08f, center = Offset(size.width * 0.35f, size.height * 0.35f))
-                                    drawCircle(color = InkDark, radius = size.width * 0.08f, center = Offset(size.width * 0.65f, size.height * 0.45f))
-                                    drawCircle(color = InkDark, radius = size.width * 0.08f, center = Offset(size.width * 0.45f, size.height * 0.65f))
+                                "weekly_digest", "digest" -> {
+                                    Canvas(modifier = Modifier.size(20.dp)) {
+                                        drawRoundRect(
+                                            color = InkDark,
+                                            topLeft = Offset(size.width * 0.2f, size.height * 0.15f),
+                                            size = Size(size.width * 0.6f, size.height * 0.7f),
+                                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.dp.toPx()),
+                                            style = Stroke(width = 1.8.dp.toPx())
+                                        )
+                                        drawLine(color = InkDark, start = Offset(size.width * 0.35f, size.height * 0.35f), end = Offset(size.width * 0.65f, size.height * 0.35f), strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
+                                        drawLine(color = InkDark, start = Offset(size.width * 0.35f, size.height * 0.50f), end = Offset(size.width * 0.65f, size.height * 0.50f), strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
+                                    }
                                 }
-                            }
-                            "sales" -> {
-                                Canvas(modifier = Modifier.size(20.dp)) {
-                                    drawLine(color = InkDark, start = Offset(size.width * 0.2f, size.height * 0.8f), end = Offset(size.width * 0.2f, size.height * 0.5f), strokeWidth = 2.dp.toPx())
-                                    drawLine(color = InkDark, start = Offset(size.width * 0.5f, size.height * 0.8f), end = Offset(size.width * 0.5f, size.height * 0.2f), strokeWidth = 2.dp.toPx())
-                                    drawLine(color = InkDark, start = Offset(size.width * 0.8f, size.height * 0.8f), end = Offset(size.width * 0.8f, size.height * 0.4f), strokeWidth = 2.dp.toPx())
+                                "import" -> {
+                                    Canvas(modifier = Modifier.size(20.dp)) {
+                                        drawRect(
+                                            color = InkDark,
+                                            topLeft = Offset(size.width * 0.2f, size.height * 0.5f),
+                                            size = Size(size.width * 0.6f, size.height * 0.35f),
+                                            style = Stroke(width = 1.8.dp.toPx())
+                                        )
+                                        drawLine(color = InkDark, start = Offset(size.width * 0.5f, size.height * 0.15f), end = Offset(size.width * 0.5f, size.height * 0.6f), strokeWidth = 1.8.dp.toPx(), cap = StrokeCap.Round)
+                                        val arrowPath = Path().apply {
+                                            moveTo(size.width * 0.35f, size.height * 0.45f)
+                                            lineTo(size.width * 0.5f, size.height * 0.6f)
+                                            lineTo(size.width * 0.65f, size.height * 0.45f)
+                                        }
+                                        drawPath(arrowPath, color = InkDark, style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                                    }
                                 }
-                            }
-                            else -> {
-                                Canvas(modifier = Modifier.size(20.dp)) {
-                                    drawRoundRect(
-                                        color = InkDark,
-                                        topLeft = Offset(size.width * 0.2f, size.height * 0.15f),
-                                        size = Size(size.width * 0.6f, size.height * 0.7f),
-                                        style = Stroke(width = 1.8.dp.toPx())
-                                    )
-                                    drawLine(color = InkDark, start = Offset(size.width * 0.35f, size.height * 0.35f), end = Offset(size.width * 0.65f, size.height * 0.35f), strokeWidth = 1.5.dp.toPx())
-                                    drawLine(color = InkDark, start = Offset(size.width * 0.35f, size.height * 0.50f), end = Offset(size.width * 0.65f, size.height * 0.50f), strokeWidth = 1.5.dp.toPx())
-                                    drawLine(color = InkDark, start = Offset(size.width * 0.35f, size.height * 0.65f), end = Offset(size.width * 0.55f, size.height * 0.65f), strokeWidth = 1.5.dp.toPx())
+                                else -> {
+                                    Canvas(modifier = Modifier.size(20.dp)) {
+                                        val bellPath = Path().apply {
+                                            moveTo(size.width * 0.5f, size.height * 0.18f)
+                                            cubicTo(size.width * 0.32f, size.height * 0.18f, size.width * 0.22f, size.height * 0.38f, size.width * 0.22f, size.height * 0.58f)
+                                            lineTo(size.width * 0.12f, size.height * 0.74f)
+                                            lineTo(size.width * 0.88f, size.height * 0.74f)
+                                            lineTo(size.width * 0.78f, size.height * 0.58f)
+                                            cubicTo(size.width * 0.78f, size.height * 0.38f, size.width * 0.68f, size.height * 0.18f, size.width * 0.5f, size.height * 0.18f)
+                                            close()
+                                        }
+                                        drawPath(bellPath, color = InkDark, style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                                    }
                                 }
                             }
                         }
@@ -487,10 +507,26 @@ private fun formatNotificationTime(createdForDate: String?): String {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Notifications Light", showBackground = true)
 @Composable
 fun NotificationsScreenPreview() {
-    StockSenseTheme {
+    StockSenseTheme(themeMode = ThemeMode.LIGHT) {
+        NotificationsScreen()
+    }
+}
+
+@Preview(name = "Notifications Dark Mode", showBackground = true)
+@Composable
+fun NotificationsScreenDarkPreview() {
+    StockSenseTheme(themeMode = ThemeMode.DARK) {
+        NotificationsScreen()
+    }
+}
+
+@Preview(name = "Notifications Small 360dp Large Font", showBackground = true, widthDp = 360, fontScale = 1.3f)
+@Composable
+fun NotificationsScreenSmallFontPreview() {
+    StockSenseTheme(themeMode = ThemeMode.LIGHT) {
         NotificationsScreen()
     }
 }

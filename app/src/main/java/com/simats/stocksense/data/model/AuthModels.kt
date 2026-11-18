@@ -135,6 +135,28 @@ data class DeleteAccountRequest(
 )
 
 /**
+ * Error response envelope for POST auth/login.php
+ */
+data class LoginErrorResponse(
+    @SerializedName("status") val status: Boolean? = null,
+    @SerializedName("success") val success: Boolean? = null,
+    @SerializedName("error_code") val errorCode: String? = null,
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("attempts_left") val attemptsLeft: Int? = null,
+    @SerializedName("retry_after_seconds") val retryAfterSeconds: Int? = null
+)
+
+/**
+ * Structured exception for login failures conveying specific error codes, attempts left, and lockout seconds
+ */
+class LoginApiException(
+    val errorCode: String?,
+    val attemptsLeft: Int? = null,
+    val retryAfterSeconds: Int? = null,
+    message: String = "Login failed"
+) : Exception(message)
+
+/**
  * Standard generic response envelope (e.g. for logout or errors)
  */
 data class BaseResponse(

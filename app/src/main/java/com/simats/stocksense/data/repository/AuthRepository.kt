@@ -84,11 +84,44 @@ class AuthRepository(
                     Result.failure(Exception(body?.message ?: "Login failed. Please try again."))
                 }
             } else {
-                val errorMsg = parseHttpError(response.code(), response.errorBody()?.string())
-                Result.failure(Exception(errorMsg))
+                val rawError = response.errorBody()?.string()
+                val loginError = try {
+                    if (!rawError.isNullOrBlank()) {
+                        NetworkClient.gson.fromJson(rawError, com.simats.stocksense.data.model.LoginErrorResponse::class.java)
+                    } else null
+                } catch (_: Exception) {
+                    null
+                }
+
+                if (loginError?.errorCode != null) {
+                    Result.failure(
+                        com.simats.stocksense.data.model.LoginApiException(
+                            errorCode = loginError.errorCode,
+                            attemptsLeft = loginError.attemptsLeft,
+                            retryAfterSeconds = loginError.retryAfterSeconds,
+                            message = loginError.message ?: parseHttpError(response.code(), rawError)
+                        )
+                    )
+                } else if (response.code() == 429) {
+                    Result.failure(
+                        com.simats.stocksense.data.model.LoginApiException(
+                            errorCode = "ACCOUNT_LOCKED",
+                            attemptsLeft = 0,
+                            retryAfterSeconds = loginError?.retryAfterSeconds ?: 300,
+                            message = loginError?.message ?: "Too many failed login attempts. Account locked for 5 minutes."
+                        )
+                    )
+                } else {
+                    val errorMsg = parseHttpError(response.code(), rawError)
+                    Result.failure(Exception(errorMsg))
+                }
             }
         } catch (e: Throwable) {
-            Result.failure(Exception(parseNetworkException(e)))
+            if (e is com.simats.stocksense.data.model.LoginApiException) {
+                Result.failure(e)
+            } else {
+                Result.failure(Exception(parseNetworkException(e)))
+            }
         }
     }
 

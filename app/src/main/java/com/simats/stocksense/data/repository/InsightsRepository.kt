@@ -30,11 +30,16 @@ class InsightsRepository(
         }
     }
 
-    suspend fun getProductPairs(minSupport: Double = 0.05, includeDismissed: Boolean = false): Result<ProductPairsData> = withContext(Dispatchers.IO) {
+    suspend fun getProductPairs(
+        minSupport: Double = 0.05,
+        includeDismissed: Boolean = false,
+        limit: Int? = 5
+    ): Result<ProductPairsData> = withContext(Dispatchers.IO) {
         try {
             val response = apiService.getProductPairs(
                 minSupport = minSupport,
-                includeDismissed = if (includeDismissed) 1 else 0
+                includeDismissed = if (includeDismissed) 1 else 0,
+                limit = limit
             )
             if (response.isSuccessful) {
                 val body = response.body()

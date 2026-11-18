@@ -23,7 +23,8 @@ interface InsightsApiService {
     @GET("insights/product_pairs.php")
     suspend fun getProductPairs(
         @Query("min_support") minSupport: Double? = 0.05,
-        @Query("include_dismissed") includeDismissed: Int = 0
+        @Query("include_dismissed") includeDismissed: Int = 0,
+        @Query("limit") limit: Int? = 5
     ): Response<ProductPairsResponse>
 
     /**

@@ -129,7 +129,72 @@ fun LoginScreen(
                         fontSize = 14.sp
                     )
 
-                Spacer(modifier = Modifier.height(28.dp))
+                    Spacer(modifier = Modifier.height(if (loginState.lockRetryAfterSeconds > 0 || !loginState.bannerError.isNullOrBlank()) 14.dp else 28.dp))
+
+                    // Account Locked Banner
+                    if (!loginState.bannerError.isNullOrBlank() || loginState.lockRetryAfterSeconds > 0) {
+                        val bannerText = loginState.bannerError ?: "Too many failed attempts. Try again in ${loginState.lockRetryAfterSeconds}s"
+                        BoldCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = SoftPeach,
+                            borderColor = DangerRed,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp,
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Canvas(modifier = Modifier.size(24.dp)) {
+                                    drawRect(
+                                        color = DangerRed,
+                                        topLeft = Offset(size.width * 0.15f, size.height * 0.45f),
+                                        size = Size(size.width * 0.7f, size.height * 0.5f),
+                                        style = Stroke(width = 1.8.dp.toPx())
+                                    )
+                                    val archPath = Path().apply {
+                                        moveTo(size.width * 0.3f, size.height * 0.45f)
+                                        lineTo(size.width * 0.3f, size.height * 0.25f)
+                                        quadraticTo(size.width * 0.5f, 0f, size.width * 0.7f, size.height * 0.25f)
+                                        lineTo(size.width * 0.7f, size.height * 0.45f)
+                                    }
+                                    drawPath(
+                                        path = archPath,
+                                        color = DangerRed,
+                                        style = Stroke(width = 1.8.dp.toPx())
+                                    )
+                                    drawCircle(
+                                        color = DangerRed,
+                                        radius = size.width * 0.08f,
+                                        center = Offset(size.width * 0.5f, size.height * 0.65f)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Account Locked",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = DangerRed,
+                                        fontSize = 14.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = bannerText,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Medium,
+                                        color = InkDark,
+                                        fontSize = 12.sp,
+                                        lineHeight = 16.sp
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
 
                 // 3. Email Input Field
                 Text(
@@ -156,8 +221,8 @@ fun LoginScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = CardWhite,
                         unfocusedContainerColor = CardWhite,
-                        focusedBorderColor = InkDark,
-                        unfocusedBorderColor = InkDark,
+                        focusedBorderColor = if (!loginState.emailError.isNullOrBlank()) DangerRed else InkDark,
+                        unfocusedBorderColor = if (!loginState.emailError.isNullOrBlank()) DangerRed else InkDark,
                         focusedTextColor = InkDark,
                         unfocusedTextColor = InkDark,
                         cursorColor = InkDark
@@ -190,6 +255,17 @@ fun LoginScreen(
                     },
                     singleLine = true
                 )
+                if (!loginState.emailError.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = loginState.emailError ?: "",
+                        color = DangerRed,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -210,8 +286,8 @@ fun LoginScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = CardWhite,
                         unfocusedContainerColor = CardWhite,
-                        focusedBorderColor = InkDark,
-                        unfocusedBorderColor = InkDark,
+                        focusedBorderColor = if (!loginState.passwordError.isNullOrBlank()) DangerRed else InkDark,
+                        unfocusedBorderColor = if (!loginState.passwordError.isNullOrBlank()) DangerRed else InkDark,
                         focusedTextColor = InkDark,
                         unfocusedTextColor = InkDark,
                         cursorColor = InkDark
@@ -273,6 +349,17 @@ fun LoginScreen(
                     },
                     singleLine = true
                 )
+                if (!loginState.passwordError.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = loginState.passwordError ?: "",
+                        color = DangerRed,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
                 // Forgot password link
                 Row(
@@ -378,7 +465,7 @@ fun LoginScreen(
                         viewModel.login(onSuccess = onLoginClick)
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !loginState.isLoading,
+                    enabled = !loginState.isLoading && loginState.lockRetryAfterSeconds == 0,
                     isPrimary = true
                 ) {
                     if (loginState.isLoading) {

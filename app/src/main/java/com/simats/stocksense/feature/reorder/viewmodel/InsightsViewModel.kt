@@ -31,7 +31,7 @@ data class InsightsUiState(
     val selectedPairIndex: Int = 0
 ) {
     val totalOpportunities: Int
-        get() = reorderItems.size + slowMovingItems.size + productPairItems.size
+        get() = reorderItems.size + slowMovingItems.size + productPairItems.take(5).size
 
     val activeSlowMovingItem: SlowMovingItemDto?
         get() = slowMovingItems.getOrNull(selectedSlowMovingIndex) ?: slowMovingItems.firstOrNull()
@@ -112,7 +112,7 @@ class InsightsViewModel(
                 onSuccess = { data ->
                     newPairsData = data
                     hasEnoughPairsHist = data.hasEnoughSalesHistory ?: true
-                    newPairItems = if (hasEnoughPairsHist) data.effectiveItems else emptyList()
+                    newPairItems = if (hasEnoughPairsHist) data.effectiveItems.take(5) else emptyList()
                     pairsHistMsg = if (!hasEnoughPairsHist) {
                         "Store needs at least 30 bills in the last 90 days to identify reliable product pairs."
                     } else null

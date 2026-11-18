@@ -661,7 +661,9 @@ fun DashboardHomeContent(
                         Text(
                             text = "SLOW MOVING",
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (isSlowMovingActive) StatusDangerRed else MutedInk,
+                            color = if (isSlowMovingActive) {
+                                if (ThemeState.isDark) Color(0xFFFFF4DC) else StatusDangerRed
+                            } else MutedInk,
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp,
                             letterSpacing = 1.sp,
@@ -674,7 +676,7 @@ fun DashboardHomeContent(
                                 Text(
                                     text = "Sales history needed",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = InkDark,
+                                    color = if (isSlowMovingActive && ThemeState.isDark) Color(0xFFFFF4DC) else InkDark,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp,
                                     maxLines = 1,
@@ -684,7 +686,7 @@ fun DashboardHomeContent(
                                 Text(
                                     text = slowMovingMetadata?.message ?: "Requires 30 days history",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MutedInk,
+                                    color = if (isSlowMovingActive && ThemeState.isDark) Color(0xFFFFF4DC).copy(alpha = 0.85f) else MutedInk,
                                     fontSize = 11.sp,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
@@ -708,7 +710,7 @@ fun DashboardHomeContent(
                                         Text(
                                             text = "$slowName ›",
                                             style = MaterialTheme.typography.bodyMedium,
-                                            color = InkDark,
+                                            color = if (ThemeState.isDark) Color(0xFFFFF4DC) else InkDark,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 12.sp,
                                             lineHeight = 16.sp,
@@ -719,7 +721,7 @@ fun DashboardHomeContent(
                                         Text(
                                             text = "$slowUnits left · $slowSold sold / 30 days",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MutedInk,
+                                            color = if (ThemeState.isDark) Color(0xFFFFF4DC).copy(alpha = 0.85f) else MutedInk,
                                             fontSize = 11.sp,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
@@ -997,7 +999,7 @@ fun DashboardHomeContent(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(14.dp),
+                                .padding(start = 14.dp, top = 14.dp, bottom = 14.dp, end = 76.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             SparkleIcon(primaryColor = MainBlue)
@@ -1109,7 +1111,7 @@ private fun AiPriorityCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(start = 14.dp, top = 14.dp, bottom = 14.dp, end = 76.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {

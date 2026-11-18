@@ -114,7 +114,7 @@ private val BoldOutlineDarkColorScheme = darkColorScheme(
     outlineVariant = Color(0xFFFFF4DC),
     error = Color(0xFFE5484D),
     onError = Color.White,
-    errorContainer = Color(0xFF7A2E4C),
+    errorContainer = Color(0xFF5A2D6E),
     onErrorContainer = Color(0xFFFFF4DC)
 )
 

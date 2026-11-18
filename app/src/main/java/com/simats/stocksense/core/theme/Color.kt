@@ -35,7 +35,7 @@ import androidx.compose.ui.graphics.Color
  * - Soft Light Blue: #2B3F8F
  * - Pale Blue: #2B3F8F
  * - Soft Peach: #7A4A1E
- * - Soft Pink: #7A2E4C
+ * - Soft Pink: #5A2D6E (Deep Plum for Slow Moving)
  * - Soft Lavender: #4B3A8C
  * - Status In Stock: #C9B8FF
  * - Status Low Stock: #FF9F5A
@@ -103,7 +103,7 @@ val DarkBoldColors = BoldColors(
     softLightBlue = Color(0xFF2B3F8F),
     paleBlue = Color(0xFF2B3F8F),
     softPeach = Color(0xFF7A4A1E),
-    softPink = Color(0xFF7A2E4C),
+    softPink = Color(0xFF5A2D6E),
     softLavender = Color(0xFF4B3A8C),
     statusInStock = Color(0xFFC9B8FF),
     statusLowStock = Color(0xFFFF9F5A),
@@ -153,6 +153,9 @@ val SoftLowStock: Color
     get() = ThemeState.currentBoldColors.statusLowStock
 
 val StatusDangerRed: Color
+    get() = ThemeState.currentBoldColors.statusDangerRed
+
+val DangerRed: Color
     get() = ThemeState.currentBoldColors.statusDangerRed
 
 val OutlineInk: Color

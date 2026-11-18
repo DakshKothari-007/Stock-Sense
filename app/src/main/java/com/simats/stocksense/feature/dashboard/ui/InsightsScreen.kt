@@ -55,7 +55,7 @@ enum class InsightFilterCategory(val label: String) {
     ALL("All"),
     REORDER("Reorder"),
     SLOW_MOVING("Slow-moving"),
-    BOUGHT_TOGETHER("Bought together")
+    BUNDLE("Bundle")
 }
 
 /**
@@ -100,7 +100,7 @@ sealed class InsightItem {
         val originalIndex: Int
     ) : InsightItem() {
         override val id: String = "pair_${item.pairId ?: "${item.product1?.id}_${item.product2?.id}_$originalIndex"}"
-        override val category: InsightFilterCategory = InsightFilterCategory.BOUGHT_TOGETHER
+        override val category: InsightFilterCategory = InsightFilterCategory.BUNDLE
         override val priorityRank: Int = 3 // Bundle cross-sell opportunity
     }
 }
@@ -156,7 +156,7 @@ fun InsightsListContent(
     // Selected filter chip state
     var selectedFilter by rememberSaveable { mutableStateOf(InsightFilterCategory.ALL) }
 
-    // Aggregate and sort all insights: High priority first, then medium, then low
+    // Aggregate and sort all actionable insights: Reorder, Slow-moving / Dead stock, and top 5 Bundle suggestions
     val allInsights = remember(uiState.reorderItems, uiState.slowMovingItems, uiState.productPairItems) {
         val list = mutableListOf<InsightItem>()
         uiState.reorderItems.forEachIndexed { index, item ->
@@ -165,7 +165,8 @@ fun InsightsListContent(
         uiState.slowMovingItems.forEachIndexed { index, item ->
             list.add(InsightItem.SlowMoving(item, index))
         }
-        uiState.productPairItems.forEachIndexed { index, item ->
+        // Take at most top 5 bundle/pair suggestions (never count every product pair)
+        uiState.productPairItems.take(5).forEachIndexed { index, item ->
             list.add(InsightItem.ProductPair(item, index))
         }
         list.sortedWith(compareBy<InsightItem> { it.priorityRank }.thenBy { it.id })
@@ -177,15 +178,20 @@ fun InsightsListContent(
             InsightFilterCategory.ALL -> allInsights
             InsightFilterCategory.REORDER -> allInsights.filter { it is InsightItem.Reorder }
             InsightFilterCategory.SLOW_MOVING -> allInsights.filter { it is InsightItem.SlowMoving }
-            InsightFilterCategory.BOUGHT_TOGETHER -> allInsights.filter { it is InsightItem.ProductPair }
+            InsightFilterCategory.BUNDLE -> allInsights.filter { it is InsightItem.ProductPair }
         }
     }
 
-    // Header count strictly computed from the displayed list size
-    val displayedCount = filteredInsights.size
-    val oppText = when (displayedCount) {
+    // Tab counts matching their lists
+    val allCount = allInsights.size
+    val reorderCount = remember(allInsights) { allInsights.count { it is InsightItem.Reorder } }
+    val slowMovingCount = remember(allInsights) { allInsights.count { it is InsightItem.SlowMoving } }
+    val bundleCount = remember(allInsights) { allInsights.count { it is InsightItem.ProductPair } }
+
+    // Header count equals the number of actionable cards in "All" tab
+    val oppText = when (allCount) {
         1 -> "1 opportunity for your shop"
-        else -> "$displayedCount opportunities for your shop"
+        else -> "$allCount opportunities for your shop"
     }
     val windowInfo = rememberWindowSizeInfo()
 
@@ -296,8 +302,14 @@ fun InsightsListContent(
                     ) {
                         InsightFilterCategory.values().forEach { filter ->
                             val isSelected = selectedFilter == filter
+                            val count = when (filter) {
+                                InsightFilterCategory.ALL -> allCount
+                                InsightFilterCategory.REORDER -> reorderCount
+                                InsightFilterCategory.SLOW_MOVING -> slowMovingCount
+                                InsightFilterCategory.BUNDLE -> bundleCount
+                            }
                             BoldChip(
-                                text = filter.label,
+                                text = "${filter.label} ($count)",
                                 isSelected = isSelected,
                                 onClick = { selectedFilter = filter }
                             )
@@ -380,11 +392,11 @@ fun InsightsListContent(
                             } else {
                                 "Nothing slow-moving right now. All inventory is turning over on schedule."
                             }
-                            InsightFilterCategory.BOUGHT_TOGETHER -> if (!uiState.hasEnoughPairsHistory) {
+                            InsightFilterCategory.BUNDLE -> if (!uiState.hasEnoughPairsHistory) {
                                 uiState.productPairsHistoryMessage
                                     ?: "Store needs at least 30 bills in the last 90 days to identify reliable product pairs."
                             } else {
-                                "No frequently bought together combinations detected right now."
+                                "No bundle combinations detected right now."
                             }
                         }
                         Text(
