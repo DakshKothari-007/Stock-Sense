@@ -12,6 +12,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -1386,14 +1390,16 @@ fun ProfileContent(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(SoftPeach)
+                                .background(if (ThemeState.isDark) SoftLightBlue else SoftPeach)
                                 .border(1.5.dp, InkDark, RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Canvas(modifier = Modifier.size(18.dp)) {
-                                drawCircle(color = InkDark, radius = size.width * 0.3f, style = Stroke(width = 1.8.dp.toPx()))
-                                drawCircle(color = InkDark, radius = size.width * 0.45f, style = Stroke(width = 1.2.dp.toPx()))
-                            }
+                            Icon(
+                                imageVector = Icons.Outlined.Settings,
+                                contentDescription = "Settings",
+                                tint = InkDark,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
@@ -1440,14 +1446,12 @@ fun ProfileContent(
                                 .border(1.5.dp, InkDark, RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Canvas(modifier = Modifier.size(18.dp)) {
-                                drawRect(
-                                    color = InkDark,
-                                    topLeft = Offset(size.width * 0.15f, size.height * 0.2f),
-                                    size = Size(size.width * 0.7f, size.height * 0.7f),
-                                    style = Stroke(width = 1.8.dp.toPx())
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.Logout,
+                                contentDescription = "Sign Out",
+                                tint = InkDark,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
@@ -1494,41 +1498,12 @@ fun ProfileContent(
                                 .border(1.5.dp, InkDark, RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Canvas(modifier = Modifier.size(18.dp)) {
-                                val w = size.width
-                                val h = size.height
-                                // Trash can body
-                                val body = Path().apply {
-                                    moveTo(w * 0.25f, h * 0.35f)
-                                    lineTo(w * 0.3f, h * 0.85f)
-                                    lineTo(w * 0.7f, h * 0.85f)
-                                    lineTo(w * 0.75f, h * 0.35f)
-                                    close()
-                                }
-                                drawPath(
-                                    path = body,
-                                    color = StatusDangerRed,
-                                    style = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                )
-                                // Lid
-                                drawLine(
-                                    color = StatusDangerRed,
-                                    start = Offset(w * 0.15f, h * 0.35f),
-                                    end = Offset(w * 0.85f, h * 0.35f),
-                                    strokeWidth = 1.6.dp.toPx(),
-                                    cap = StrokeCap.Round
-                                )
-                                // Handle
-                                drawArc(
-                                    color = StatusDangerRed,
-                                    startAngle = 180f,
-                                    sweepAngle = 180f,
-                                    useCenter = false,
-                                    topLeft = Offset(w * 0.38f, h * 0.2f),
-                                    size = Size(w * 0.24f, h * 0.24f),
-                                    style = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round)
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Outlined.DeleteOutline,
+                                contentDescription = "Delete account",
+                                tint = StatusDangerRed,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
@@ -1592,6 +1567,22 @@ private fun InfoRow(label: String, value: String) {
 @Composable
 fun ProfileScreenPreview() {
     StockSenseTheme {
+        ProfileContent()
+    }
+}
+
+@Preview(name = "Profile Small 360dp Large Font", showBackground = true, widthDp = 360, fontScale = 1.3f)
+@Composable
+fun ProfileScreenSmallDevicePreview() {
+    StockSenseTheme(themeMode = ThemeMode.LIGHT) {
+        ProfileContent()
+    }
+}
+
+@Preview(name = "Profile Dark Mode", showBackground = true)
+@Composable
+fun ProfileScreenDarkPreview() {
+    StockSenseTheme(themeMode = ThemeMode.DARK) {
         ProfileContent()
     }
 }

@@ -56,12 +56,7 @@ fun InventoryScreen(
     viewModel: InventoryViewModel = viewModel(),
     onImportDataClick: () -> Unit = {},
     onAddProductClick: () -> Unit = {},
-    onProductClick: (InventoryProduct) -> Unit = {},
-    onMilkProductClick: () -> Unit = {},
-    onBiscuitsProductClick: () -> Unit = {},
-    onAttaProductClick: () -> Unit = {},
-    onTeaProductClick: () -> Unit = {},
-    onParleGProductClick: () -> Unit = {}
+    onProductClick: (InventoryProduct) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -87,12 +82,7 @@ fun InventoryScreen(
         onLoadMore = { viewModel.loadMore() },
         onImportDataClick = onImportDataClick,
         onAddProductClick = onAddProductClick,
-        onProductClick = onProductClick,
-        onMilkProductClick = onMilkProductClick,
-        onBiscuitsProductClick = onBiscuitsProductClick,
-        onAttaProductClick = onAttaProductClick,
-        onTeaProductClick = onTeaProductClick,
-        onParleGProductClick = onParleGProductClick
+        onProductClick = onProductClick
     )
 }
 
@@ -108,12 +98,7 @@ fun InventoryScreenContent(
     onLoadMore: () -> Unit = {},
     onImportDataClick: () -> Unit = {},
     onAddProductClick: () -> Unit = {},
-    onProductClick: (InventoryProduct) -> Unit = {},
-    onMilkProductClick: () -> Unit = {},
-    onBiscuitsProductClick: () -> Unit = {},
-    onAttaProductClick: () -> Unit = {},
-    onTeaProductClick: () -> Unit = {},
-    onParleGProductClick: () -> Unit = {}
+    onProductClick: (InventoryProduct) -> Unit = {}
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -201,12 +186,7 @@ fun InventoryScreenContent(
                     onLoadMore = onLoadMore,
                     onImportDataClick = onImportDataClick,
                     onAddProductClick = onAddProductClick,
-                    onProductClick = onProductClick,
-                    onMilkProductClick = onMilkProductClick,
-                    onBiscuitsProductClick = onBiscuitsProductClick,
-                    onAttaProductClick = onAttaProductClick,
-                    onTeaProductClick = onTeaProductClick,
-                    onParleGProductClick = onParleGProductClick
+                    onProductClick = onProductClick
                 )
             }
         }
@@ -231,12 +211,7 @@ fun InventoryContent(
     onLoadMore: () -> Unit = {},
     onImportDataClick: () -> Unit = {},
     onAddProductClick: () -> Unit = {},
-    onProductClick: (InventoryProduct) -> Unit = {},
-    onMilkProductClick: () -> Unit = {},
-    onBiscuitsProductClick: () -> Unit = {},
-    onAttaProductClick: () -> Unit = {},
-    onTeaProductClick: () -> Unit = {},
-    onParleGProductClick: () -> Unit = {}
+    onProductClick: (InventoryProduct) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
 
@@ -488,11 +463,6 @@ fun InventoryContent(
                             )
 
                             products.forEach { item ->
-                                val isMarie = item.name.contains("Marie", ignoreCase = true)
-                                val isAtta = item.name.contains("Atta", ignoreCase = true)
-                                val isTea = item.name.contains("Tea", ignoreCase = true)
-                                val isParleG = item.name.contains("Parle", ignoreCase = true)
-
                                 BoldCard(
                                     modifier = Modifier.fillMaxWidth(),
                                     backgroundColor = CardWhite,
@@ -502,13 +472,6 @@ fun InventoryContent(
                                     shape = RoundedCornerShape(14.dp),
                                     onClick = {
                                         onProductClick(item)
-                                        when {
-                                            isMarie -> onBiscuitsProductClick()
-                                            isAtta -> onAttaProductClick()
-                                            isTea -> onTeaProductClick()
-                                            isParleG -> onParleGProductClick()
-                                            else -> onMilkProductClick()
-                                        }
                                     }
                                 ) {
                                     Row(
@@ -612,11 +575,11 @@ fun InventoryContent(
                         }
                     }
 
-                    // Bottom padding so the last product is not hidden behind the button
+                    // Bottom padding so the last product is not hidden behind the button or the FAB
                     if (showBottomImportButton) {
-                        Spacer(modifier = Modifier.height(88.dp))
+                        Spacer(modifier = Modifier.height(156.dp))
                     } else {
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(96.dp))
                     }
                 }
 
@@ -664,6 +627,48 @@ fun InventoryScreenPreview() {
                 InventoryProduct(
                     id = "1",
                     name = "Amul Milk · 500 ml",
+                    sku = "DAI-001",
+                    price = "₹30",
+                    status = "Low stock · Minimum 24",
+                    statusColorHex = 0xFFFF9F5A,
+                    units = "8",
+                    iconType = 0
+                )
+            )
+        )
+    }
+}
+
+@Preview(name = "Inventory Small 360dp Large Font", showBackground = true, widthDp = 360, fontScale = 1.3f)
+@Composable
+fun InventoryScreenSmallDevicePreview() {
+    StockSenseTheme(themeMode = ThemeMode.LIGHT) {
+        InventoryContent(
+            products = listOf(
+                InventoryProduct(
+                    id = "1",
+                    name = "Amul Taaza Homogenised Toned Milk 500ml",
+                    sku = "DAI-001",
+                    price = "₹30",
+                    status = "Low stock · Minimum 24",
+                    statusColorHex = 0xFFFF9F5A,
+                    units = "8",
+                    iconType = 0
+                )
+            )
+        )
+    }
+}
+
+@Preview(name = "Inventory Dark Mode", showBackground = true)
+@Composable
+fun InventoryScreenDarkPreview() {
+    StockSenseTheme(themeMode = ThemeMode.DARK) {
+        InventoryContent(
+            products = listOf(
+                InventoryProduct(
+                    id = "1",
+                    name = "Amul Taaza Homogenised Toned Milk 500ml",
                     sku = "DAI-001",
                     price = "₹30",
                     status = "Low stock · Minimum 24",

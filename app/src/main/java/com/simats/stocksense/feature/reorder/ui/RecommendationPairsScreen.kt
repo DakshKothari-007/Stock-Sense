@@ -390,7 +390,7 @@ fun RecommendationPairsScreen(
 
                 BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = SoftPeach,
+                    backgroundColor = if (ThemeState.isDark) SoftLightBlue else SoftPeach,
                     borderColor = InkDark,
                     borderWidth = 2.5.dp,
                     shadowOffset = 4.dp

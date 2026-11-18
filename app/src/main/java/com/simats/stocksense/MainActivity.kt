@@ -60,11 +60,7 @@ import com.simats.stocksense.feature.inventory.ui.InventoryImportedScreen
 import com.simats.stocksense.feature.inventory.viewmodel.ImportViewModel
 import com.simats.stocksense.feature.inventory.viewmodel.InventoryViewModel
 import com.simats.stocksense.feature.inventory.viewmodel.ProductFormViewModel
-import com.simats.stocksense.feature.inventory.ui.ProductAttaScreen
-import com.simats.stocksense.feature.inventory.ui.ProductBiscuitsScreen
 import com.simats.stocksense.feature.inventory.ui.ProductDetailScreen
-import com.simats.stocksense.feature.inventory.ui.ProductParleGScreen
-import com.simats.stocksense.feature.inventory.ui.ProductTeaScreen
 import com.simats.stocksense.feature.inventory.viewmodel.ProductDetailViewModel
 import com.simats.stocksense.feature.reorder.ui.AcceptedOverlayScreen
 import com.simats.stocksense.feature.reorder.ui.DismissedOverlayScreen
@@ -421,35 +417,22 @@ fun StockSenseAppNavigation(
                         productId = prod.id.toIntOrNull(),
                         sku = prod.sku.takeIf { it.isNotBlank() && it != "—" }
                     )
-                },
-                onProductMilkClick = {
-                    val currentProd = productDetailViewModel.uiState.value.product
-                    val sku = currentProd.sku.takeIf { it.isNotBlank() && it != "—" }
-                    val id = currentProd.id.toIntOrNull()
-                    if (sku == null && id == null) {
-                        productDetailViewModel.loadProduct(sku = "DAI-001")
-                    }
                     navController.navigate("product_detail") {
                         launchSingleTop = true
                     }
                 },
-                onProductBiscuitsClick = {
-                    navController.navigate("product_biscuits") {
-                        launchSingleTop = true
+                onLowStockClick = { sku, id ->
+                    if (id != null || !sku.isNullOrBlank()) {
+                        productDetailViewModel.loadProduct(productId = id, sku = sku)
+                    } else {
+                        val currentProd = productDetailViewModel.uiState.value.product
+                        val curSku = currentProd.sku.takeIf { it.isNotBlank() && it != "—" }
+                        val curId = currentProd.id.toIntOrNull()
+                        if (curSku == null && curId == null) {
+                            productDetailViewModel.loadProduct(sku = "DAI-001")
+                        }
                     }
-                },
-                onProductAttaClick = {
-                    navController.navigate("product_atta") {
-                        launchSingleTop = true
-                    }
-                },
-                onProductTeaClick = {
-                    navController.navigate("product_tea") {
-                        launchSingleTop = true
-                    }
-                },
-                onProductParleGClick = {
-                    navController.navigate("product_parleg") {
+                    navController.navigate("product_detail") {
                         launchSingleTop = true
                     }
                 },
@@ -642,74 +625,7 @@ fun StockSenseAppNavigation(
                 viewModel = productDetailViewModel
             )
         }
-        composable("product_biscuits") {
-            ProductBiscuitsScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                },
-                onSalesAnalyticsClick = {
-                    navController.navigate("sales_analytics") {
-                        launchSingleTop = true
-                    }
-                },
-                onActionClick = {
-                    navController.navigate("slow_moving_recommendation") {
-                        launchSingleTop = true
-                    }
-                }
-            )
-        }
-        composable("product_atta") {
-            ProductAttaScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                },
-                onReorderClick = {
-                    navController.navigate("reorder_placed") {
-                        launchSingleTop = true
-                    }
-                },
-                onSalesAnalyticsClick = {
-                    navController.navigate("sales_analytics") {
-                        launchSingleTop = true
-                    }
-                }
-            )
-        }
-        composable("product_tea") {
-            ProductTeaScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                },
-                onReorderClick = {
-                    navController.navigate("reorder_placed") {
-                        launchSingleTop = true
-                    }
-                },
-                onSalesAnalyticsClick = {
-                    navController.navigate("sales_analytics") {
-                        launchSingleTop = true
-                    }
-                }
-            )
-        }
-        composable("product_parleg") {
-            ProductParleGScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                },
-                onReorderClick = {
-                    navController.navigate("reorder_placed") {
-                        launchSingleTop = true
-                    }
-                },
-                onSalesAnalyticsClick = {
-                    navController.navigate("sales_analytics") {
-                        launchSingleTop = true
-                    }
-                }
-            )
-        }
+
         composable("slow_moving_recommendation") {
             SlowMovingRecommendationScreen(
                 onBackClick = {

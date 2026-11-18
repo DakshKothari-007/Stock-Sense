@@ -239,7 +239,7 @@ fun RecordSaleScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 10.dp),
-                            backgroundColor = SoftPeach,
+                            backgroundColor = if (ThemeState.isDark) SoftLightBlue else SoftPeach,
                             borderColor = InkDark,
                             borderWidth = 2.dp,
                             shadowOffset = 2.dp,

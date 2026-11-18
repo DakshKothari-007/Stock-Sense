@@ -43,7 +43,9 @@ import com.simats.stocksense.data.model.ProductPairItemDto
 import com.simats.stocksense.data.model.ReorderItemDto
 import com.simats.stocksense.data.model.SlowMovingItemDto
 import com.simats.stocksense.feature.inventory.icon.ProductAvatar
+import com.simats.stocksense.feature.reorder.viewmodel.InsightsUiState
 import com.simats.stocksense.feature.reorder.viewmodel.InsightsViewModel
+import androidx.compose.ui.tooling.preview.Preview
 import java.util.Locale
 
 /**
@@ -111,7 +113,6 @@ fun InsightsContent(
     onTeaPairClick: () -> Unit = {},
     viewModel: InsightsViewModel = viewModel()
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
     val uiState by viewModel.uiState.collectAsState()
 
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -126,6 +127,31 @@ fun InsightsContent(
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
+
+    InsightsListContent(
+        storeName = storeName,
+        uiState = uiState,
+        onRefresh = { viewModel.refresh() },
+        onReorderMilkClick = onReorderMilkClick,
+        onMoveBiscuitsClick = onMoveBiscuitsClick,
+        onTeaPairClick = onTeaPairClick,
+        onSlowMovingIndexSelected = { viewModel.selectSlowMovingIndex(it) },
+        onPairIndexSelected = { viewModel.selectPairIndex(it) }
+    )
+}
+
+@Composable
+fun InsightsListContent(
+    storeName: String? = null,
+    uiState: InsightsUiState,
+    onRefresh: () -> Unit = {},
+    onReorderMilkClick: () -> Unit = {},
+    onMoveBiscuitsClick: () -> Unit = {},
+    onTeaPairClick: () -> Unit = {},
+    onSlowMovingIndexSelected: (Int) -> Unit = {},
+    onPairIndexSelected: (Int) -> Unit = {}
+) {
+    val primaryColor = MaterialTheme.colorScheme.primary
 
     // Selected filter chip state
     var selectedFilter by rememberSaveable { mutableStateOf(InsightFilterCategory.ALL) }
@@ -193,14 +219,17 @@ fun InsightsContent(
                             text = "$storeDisplay · ${NumberFormatUtil.formatCurrentHeaderDate()}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MutedInk,
-                            fontSize = 12.sp
+                            fontSize = 12.sp,
+                            lineHeight = 16.sp,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
                     // Summary Opportunities Banner
                     BoldCard(
                         modifier = Modifier.fillMaxWidth(),
-                        backgroundColor = SoftPeach,
+                        backgroundColor = if (ThemeState.isDark) SoftLavender else SoftPeach,
                         borderColor = InkDark,
                         borderWidth = 2.dp,
                         shadowOffset = 3.dp
@@ -314,7 +343,7 @@ fun InsightsContent(
                         )
                         BoldButton(
                             text = "Retry",
-                            onClick = { viewModel.refresh() },
+                            onClick = onRefresh,
                             isPrimary = true
                         )
                     }
@@ -387,7 +416,7 @@ fun InsightsContent(
                             item = insight.item,
                             primaryColor = primaryColor,
                             onClick = {
-                                viewModel.selectSlowMovingIndex(insight.originalIndex)
+                                onSlowMovingIndexSelected(insight.originalIndex)
                                 onMoveBiscuitsClick()
                             }
                         )
@@ -397,7 +426,7 @@ fun InsightsContent(
                             pair = insight.item,
                             primaryColor = primaryColor,
                             onClick = {
-                                viewModel.selectPairIndex(insight.originalIndex)
+                                onPairIndexSelected(insight.originalIndex)
                                 onTeaPairClick()
                             }
                         )
@@ -418,6 +447,11 @@ fun InsightsContent(
                     .fillMaxWidth()
                     .padding(top = 8.dp, bottom = 16.dp)
             )
+        }
+
+        // Bottom spacer to ensure Dukaan Mitra FAB never covers content
+        item(key = "bottom_spacer") {
+            Spacer(modifier = Modifier.height(96.dp))
         }
     }
 }
@@ -507,7 +541,8 @@ fun ReorderInsightCard(
             val salesRate = reorder.dailySalesRate ?: 0.0
             val suggestedQty = reorder.suggestedQuantity ?: 0
             val costStr = NumberFormatUtil.formatIndianRupees(reorder.estimatedCost)
-            val stockText = "$currentStock units left, $salesRate sold per day. Add $suggestedQty units for $costStr to avoid an empty shelf."
+            val salesRateFormatted = if (salesRate % 1.0 == 0.0) "${salesRate.toInt()}" else String.format(Locale.US, "%.1f", salesRate)
+            val stockText = "$currentStock units left, $salesRateFormatted sold per day. Add $suggestedQty units for $costStr to avoid an empty shelf."
             Text(
                 text = stockText,
                 style = MaterialTheme.typography.bodySmall,
@@ -696,5 +731,38 @@ fun ProductPairInsightCard(
                 lineHeight = 17.sp
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun InsightsScreenPreview() {
+    StockSenseTheme(themeMode = ThemeMode.LIGHT) {
+        InsightsListContent(
+            storeName = "Kirana Store",
+            uiState = InsightsUiState()
+        )
+    }
+}
+
+@Preview(name = "Insights Dark Mode", showBackground = true)
+@Composable
+fun InsightsScreenDarkPreview() {
+    StockSenseTheme(themeMode = ThemeMode.DARK) {
+        InsightsListContent(
+            storeName = "Kirana Store",
+            uiState = InsightsUiState()
+        )
+    }
+}
+
+@Preview(name = "Insights Small 360dp Large Font", showBackground = true, widthDp = 360, fontScale = 1.3f)
+@Composable
+fun InsightsScreenSmallFontPreview() {
+    StockSenseTheme(themeMode = ThemeMode.LIGHT) {
+        InsightsListContent(
+            storeName = "Kirana Store",
+            uiState = InsightsUiState()
+        )
     }
 }

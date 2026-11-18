@@ -36,15 +36,11 @@ fun MainScreen(
     onBackClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
     onProductDetailClick: (com.simats.stocksense.data.model.InventoryProduct) -> Unit = {},
-    onProductMilkClick: () -> Unit = {},
-    onProductBiscuitsClick: () -> Unit = {},
-    onProductAttaClick: () -> Unit = {},
-    onProductTeaClick: () -> Unit = {},
-    onProductParleGClick: () -> Unit = {},
+    onLowStockClick: (sku: String?, id: Int?) -> Unit = { _, _ -> },
     onSalesAnalyticsClick: () -> Unit = {},
     onReorderRecommendationClick: () -> Unit = {},
     onRecommendationPairsClick: () -> Unit = {},
-    onSlowMovingRecommendationClick: () -> Unit = onProductBiscuitsClick,
+    onSlowMovingRecommendationClick: () -> Unit = {},
     onInventoryImportedClick: () -> Unit = {},
     onAddProductClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
@@ -118,24 +114,19 @@ fun MainScreen(
                                 0 -> DashboardHomeScreen(
                                     viewModel = dashboardViewModel,
                                     onNotificationsClick = onNotificationsClick,
-                                    onLowStockClick = onProductMilkClick,
-                                    onSlowMovingClick = onProductBiscuitsClick,
+                                    onLowStockClick = onLowStockClick,
+                                    onSlowMovingClick = onSlowMovingRecommendationClick,
                                     onAnalyticsClick = onSalesAnalyticsClick,
                                     onInsightsClick = { viewModel.selectTab(2) },
                                     onReorderMilkClick = onReorderRecommendationClick,
-                                    onFreeUpStockClick = onProductBiscuitsClick,
+                                    onFreeUpStockClick = onSlowMovingRecommendationClick,
                                     onImportClick = onInventoryImportedClick
                                 )
                                 1 -> InventoryScreen(
                                     viewModel = inventoryViewModel,
                                     onImportDataClick = onInventoryImportedClick,
                                     onAddProductClick = onAddProductClick,
-                                    onProductClick = onProductDetailClick,
-                                    onMilkProductClick = onProductMilkClick,
-                                    onBiscuitsProductClick = onProductBiscuitsClick,
-                                    onAttaProductClick = onProductAttaClick,
-                                    onTeaProductClick = onProductTeaClick,
-                                    onParleGProductClick = onProductParleGClick
+                                    onProductClick = onProductDetailClick
                                 )
                                 2 -> InsightsContent(
                                     storeName = uiState.storeProfile.name.takeIf { it.isNotBlank() },
@@ -171,11 +162,12 @@ fun MainScreen(
 
                     // Dukaan Mitra Floating Action Button (Home, Inventory, Insights only)
                     if (uiState.selectedTab in 0..2) {
+                        val fabBottomPadding = if (uiState.selectedTab == 1) 88.dp else 16.dp
                         DukaanMitraFloatingButton(
                             onClick = onAiChatClick,
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .padding(end = 16.dp, bottom = 16.dp)
+                                .padding(end = 16.dp, bottom = fabBottomPadding)
                         )
                     }
                 }

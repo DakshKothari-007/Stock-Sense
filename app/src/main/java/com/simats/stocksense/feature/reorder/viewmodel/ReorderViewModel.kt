@@ -167,11 +167,15 @@ class ReorderViewModel(
         val soldText = "${NumberFormatUtil.formatIndianNumber(sold30)} units (30d)"
 
         val demandRate = item.dailySalesRate ?: 0.0
-        val demandText = "${String.format(Locale.US, "%.1f", demandRate)} units/day"
+        val demandFormatted = if (demandRate % 1.0 == 0.0) "${demandRate.toInt()}" else String.format(Locale.US, "%.1f", demandRate)
+        val demandText = "$demandFormatted units/day"
 
         val daysLeft = item.daysOfStockLeft
         val coverNowText = when {
-            daysLeft != null && daysLeft > 0 -> "$daysLeft days"
+            daysLeft != null && daysLeft > 0 -> {
+                val rounded = Math.round(daysLeft).toInt()
+                if (rounded <= 0) "less than a day" else "$rounded days"
+            }
             currentStock <= 0 -> "0 days (out of stock)"
             else -> "less than a day"
         }
@@ -180,7 +184,9 @@ class ReorderViewModel(
         val projectedTotal = currentStock + recUnits + onOrder
         val coverAfterDays = item.stockCoverAfterReorderDays
         val coverAfterText = if (coverAfterDays != null) {
-            "$projectedTotal units · $coverAfterDays days"
+            val rounded = Math.round(coverAfterDays).toInt()
+            val daysStr = if (rounded <= 0) "less than a day" else "$rounded days"
+            "$projectedTotal units · $daysStr"
         } else {
             "$projectedTotal units · —"
         }

@@ -29,6 +29,9 @@ object ThemeState {
     var currentBoldColors: BoldColors by mutableStateOf(LightBoldColors)
         internal set
 
+    val isDark: Boolean
+        get() = currentBoldColors.isDark
+
     private var appContext: Context? = null
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 

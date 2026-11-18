@@ -284,8 +284,11 @@ fun SlowMovingRecommendationScreen(
                         val soldPacks = item.unitsSold30Days ?: 0
                         val revenue = if (item.sellingPrice != null) soldPacks * item.sellingPrice!! else null
                         val coverDaysText = when {
-                            item.stockCoverDays != null -> "${item.stockCoverDays!!.toInt()} days"
                             soldPacks == 0 -> "No sales in 30 days"
+                            item.stockCoverDays != null && item.stockCoverDays!! <= 365.0 -> {
+                                val rounded = Math.round(item.stockCoverDays!!).toInt()
+                                "$rounded days"
+                            }
                             else -> " — "
                         }
 
@@ -305,7 +308,7 @@ fun SlowMovingRecommendationScreen(
 
                 BoldCard(
                     modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = SoftPeach,
+                    backgroundColor = if (ThemeState.isDark) SoftLavender else SoftPeach,
                     borderColor = InkDark,
                     borderWidth = 2.5.dp,
                     shadowOffset = 4.dp

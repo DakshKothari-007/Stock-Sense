@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -333,7 +334,10 @@ fun ProductDetailScreenContent(
                                         text = "Minimum: ${uiState.minimumStockThreshold} units",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MutedInk,
-                                        fontSize = 11.sp
+                                        fontSize = 11.sp,
+                                        maxLines = 2,
+                                        lineHeight = 15.sp,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -341,7 +345,7 @@ fun ProductDetailScreenContent(
                             // Selling Price Card
                             BoldCard(
                                 modifier = Modifier.weight(1f),
-                                backgroundColor = SoftPeach,
+                                backgroundColor = if (ThemeState.isDark) SoftLightBlue else SoftPeach,
                                 borderColor = InkDark,
                                 borderWidth = 2.dp,
                                 shadowOffset = 3.dp,
@@ -363,11 +367,15 @@ fun ProductDetailScreenContent(
                                         fontSize = 20.sp
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
+                                    val costFormatted = uiState.costPrice.replace(".00", "")
                                     Text(
-                                        text = "Purchase cost: ${uiState.costPrice}",
+                                        text = "Cost $costFormatted",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MutedInk,
-                                        fontSize = 11.sp
+                                        fontSize = 11.sp,
+                                        maxLines = 2,
+                                        lineHeight = 15.sp,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -652,7 +660,7 @@ fun ProductDetailScreenContent(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "Stock cover pace",
+                                        text = uiState.stockCoverLabel,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MutedInk,
                                         fontSize = 12.sp
@@ -669,56 +677,40 @@ fun ProductDetailScreenContent(
                         }
 
                         // 5. Suggested Reorder Box
-                        BoldCard(
-                            modifier = Modifier.fillMaxWidth(),
-                            backgroundColor = SoftLavender,
-                            borderColor = InkDark,
-                            borderWidth = 2.dp,
-                            shadowOffset = 3.dp,
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                        if (uiState.unitsToReorder <= 0 && uiState.onOrderUnits <= 0) {
+                            BoldCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                backgroundColor = CardWhite,
+                                borderColor = InkDark,
+                                borderWidth = 2.dp,
+                                shadowOffset = 3.dp,
+                                shape = RoundedCornerShape(16.dp)
                             ) {
                                 Row(
+                                    modifier = Modifier.padding(16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Box(
                                         modifier = Modifier
                                             .size(36.dp)
                                             .clip(CircleShape)
-                                            .background(CardWhite)
+                                            .background(SoftLavender)
                                             .border(2.dp, InkDark, CircleShape),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Canvas(modifier = Modifier.size(16.dp)) {
-                                            val cx = size.width / 2f
-                                            val cy = size.height / 2f
-                                            val path = Path().apply {
-                                                moveTo(cx, 0f)
-                                                quadraticTo(cx, cy, size.width, cy)
-                                                quadraticTo(cx, cy, cx, size.height)
-                                                quadraticTo(cx, cy, 0f, cy)
-                                                quadraticTo(cx, cy, cx, 0f)
-                                            }
-                                            drawPath(
-                                                path = path,
-                                                color = MainBlue,
-                                                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                            )
-                                        }
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = InkDark,
+                                            modifier = Modifier.size(20.dp)
+                                        )
                                     }
 
                                     Spacer(modifier = Modifier.width(12.dp))
 
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = if (uiState.onOrderUnits > 0 && uiState.unitsToReorder <= 0) {
-                                                "${uiState.onOrderUnits} units already on order"
-                                            } else {
-                                                "Suggested reorder: ${uiState.unitsToReorder} units"
-                                            },
+                                            text = "No reorder needed right now",
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = InkDark,
@@ -726,40 +718,121 @@ fun ProductDetailScreenContent(
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )
+                                        Spacer(modifier = Modifier.height(2.dp))
                                         Text(
-                                            text = if (uiState.onOrderUnits > 0 && uiState.unitsToReorder <= 0) {
-                                                "Awaiting delivery from placed purchase order"
-                                            } else {
-                                                "Estimated purchase: ${uiState.estimatedCost}"
-                                            },
+                                            text = "Stock is sufficient based on current sales pace",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MutedInk,
                                             fontSize = 12.sp,
-                                            maxLines = 1,
+                                            maxLines = 2,
                                             overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
+                            }
+                        } else {
+                            BoldCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                backgroundColor = SoftLavender,
+                                borderColor = InkDark,
+                                borderWidth = 2.dp,
+                                shadowOffset = 3.dp,
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .clip(CircleShape)
+                                                .background(CardWhite)
+                                                .border(2.dp, InkDark, CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Canvas(modifier = Modifier.size(16.dp)) {
+                                                val cx = size.width / 2f
+                                                val cy = size.height / 2f
+                                                val path = Path().apply {
+                                                    moveTo(cx, 0f)
+                                                    quadraticTo(cx, cy, size.width, cy)
+                                                    quadraticTo(cx, cy, cx, size.height)
+                                                    quadraticTo(cx, cy, 0f, cy)
+                                                    quadraticTo(cx, cy, cx, 0f)
+                                                }
+                                                drawPath(
+                                                    path = path,
+                                                    color = MainBlue,
+                                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                                )
+                                            }
+                                        }
 
-                                val currentStockUnits = uiState.product.rawUnits
-                                if (uiState.onOrderUnits > 0 && uiState.unitsToReorder <= 0) {
-                                    val totalWithOnOrder = currentStockUnits + uiState.onOrderUnits
-                                    Text(
-                                        text = "Your $currentStockUnits units cover ${uiState.stockCoverDaysText}. ${uiState.onOrderUnits} units on order will bring stock to $totalWithOnOrder units.",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = InkDark,
-                                        fontSize = 12.sp,
-                                        lineHeight = 16.sp
-                                    )
-                                } else {
-                                    val targetStock = currentStockUnits + uiState.unitsToReorder
-                                    Text(
-                                        text = "Your $currentStockUnits units cover ${uiState.stockCoverDaysText}. Adding ${uiState.unitsToReorder} brings stock to $targetStock units.",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = InkDark,
-                                        fontSize = 12.sp,
-                                        lineHeight = 16.sp
-                                    )
+                                        Spacer(modifier = Modifier.width(12.dp))
+
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = if (uiState.onOrderUnits > 0 && uiState.unitsToReorder <= 0) {
+                                                    "${uiState.onOrderUnits} units already on order"
+                                                } else {
+                                                    "Suggested reorder: ${uiState.unitsToReorder} units"
+                                                },
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = InkDark,
+                                                fontSize = 14.sp,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = if (uiState.onOrderUnits > 0 && uiState.unitsToReorder <= 0) {
+                                                    "Awaiting delivery from placed purchase order"
+                                                } else {
+                                                    "Estimated purchase: ${uiState.estimatedCost}"
+                                                },
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MutedInk,
+                                                fontSize = 12.sp,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+
+                                    val currentStockUnits = uiState.product.rawUnits
+                                    if (uiState.onOrderUnits > 0 && uiState.unitsToReorder <= 0) {
+                                        val totalWithOnOrder = currentStockUnits + uiState.onOrderUnits
+                                        val coverDesc = if (uiState.stockCoverDaysText == "—") {
+                                            "Your $currentStockUnits units are in stock. ${uiState.onOrderUnits} units on order will bring stock to $totalWithOnOrder units."
+                                        } else {
+                                            "Your $currentStockUnits units cover ${uiState.stockCoverDaysText}. ${uiState.onOrderUnits} units on order will bring stock to $totalWithOnOrder units."
+                                        }
+                                        Text(
+                                            text = coverDesc,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = InkDark,
+                                            fontSize = 12.sp,
+                                            lineHeight = 16.sp
+                                        )
+                                    } else {
+                                        val targetStock = currentStockUnits + uiState.unitsToReorder
+                                        val coverDesc = if (uiState.stockCoverDaysText == "—") {
+                                            "Your $currentStockUnits units are in stock. Adding ${uiState.unitsToReorder} brings stock to $targetStock units."
+                                        } else {
+                                            "Your $currentStockUnits units cover ${uiState.stockCoverDaysText}. Adding ${uiState.unitsToReorder} brings stock to $targetStock units."
+                                        }
+                                        Text(
+                                            text = coverDesc,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = InkDark,
+                                            fontSize = 12.sp,
+                                            lineHeight = 16.sp
+                                        )
+                                    }
                                 }
                             }
                         }

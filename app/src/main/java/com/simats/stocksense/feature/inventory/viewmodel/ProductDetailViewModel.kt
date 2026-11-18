@@ -42,6 +42,7 @@ data class ProductDetailUiState(
     val costPrice: String = "—",
     val stockCoverDays: Double? = null,
     val stockCoverDaysText: String = "—",
+    val stockCoverLabel: String = "Stock cover pace",
     val unitsToReorder: Int = 0,
     val onOrderUnits: Int = 0,
     val estimatedCost: String = "—",
@@ -172,10 +173,24 @@ class ProductDetailViewModel(
                         ?: salesPoints.lastOrNull { it.date.isNotBlank() }?.date
                     val lastUpdatedDateText = NumberFormatUtil.formatProductDetailLastUpdated(rawUpdatedStr)
 
-                    val coverText = when {
-                        coverDays != null && coverDays > 0 -> "$coverDays days"
-                        rawUnits <= 0 -> "0 days (out of stock)"
-                        else -> "less than a day"
+                    val hasSalesIn7Days = has7DaySales && total7DayUnits > 0
+                    val isCoverOverYear = coverDays != null && coverDays > 365.0
+
+                    val (coverText, coverLabel) = when {
+                        !hasSalesIn7Days || isCoverOverYear || coverDays == null -> {
+                            "—" to "No recent sales"
+                        }
+                        rawUnits <= 0 -> {
+                            "0 days (out of stock)" to "Stock cover pace"
+                        }
+                        coverDays <= 0.0 -> {
+                            "less than a day" to "Stock cover pace"
+                        }
+                        else -> {
+                            val rounded = Math.round(coverDays).toInt()
+                            val text = if (rounded <= 0) "less than a day" else "$rounded days"
+                            text to "Stock cover pace"
+                        }
                     }
 
                     val rawStatus = data.status?.trim()
@@ -238,6 +253,7 @@ class ProductDetailViewModel(
                             costPrice = formattedCostPrice,
                             stockCoverDays = coverDays,
                             stockCoverDaysText = coverText,
+                            stockCoverLabel = coverLabel,
                             unitsToReorder = unitsToReorder,
                             onOrderUnits = onOrderUnits,
                             estimatedCost = estCostFormatted,

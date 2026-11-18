@@ -60,7 +60,9 @@ import com.simats.stocksense.data.model.ChatMessage
 import com.simats.stocksense.feature.ai.viewmodel.AiChatViewModel
 import java.util.*
 
-private val UserBubbleColor = SoftPeach
+private val UserBubbleColor: Color
+    @Composable
+    get() = if (ThemeState.isDark) SoftLightBlue else SoftPeach
 
 @Composable
 fun AiChatScreen(

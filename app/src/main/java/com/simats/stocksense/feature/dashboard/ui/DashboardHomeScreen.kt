@@ -64,7 +64,7 @@ import com.simats.stocksense.feature.dashboard.viewmodel.DashboardViewModel
 fun DashboardHomeScreen(
     viewModel: DashboardViewModel = viewModel(),
     onNotificationsClick: () -> Unit = {},
-    onLowStockClick: () -> Unit = {},
+    onLowStockClick: (sku: String?, id: Int?) -> Unit = { _, _ -> },
     onSlowMovingClick: () -> Unit = {},
     onAnalyticsClick: () -> Unit = {},
     onInsightsClick: () -> Unit = {},
@@ -191,7 +191,7 @@ fun DashboardHomeScreenContent(
     uiState: DashboardUiState,
     onRefresh: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
-    onLowStockClick: () -> Unit = {},
+    onLowStockClick: (sku: String?, id: Int?) -> Unit = { _, _ -> },
     onSlowMovingClick: () -> Unit = {},
     onAnalyticsClick: () -> Unit = {},
     onInsightsClick: () -> Unit = {},
@@ -291,7 +291,7 @@ fun DashboardHomeContent(
     unreadCount: Int = 0,
     lastUpdatedText: String = "",
     onNotificationsClick: () -> Unit = {},
-    onLowStockClick: () -> Unit = {},
+    onLowStockClick: (sku: String?, id: Int?) -> Unit = { _, _ -> },
     onSlowMovingClick: () -> Unit = {},
     onAnalyticsClick: () -> Unit = {},
     onInsightsClick: () -> Unit = {},
@@ -347,7 +347,8 @@ fun DashboardHomeContent(
                             style = MaterialTheme.typography.bodySmall,
                             color = MutedInk,
                             fontSize = 12.sp,
-                            maxLines = 1,
+                            lineHeight = 16.sp,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
@@ -442,10 +443,10 @@ fun DashboardHomeContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Today's Sales Card in Soft Peach
+                // Today's Sales Card in Soft Peach / Dark Pastel Blue
                 BoldCard(
                     modifier = Modifier.weight(1f),
-                    backgroundColor = SoftPeach
+                    backgroundColor = if (ThemeState.isDark) SoftLightBlue else SoftPeach
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text(
@@ -572,7 +573,10 @@ fun DashboardHomeContent(
                 BoldCard(
                     modifier = Modifier.weight(1f),
                     backgroundColor = if (isLowStockActive) SoftLavender else CardWhite,
-                    onClick = onLowStockClick
+                    onClick = {
+                        val topId = topLowItem?.id?.toString()?.toIntOrNull()
+                        onLowStockClick(topLowItem?.sku, topId)
+                    }
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text(
@@ -606,8 +610,9 @@ fun DashboardHomeContent(
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = InkDark,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp,
-                                        maxLines = 1,
+                                        fontSize = 12.sp,
+                                        lineHeight = 16.sp,
+                                        maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
@@ -628,7 +633,8 @@ fun DashboardHomeContent(
                                 color = InkDark,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp,
-                                maxLines = 1,
+                                lineHeight = 17.sp,
+                                maxLines = 2,
                                 overflow = TextOverflow.Ellipsis
                             )
                             Spacer(modifier = Modifier.height(2.dp))
@@ -704,8 +710,9 @@ fun DashboardHomeContent(
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = InkDark,
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 13.sp,
-                                            maxLines = 1,
+                                            fontSize = 12.sp,
+                                            lineHeight = 16.sp,
+                                            maxLines = 2,
                                             overflow = TextOverflow.Ellipsis
                                         )
                                         Spacer(modifier = Modifier.height(2.dp))
@@ -727,7 +734,8 @@ fun DashboardHomeContent(
                                     color = InkDark,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp,
-                                    maxLines = 1,
+                                    lineHeight = 17.sp,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
@@ -1078,7 +1086,7 @@ fun DashboardHomeContent(
                     .padding(vertical = 4.dp)
             )
 
-            Spacer(modifier = Modifier.height(88.dp))
+            Spacer(modifier = Modifier.height(96.dp))
         }
     }
 }
@@ -1261,6 +1269,30 @@ fun DashboardHomeScreenPreview() {
 @Composable
 fun DashboardHomeScreenSmallDevicePreview() {
     StockSenseTheme {
+        DashboardHomeContent(
+            data = DashboardSummaryData(),
+            unreadCount = 2,
+            lastUpdatedText = "30 Oct, 1:30 pm"
+        )
+    }
+}
+
+@Preview(name = "Dashboard Dark Mode", showBackground = true)
+@Composable
+fun DashboardHomeScreenDarkPreview() {
+    StockSenseTheme(themeMode = ThemeMode.DARK) {
+        DashboardHomeContent(
+            data = DashboardSummaryData(),
+            unreadCount = 2,
+            lastUpdatedText = "30 Oct, 1:30 pm"
+        )
+    }
+}
+
+@Preview(name = "Dashboard Dark 360dp Large Font", showBackground = true, widthDp = 360, fontScale = 1.3f)
+@Composable
+fun DashboardHomeScreenDarkSmallFontPreview() {
+    StockSenseTheme(themeMode = ThemeMode.DARK) {
         DashboardHomeContent(
             data = DashboardSummaryData(),
             unreadCount = 2,
