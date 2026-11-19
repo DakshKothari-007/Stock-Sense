@@ -263,6 +263,7 @@ fun BoldStatusChip(
 
     Box(
         modifier = modifier
+            .wrapContentWidth()
             .background(bgColor, RoundedCornerShape(8.dp))
             .border(2.dp, InkDark, RoundedCornerShape(8.dp))
             .padding(horizontal = 10.dp, vertical = 4.dp),
@@ -277,6 +278,7 @@ fun BoldStatusChip(
             ),
             color = InkDark,
             maxLines = 1,
+            softWrap = false,
             overflow = TextOverflow.Ellipsis
         )
     }

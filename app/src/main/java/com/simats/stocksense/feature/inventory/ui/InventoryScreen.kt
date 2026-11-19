@@ -464,7 +464,9 @@ fun InventoryContent(
 
                             products.forEach { item ->
                                 BoldCard(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .defaultMinSize(minHeight = 76.dp),
                                     backgroundColor = CardWhite,
                                     borderColor = InkDark,
                                     borderWidth = 2.dp,
@@ -504,7 +506,8 @@ fun InventoryContent(
                                                     fontWeight = FontWeight.Bold,
                                                     color = InkDark,
                                                     fontSize = 14.sp,
-                                                    maxLines = 1,
+                                                    lineHeight = 18.sp,
+                                                    maxLines = 2,
                                                     overflow = TextOverflow.Ellipsis
                                                 )
                                                 val skuDisplay = item.sku.ifBlank { "—" }
@@ -523,20 +526,30 @@ fun InventoryContent(
                                             }
                                         }
 
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Column(horizontalAlignment = Alignment.End) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.wrapContentWidth()
+                                        ) {
+                                            Column(
+                                                horizontalAlignment = Alignment.End,
+                                                modifier = Modifier.wrapContentWidth()
+                                            ) {
                                                 Text(
                                                     text = item.units.ifBlank { "0" },
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     fontWeight = FontWeight.ExtraBold,
                                                     color = InkDark,
-                                                    fontSize = 15.sp
+                                                    fontSize = 15.sp,
+                                                    maxLines = 1,
+                                                    softWrap = false
                                                 )
                                                 Text(
                                                     text = "units",
                                                     style = MaterialTheme.typography.bodySmall,
                                                     color = MutedInk,
-                                                    fontSize = 10.sp
+                                                    fontSize = 10.sp,
+                                                    maxLines = 1,
+                                                    softWrap = false
                                                 )
                                             }
                                             Spacer(modifier = Modifier.width(8.dp))

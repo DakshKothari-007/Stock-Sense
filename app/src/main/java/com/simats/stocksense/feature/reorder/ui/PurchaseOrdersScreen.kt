@@ -341,7 +341,9 @@ private fun PurchaseOrderCard(
     val totalAmountFormatted = NumberFormatUtil.formatIndianRupees(order.totalEstimatedCost ?: 0.0)
 
     BoldCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 76.dp),
         backgroundColor = CardWhite,
         borderColor = InkDark,
         borderWidth = 2.dp,
@@ -368,15 +370,16 @@ private fun PurchaseOrderCard(
                     fontSize = 15.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .padding(end = 8.dp)
                 )
-
-                Spacer(modifier = Modifier.width(8.dp))
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
                     color = statusBg,
-                    border = BorderStroke(1.5.dp, InkDark)
+                    border = BorderStroke(1.5.dp, InkDark),
+                    modifier = Modifier.wrapContentWidth()
                 ) {
                     Text(
                         text = order.status?.uppercase() ?: "PLACED",
@@ -385,7 +388,9 @@ private fun PurchaseOrderCard(
                         fontWeight = FontWeight.Bold,
                         color = statusFg,
                         fontSize = 10.sp,
-                        letterSpacing = 0.5.sp
+                        letterSpacing = 0.5.sp,
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
             }
@@ -410,7 +415,8 @@ private fun PurchaseOrderCard(
                         fontWeight = FontWeight.Bold,
                         color = InkDark,
                         fontSize = 14.sp,
-                        maxLines = 1,
+                        lineHeight = 18.sp,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
 

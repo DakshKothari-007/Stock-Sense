@@ -343,28 +343,36 @@ fun InventoryImportedScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column(modifier = Modifier.weight(1f)) {
+                                    Column(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(end = 8.dp)
+                                    ) {
                                         Text(
                                             text = prod.name?.takeIf { it.isNotBlank() } ?: "Product",
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = InkDark,
                                             fontSize = 13.sp,
-                                            maxLines = 1,
+                                            lineHeight = 17.sp,
+                                            maxLines = 2,
                                             overflow = TextOverflow.Ellipsis
                                         )
                                         Text(
                                             text = "${prod.sku?.takeIf { it.isNotBlank() } ?: "SKU"} · ${prod.category?.takeIf { it.isNotBlank() } ?: "General"}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MutedInk,
-                                            fontSize = 11.sp
+                                            fontSize = 11.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
 
                                     Surface(
                                         shape = RoundedCornerShape(6.dp),
                                         color = SoftPink,
-                                        border = BorderStroke(1.dp, InkDark)
+                                        border = BorderStroke(1.dp, InkDark),
+                                        modifier = Modifier.wrapContentWidth()
                                     ) {
                                         Text(
                                             text = "0 units · Out of stock",
@@ -372,6 +380,8 @@ fun InventoryImportedScreen(
                                             fontWeight = FontWeight.Bold,
                                             color = StatusDangerRed,
                                             fontSize = 10.sp,
+                                            maxLines = 1,
+                                            softWrap = false,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                         )
                                     }

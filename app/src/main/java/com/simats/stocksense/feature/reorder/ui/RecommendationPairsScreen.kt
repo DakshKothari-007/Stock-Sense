@@ -250,7 +250,8 @@ fun RecommendationPairsScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = InkDark,
                                     fontSize = 14.sp,
-                                    maxLines = 1,
+                                    lineHeight = 18.sp,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
@@ -286,7 +287,8 @@ fun RecommendationPairsScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = InkDark,
                                     fontSize = 14.sp,
-                                    maxLines = 1,
+                                    lineHeight = 18.sp,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))

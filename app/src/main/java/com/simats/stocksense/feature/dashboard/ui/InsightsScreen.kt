@@ -517,7 +517,8 @@ fun ReorderInsightCard(
                             fontWeight = FontWeight.Bold,
                             color = InkDark,
                             fontSize = 15.sp,
-                            maxLines = 1,
+                            lineHeight = 18.sp,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                         val priorityTag = when {
@@ -614,7 +615,8 @@ fun SlowMovingInsightCard(
                             fontWeight = FontWeight.Bold,
                             color = InkDark,
                             fontSize = 15.sp,
-                            maxLines = 1,
+                            lineHeight = 18.sp,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                         val isDeadStock = (item.unitsSold30Days ?: 0) == 0 || item.ruleTriggered?.contains("dead", ignoreCase = true) == true
@@ -704,7 +706,8 @@ fun ProductPairInsightCard(
                             fontWeight = FontWeight.Bold,
                             color = InkDark,
                             fontSize = 15.sp,
-                            maxLines = 1,
+                            lineHeight = 18.sp,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(

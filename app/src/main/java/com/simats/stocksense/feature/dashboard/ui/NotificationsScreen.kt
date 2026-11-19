@@ -290,7 +290,9 @@ private fun NotificationCard(
     val isRead = item.isRead == true
 
     BoldCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 76.dp),
         backgroundColor = CardWhite,
         borderColor = InkDark,
         borderWidth = 2.dp,
@@ -407,7 +409,8 @@ private fun NotificationCard(
                             fontWeight = FontWeight.Bold,
                             color = InkDark,
                             fontSize = 14.sp,
-                            maxLines = 1,
+                            lineHeight = 18.sp,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                         Spacer(modifier = Modifier.height(2.dp))

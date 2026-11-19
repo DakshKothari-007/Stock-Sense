@@ -616,7 +616,9 @@ fun SalesAnalyticsScreen(
                                         ) {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
-                                                modifier = Modifier.weight(1f)
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .padding(end = 8.dp)
                                             ) {
                                                 ProductAvatar(
                                                     name = item.nameWithUnits,
@@ -629,18 +631,21 @@ fun SalesAnalyticsScreen(
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     color = InkDark,
                                                     fontSize = 13.sp,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
+                                                    lineHeight = 17.sp,
+                                                    maxLines = 2,
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    modifier = Modifier.weight(1f)
                                                 )
                                             }
-                                            Spacer(modifier = Modifier.width(8.dp))
                                             Text(
                                                 text = item.revenueText,
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.Bold,
                                                 color = InkDark,
                                                 fontSize = 13.sp,
-                                                maxLines = 1
+                                                maxLines = 1,
+                                                softWrap = false,
+                                                modifier = Modifier.wrapContentWidth()
                                             )
                                         }
                                     }

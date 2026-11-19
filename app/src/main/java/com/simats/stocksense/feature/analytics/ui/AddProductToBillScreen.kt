@@ -286,7 +286,9 @@ private fun AddProductRowCard(
     }
 
     BoldCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 76.dp),
         backgroundColor = CardWhite,
         borderColor = InkDark,
         borderWidth = 2.dp,
@@ -306,23 +308,101 @@ private fun AddProductRowCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Middle Column: Name, SKU, Price & Stock
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = product.name ?: "—",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = InkDark,
-                    fontSize = 14.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(2.dp))
-
+            // Two-line layout Column
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Line 1: name (weight 1f, maxLines 2, ellipsis) and the Add / Added button on the right (fixed size)
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = product.name ?: "—",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = InkDark,
+                        fontSize = 14.sp,
+                        lineHeight = 18.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp)
+                    )
+
+                    // Action Button: Add, Added · N, or Out of stock (never shrink below content width)
+                    if (isOutOfStock) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = PaleBlue.copy(alpha = 0.5f),
+                            border = BorderStroke(1.dp, InkDark.copy(alpha = 0.3f)),
+                            modifier = Modifier.wrapContentWidth()
+                        ) {
+                            Text(
+                                text = "Out of stock",
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Medium,
+                                color = MutedInk,
+                                fontSize = 11.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    } else if (quantityInBill > 0) {
+                        Surface(
+                            onClick = {
+                                if (quantityInBill < availableStock) {
+                                    onAddClick()
+                                }
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            color = SoftLavender,
+                            border = BorderStroke(1.5.dp, InkDark),
+                            modifier = Modifier.wrapContentWidth()
+                        ) {
+                            Text(
+                                text = "Added · $quantityInBill",
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark,
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    } else {
+                        Surface(
+                            onClick = onAddClick,
+                            shape = RoundedCornerShape(10.dp),
+                            color = MainYellow,
+                            border = BorderStroke(1.5.dp, InkDark),
+                            modifier = Modifier.wrapContentWidth()
+                        ) {
+                            Text(
+                                text = "Add",
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark,
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
+                }
+
+                // Line 2: SKU · price on the left, and the stock info on the right as ONE short chip:
+                // "89 in stock", or "Low · 6 left" in orange. Chips are single-line (maxLines 1, softWrap false, no wrap, min width wrapContent).
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     val skuText = product.sku ?: "—"
                     Text(
@@ -331,14 +411,37 @@ private fun AddProductRowCard(
                         color = MutedInk,
                         fontSize = 11.sp,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .padding(end = 8.dp)
                     )
 
-                    if (isLowStock) {
+                    // Stock info on the right as ONE short chip
+                    if (isOutOfStock) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = CardWhite,
+                            border = BorderStroke(1.dp, InkDark.copy(alpha = 0.35f)),
+                            modifier = Modifier.wrapContentWidth()
+                        ) {
+                            Text(
+                                text = "0 in stock",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MutedInk,
+                                fontSize = 10.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    } else if (isLowStock) {
                         Surface(
                             shape = RoundedCornerShape(6.dp),
                             color = SoftLowStock,
-                            border = BorderStroke(1.dp, InkDark)
+                            border = BorderStroke(1.dp, InkDark),
+                            modifier = Modifier.wrapContentWidth()
                         ) {
                             Text(
                                 text = "Low · $availableStock left",
@@ -346,73 +449,30 @@ private fun AddProductRowCard(
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = InkDark,
-                                fontSize = 10.sp
+                                fontSize = 10.sp,
+                                maxLines = 1,
+                                softWrap = false
                             )
                         }
-                    } else if (!isOutOfStock) {
-                        Text(
-                            text = "· $availableStock in stock",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MutedInk,
-                            fontSize = 11.sp
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // Action Button: Add, Added · N, or Out of stock
-            if (isOutOfStock) {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = PaleBlue.copy(alpha = 0.5f),
-                    border = BorderStroke(1.dp, InkDark.copy(alpha = 0.3f))
-                ) {
-                    Text(
-                        text = "Out of stock",
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Medium,
-                        color = MutedInk,
-                        fontSize = 11.sp
-                    )
-                }
-            } else if (quantityInBill > 0) {
-                Surface(
-                    onClick = {
-                        if (quantityInBill < availableStock) {
-                            onAddClick()
+                    } else {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = CardWhite,
+                            border = BorderStroke(1.dp, InkDark.copy(alpha = 0.35f)),
+                            modifier = Modifier.wrapContentWidth()
+                        ) {
+                            Text(
+                                text = "$availableStock in stock",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark,
+                                fontSize = 10.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
                         }
-                    },
-                    shape = RoundedCornerShape(10.dp),
-                    color = SoftLavender,
-                    border = BorderStroke(1.5.dp, InkDark)
-                ) {
-                    Text(
-                        text = "Added · $quantityInBill",
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = InkDark,
-                        fontSize = 12.sp
-                    )
-                }
-            } else {
-                Surface(
-                    onClick = onAddClick,
-                    shape = RoundedCornerShape(10.dp),
-                    color = MainYellow,
-                    border = BorderStroke(1.5.dp, InkDark)
-                ) {
-                    Text(
-                        text = "Add",
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = InkDark,
-                        fontSize = 12.sp
-                    )
+                    }
                 }
             }
         }

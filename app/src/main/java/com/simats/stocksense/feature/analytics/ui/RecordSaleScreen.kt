@@ -555,7 +555,9 @@ private fun BillItemCard(
     val isAtStockLimit = item.quantity >= item.availableStock
 
     BoldCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 76.dp),
         backgroundColor = CardWhite,
         borderColor = InkDark,
         borderWidth = 2.dp,
@@ -591,8 +593,11 @@ private fun BillItemCard(
                             fontWeight = FontWeight.Bold,
                             color = InkDark,
                             fontSize = 15.sp,
-                            modifier = Modifier.weight(1f),
-                            maxLines = 1,
+                            lineHeight = 18.sp,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp),
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
 
@@ -601,7 +606,10 @@ private fun BillItemCard(
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
                             color = InkDark,
-                            fontSize = 16.sp
+                            fontSize = 16.sp,
+                            maxLines = 1,
+                            softWrap = false,
+                            modifier = Modifier.wrapContentWidth()
                         )
                     }
 
@@ -627,7 +635,8 @@ private fun BillItemCard(
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = CardWhite,
-                    border = BorderStroke(1.5.dp, InkDark)
+                    border = BorderStroke(1.5.dp, InkDark),
+                    modifier = Modifier.wrapContentWidth()
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
@@ -666,6 +675,8 @@ private fun BillItemCard(
                     }
                 }
 
+                Spacer(modifier = Modifier.width(8.dp))
+
                 // Stock Hint
                 if (isAtStockLimit) {
                     Text(
@@ -673,14 +684,20 @@ private fun BillItemCard(
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
                         color = StatusLowStock,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.wrapContentWidth()
                     )
                 } else {
                     Text(
                         text = "${item.availableStock} in stock",
                         style = MaterialTheme.typography.bodySmall,
                         color = MutedInk,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.wrapContentWidth()
                     )
                 }
             }

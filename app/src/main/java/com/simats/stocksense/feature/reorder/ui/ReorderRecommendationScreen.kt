@@ -299,7 +299,8 @@ fun ReorderRecommendationScreen(
                                     color = InkDark,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 20.sp,
-                                    maxLines = 1,
+                                    lineHeight = 24.sp,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
@@ -307,7 +308,8 @@ fun ReorderRecommendationScreen(
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MutedInk,
                                     fontSize = 14.sp,
-                                    maxLines = 1,
+                                    lineHeight = 18.sp,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }

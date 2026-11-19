@@ -493,7 +493,9 @@ private fun OrderDetailItemCard(item: PurchaseOrderItemDto) {
     val stockNowText = item.currentStock?.let { "Stock now: $it" } ?: "Stock now: —"
 
     BoldCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 76.dp),
         backgroundColor = CardWhite,
         borderColor = InkDark,
         borderWidth = 2.dp,
@@ -529,8 +531,11 @@ private fun OrderDetailItemCard(item: PurchaseOrderItemDto) {
                             fontWeight = FontWeight.Bold,
                             color = InkDark,
                             fontSize = 15.sp,
-                            modifier = Modifier.weight(1f),
-                            maxLines = 1,
+                            lineHeight = 18.sp,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp),
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
 
@@ -540,7 +545,9 @@ private fun OrderDetailItemCard(item: PurchaseOrderItemDto) {
                             fontWeight = FontWeight.Bold,
                             color = InkDark,
                             fontSize = 16.sp,
-                            maxLines = 1
+                            maxLines = 1,
+                            softWrap = false,
+                            modifier = Modifier.wrapContentWidth()
                         )
                     }
 
@@ -570,17 +577,19 @@ private fun OrderDetailItemCard(item: PurchaseOrderItemDto) {
                     fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .padding(end = 8.dp)
                 )
-
-                Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
                     text = stockNowText,
                     style = MaterialTheme.typography.bodySmall,
                     color = MutedInk,
                     fontSize = 12.sp,
-                    maxLines = 1
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier.wrapContentWidth()
                 )
             }
         }
