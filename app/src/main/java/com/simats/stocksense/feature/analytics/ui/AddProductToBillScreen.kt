@@ -153,8 +153,8 @@ fun AddProductToBillScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = InkDark,
                         unfocusedBorderColor = InkDark,
-                        focusedContainerColor = CardWhite,
-                        unfocusedContainerColor = CardWhite,
+                        focusedContainerColor = RaisedSurface,
+                        unfocusedContainerColor = RaisedSurface,
                         focusedTextColor = InkDark,
                         unfocusedTextColor = InkDark,
                         cursorColor = InkDark
@@ -388,7 +388,7 @@ private fun AddProductRowCard(
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontSize = 12.sp,
                                 maxLines = 1,
                                 softWrap = false
@@ -421,7 +421,7 @@ private fun AddProductRowCard(
                     if (isOutOfStock) {
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = CardWhite,
+                            color = RaisedSurface,
                             border = BorderStroke(1.dp, InkDark.copy(alpha = 0.35f)),
                             modifier = Modifier.wrapContentWidth()
                         ) {
@@ -448,7 +448,7 @@ private fun AddProductRowCard(
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontSize = 10.sp,
                                 maxLines = 1,
                                 softWrap = false
@@ -457,7 +457,7 @@ private fun AddProductRowCard(
                     } else {
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = CardWhite,
+                            color = RaisedSurface,
                             border = BorderStroke(1.dp, InkDark.copy(alpha = 0.35f)),
                             modifier = Modifier.wrapContentWidth()
                         ) {

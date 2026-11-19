@@ -443,16 +443,16 @@ fun DashboardHomeContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Today's Sales Card in Soft Peach / Dark Pastel Blue
+                // Today's Sales Card in Soft Peach
                 BoldCard(
                     modifier = Modifier.weight(1f),
-                    backgroundColor = if (ThemeState.isDark) SoftLightBlue else SoftPeach
+                    backgroundColor = SoftPeach
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text(
                             text = "Today's sales",
                             style = MaterialTheme.typography.bodySmall,
-                            color = InkDark,
+                            color = OnPastelInk,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                             maxLines = 1,
@@ -462,7 +462,7 @@ fun DashboardHomeContent(
                         Text(
                             text = NumberFormatUtil.formatIndianRupees(data.sales?.todaySalesAmount),
                             style = MaterialTheme.typography.titleLarge,
-                            color = InkDark,
+                            color = OnPastelInk,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
                             maxLines = 1,
@@ -473,7 +473,7 @@ fun DashboardHomeContent(
                         Text(
                             text = "${NumberFormatUtil.formatIndianNumber(bills)} bills today",
                             style = MaterialTheme.typography.bodySmall,
-                            color = InkDark.copy(alpha = 0.8f),
+                            color = OnPastelMuted,
                             fontWeight = FontWeight.Medium,
                             fontSize = 11.sp,
                             maxLines = 1,
@@ -491,7 +491,7 @@ fun DashboardHomeContent(
                         Text(
                             text = "Inventory value",
                             style = MaterialTheme.typography.bodySmall,
-                            color = InkDark,
+                            color = OnPastelInk,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                             maxLines = 1,
@@ -501,7 +501,7 @@ fun DashboardHomeContent(
                         Text(
                             text = NumberFormatUtil.formatIndianRupees(data.inventory?.totalStockValue),
                             style = MaterialTheme.typography.titleLarge,
-                            color = InkDark,
+                            color = OnPastelInk,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
                             maxLines = 1,
@@ -511,7 +511,7 @@ fun DashboardHomeContent(
                         Text(
                             text = "${NumberFormatUtil.formatIndianNumber(totalActiveProducts)} active products",
                             style = MaterialTheme.typography.bodySmall,
-                            color = InkDark.copy(alpha = 0.8f),
+                            color = OnPastelMuted,
                             fontWeight = FontWeight.Medium,
                             fontSize = 11.sp,
                             maxLines = 1,
@@ -535,7 +535,7 @@ fun DashboardHomeContent(
                             text = "Welcome to StockSense!",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = InkDark
+                            color = OnPastelInk
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -582,7 +582,7 @@ fun DashboardHomeContent(
                         Text(
                             text = "LOW STOCK",
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (isLowStockActive) StatusLowStock else MutedInk,
+                            color = if (isLowStockActive) (if (ThemeState.isDark) Color(0xFF0B1230) else StatusLowStock) else MutedInk,
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp,
                             letterSpacing = 1.sp,
@@ -608,7 +608,7 @@ fun DashboardHomeContent(
                                     Text(
                                         text = "$lowName · $lowUnits left ›",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = InkDark,
+                                        color = if (isLowStockActive) OnPastelInk else InkDark,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 12.sp,
                                         lineHeight = 16.sp,
@@ -619,7 +619,7 @@ fun DashboardHomeContent(
                                     Text(
                                         text = "Below $lowMin-unit minimum",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MutedInk,
+                                        color = if (isLowStockActive) OnPastelMuted else MutedInk,
                                         fontSize = 11.sp,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
@@ -816,7 +816,7 @@ fun DashboardHomeContent(
                                 Text(
                                     text = weekDateRangeTag,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = InkDark,
+                                    color = OnPastelInk,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 10.sp,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),

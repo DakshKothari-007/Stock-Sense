@@ -230,7 +230,7 @@ fun SettingsScreen(
                                             onClick = { viewModel.updateThemeMode(mode) },
                                             modifier = Modifier.weight(1f),
                                             shape = RoundedCornerShape(12.dp),
-                                            color = if (isSelected) MainYellow else CardWhite,
+                                            color = if (isSelected) MainYellow else RaisedSurface,
                                             border = BorderStroke(2.dp, InkDark)
                                         ) {
                                             Box(
@@ -272,79 +272,39 @@ fun SettingsScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text("Owner", style = MaterialTheme.typography.bodySmall, color = MutedInk, fontSize = 12.sp)
-                                    Text(
-                                        account?.ownerName?.takeIf { it.isNotBlank() } ?: "—",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = InkDark,
-                                        fontSize = 12.sp
-                                    )
-                                }
-
-                                Text(
-                                    account?.email?.takeIf { it.isNotBlank() } ?: "—",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MutedInk,
-                                    fontSize = 12.sp
+                                BoldInfoRow(
+                                    label = "Owner",
+                                    value = account?.ownerName?.takeIf { it.isNotBlank() } ?: "—"
                                 )
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text("Store", style = MaterialTheme.typography.bodySmall, color = MutedInk, fontSize = 12.sp)
-                                    val shop = account?.shopName?.takeIf { it.isNotBlank() } ?: "—"
-                                    val loc = account?.location?.takeIf { it.isNotBlank() }
-                                    val storeStr = if (loc != null && shop != "—") "$shop, $loc" else shop
-                                    Text(
-                                        storeStr,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = InkDark,
-                                        fontSize = 12.sp
-                                    )
-                                }
+                                BoldInfoRow(
+                                    label = "Email",
+                                    value = account?.email?.takeIf { it.isNotBlank() } ?: "—"
+                                )
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text("Currency", style = MaterialTheme.typography.bodySmall, color = MutedInk, fontSize = 12.sp)
-                                    val curr = account?.currency?.takeIf { it.isNotBlank() } ?: "INR"
-                                    val currStr = if (curr.equals("INR", ignoreCase = true)) "Indian rupee · ₹" else curr
-                                    Text(
-                                        currStr,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = InkDark,
-                                        fontSize = 12.sp
-                                    )
-                                }
+                                HorizontalDivider(color = InkDark.copy(alpha = 0.12f), thickness = 1.dp)
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text("Timezone", style = MaterialTheme.typography.bodySmall, color = MutedInk, fontSize = 12.sp)
-                                    val tz = account?.timezone?.takeIf { it.isNotBlank() } ?: "Asia/Kolkata"
-                                    val tzStr = if (tz.equals("Asia/Kolkata", ignoreCase = true)) "Asia/Kolkata · IST" else tz
-                                    Text(
-                                        tzStr,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = InkDark,
-                                        fontSize = 12.sp
-                                    )
-                                }
+                                val shop = account?.shopName?.takeIf { it.isNotBlank() } ?: "—"
+                                val loc = account?.location?.takeIf { it.isNotBlank() }
+                                val storeStr = if (loc != null && shop != "—") "$shop, $loc" else shop
+                                BoldInfoRow(
+                                    label = "Store",
+                                    value = storeStr
+                                )
+
+                                val curr = account?.currency?.takeIf { it.isNotBlank() } ?: "INR"
+                                val currStr = if (curr.equals("INR", ignoreCase = true)) "Indian rupee · ₹" else curr
+                                BoldInfoRow(
+                                    label = "Currency",
+                                    value = currStr
+                                )
+
+                                val tz = account?.timezone?.takeIf { it.isNotBlank() } ?: "Asia/Kolkata"
+                                val tzStr = if (tz.equals("Asia/Kolkata", ignoreCase = true)) "Asia/Kolkata · IST" else tz
+                                BoldInfoRow(
+                                    label = "Timezone",
+                                    value = tzStr
+                                )
                             }
                         }
 
@@ -536,50 +496,20 @@ fun SettingsScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text("App Name", style = MaterialTheme.typography.bodySmall, color = MutedInk, fontSize = 12.sp)
-                                    Text(
-                                        "StockSense",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = InkDark,
-                                        fontSize = 12.sp
-                                    )
-                                }
+                                BoldInfoRow(
+                                    label = "App Name",
+                                    value = "StockSense"
+                                )
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text("Version", style = MaterialTheme.typography.bodySmall, color = MutedInk, fontSize = 12.sp)
-                                    Text(
-                                        com.simats.stocksense.BuildConfig.VERSION_NAME,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = InkDark,
-                                        fontSize = 12.sp
-                                    )
-                                }
+                                BoldInfoRow(
+                                    label = "Version",
+                                    value = com.simats.stocksense.BuildConfig.VERSION_NAME
+                                )
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text("Icon Credits", style = MaterialTheme.typography.bodySmall, color = MutedInk, fontSize = 12.sp)
-                                    Text(
-                                        "Icons: Google Noto Emoji, Apache 2.0",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = InkDark,
-                                        fontSize = 12.sp
-                                    )
-                                }
+                                BoldInfoRow(
+                                    label = "Icon Credits",
+                                    value = "Icons: Google Noto Emoji, Apache 2.0"
+                                )
                             }
                         }
 

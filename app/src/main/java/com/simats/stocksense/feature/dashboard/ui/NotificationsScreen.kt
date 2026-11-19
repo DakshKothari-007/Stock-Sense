@@ -347,39 +347,39 @@ private fun NotificationCard(
                             when (item.type) {
                                 "sales" -> {
                                     Canvas(modifier = Modifier.size(20.dp)) {
-                                        drawLine(color = InkDark, start = Offset(size.width * 0.2f, size.height * 0.8f), end = Offset(size.width * 0.2f, size.height * 0.5f), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
-                                        drawLine(color = InkDark, start = Offset(size.width * 0.5f, size.height * 0.8f), end = Offset(size.width * 0.5f, size.height * 0.2f), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
-                                        drawLine(color = InkDark, start = Offset(size.width * 0.8f, size.height * 0.8f), end = Offset(size.width * 0.8f, size.height * 0.4f), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                                        drawLine(color = OnPastelInk, start = Offset(size.width * 0.2f, size.height * 0.8f), end = Offset(size.width * 0.2f, size.height * 0.5f), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                                        drawLine(color = OnPastelInk, start = Offset(size.width * 0.5f, size.height * 0.8f), end = Offset(size.width * 0.5f, size.height * 0.2f), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+                                        drawLine(color = OnPastelInk, start = Offset(size.width * 0.8f, size.height * 0.8f), end = Offset(size.width * 0.8f, size.height * 0.4f), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
                                     }
                                 }
                                 "weekly_digest", "digest" -> {
                                     Canvas(modifier = Modifier.size(20.dp)) {
                                         drawRoundRect(
-                                            color = InkDark,
+                                            color = OnPastelInk,
                                             topLeft = Offset(size.width * 0.2f, size.height * 0.15f),
                                             size = Size(size.width * 0.6f, size.height * 0.7f),
                                             cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.dp.toPx()),
                                             style = Stroke(width = 1.8.dp.toPx())
                                         )
-                                        drawLine(color = InkDark, start = Offset(size.width * 0.35f, size.height * 0.35f), end = Offset(size.width * 0.65f, size.height * 0.35f), strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
-                                        drawLine(color = InkDark, start = Offset(size.width * 0.35f, size.height * 0.50f), end = Offset(size.width * 0.65f, size.height * 0.50f), strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
+                                        drawLine(color = OnPastelInk, start = Offset(size.width * 0.35f, size.height * 0.35f), end = Offset(size.width * 0.65f, size.height * 0.35f), strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
+                                        drawLine(color = OnPastelInk, start = Offset(size.width * 0.35f, size.height * 0.50f), end = Offset(size.width * 0.65f, size.height * 0.50f), strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
                                     }
                                 }
                                 "import" -> {
                                     Canvas(modifier = Modifier.size(20.dp)) {
                                         drawRect(
-                                            color = InkDark,
+                                            color = OnPastelInk,
                                             topLeft = Offset(size.width * 0.2f, size.height * 0.5f),
                                             size = Size(size.width * 0.6f, size.height * 0.35f),
                                             style = Stroke(width = 1.8.dp.toPx())
                                         )
-                                        drawLine(color = InkDark, start = Offset(size.width * 0.5f, size.height * 0.15f), end = Offset(size.width * 0.5f, size.height * 0.6f), strokeWidth = 1.8.dp.toPx(), cap = StrokeCap.Round)
+                                        drawLine(color = OnPastelInk, start = Offset(size.width * 0.5f, size.height * 0.15f), end = Offset(size.width * 0.5f, size.height * 0.6f), strokeWidth = 1.8.dp.toPx(), cap = StrokeCap.Round)
                                         val arrowPath = Path().apply {
                                             moveTo(size.width * 0.35f, size.height * 0.45f)
                                             lineTo(size.width * 0.5f, size.height * 0.6f)
                                             lineTo(size.width * 0.65f, size.height * 0.45f)
                                         }
-                                        drawPath(arrowPath, color = InkDark, style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                                        drawPath(arrowPath, color = OnPastelInk, style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
                                     }
                                 }
                                 else -> {
@@ -393,7 +393,7 @@ private fun NotificationCard(
                                             cubicTo(size.width * 0.78f, size.height * 0.38f, size.width * 0.68f, size.height * 0.18f, size.width * 0.5f, size.height * 0.18f)
                                             close()
                                         }
-                                        drawPath(bellPath, color = InkDark, style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                                        drawPath(bellPath, color = OnPastelInk, style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
                                     }
                                 }
                             }

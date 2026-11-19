@@ -318,14 +318,14 @@ fun ProductDetailScreenContent(
                                     Text(
                                         text = "Available stock",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = InkDark,
+                                        color = OnPastelInk,
                                         fontSize = 12.sp
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = "${uiState.product.units} units",
                                         style = MaterialTheme.typography.titleLarge,
-                                        color = InkDark,
+                                        color = OnPastelInk,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 20.sp
                                     )
@@ -333,7 +333,7 @@ fun ProductDetailScreenContent(
                                     Text(
                                         text = "Minimum: ${uiState.minimumStockThreshold} units",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MutedInk,
+                                        color = OnPastelMuted,
                                         fontSize = 11.sp,
                                         maxLines = 2,
                                         lineHeight = 15.sp,
@@ -345,7 +345,7 @@ fun ProductDetailScreenContent(
                             // Selling Price Card
                             BoldCard(
                                 modifier = Modifier.weight(1f),
-                                backgroundColor = if (ThemeState.isDark) SoftLightBlue else SoftPeach,
+                                backgroundColor = SoftPeach,
                                 borderColor = InkDark,
                                 borderWidth = 2.dp,
                                 shadowOffset = 3.dp,
@@ -355,14 +355,14 @@ fun ProductDetailScreenContent(
                                     Text(
                                         text = "Selling price",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = InkDark,
+                                        color = OnPastelInk,
                                         fontSize = 12.sp
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = uiState.product.price,
                                         style = MaterialTheme.typography.titleLarge,
-                                        color = InkDark,
+                                        color = OnPastelInk,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 20.sp
                                     )
@@ -371,7 +371,7 @@ fun ProductDetailScreenContent(
                                     Text(
                                         text = "Cost $costFormatted",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MutedInk,
+                                        color = OnPastelMuted,
                                         fontSize = 11.sp,
                                         maxLines = 2,
                                         lineHeight = 15.sp,
@@ -783,7 +783,7 @@ fun ProductDetailScreenContent(
                                                 },
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.Bold,
-                                                color = InkDark,
+                                                color = OnPastelInk,
                                                 fontSize = 14.sp,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis
@@ -795,7 +795,7 @@ fun ProductDetailScreenContent(
                                                     "Estimated purchase: ${uiState.estimatedCost}"
                                                 },
                                                 style = MaterialTheme.typography.bodySmall,
-                                                color = MutedInk,
+                                                color = OnPastelMuted,
                                                 fontSize = 12.sp,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis

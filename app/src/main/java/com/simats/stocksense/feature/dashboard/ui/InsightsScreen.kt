@@ -235,7 +235,7 @@ fun InsightsListContent(
                     // Summary Opportunities Banner
                     BoldCard(
                         modifier = Modifier.fillMaxWidth(),
-                        backgroundColor = if (ThemeState.isDark) SoftLavender else SoftPeach,
+                        backgroundColor = SoftPeach,
                         borderColor = InkDark,
                         borderWidth = 2.dp,
                         shadowOffset = 3.dp
@@ -274,7 +274,7 @@ fun InsightsListContent(
                                     text = oppText,
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = InkDark,
+                                    color = OnPastelInk,
                                     fontSize = 14.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -283,7 +283,7 @@ fun InsightsListContent(
                                 Text(
                                     text = "Based on stock levels and recent sales.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MutedInk,
+                                    color = OnPastelMuted,
                                     fontSize = 12.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis

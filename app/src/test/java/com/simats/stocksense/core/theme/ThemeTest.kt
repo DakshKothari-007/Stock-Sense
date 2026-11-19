@@ -17,6 +17,7 @@ class ThemeTest {
         assertFalse(colors.isDark)
         assertEquals(Color(0xFFFFF4DC), colors.background)
         assertEquals(Color(0xFFFFFFFF), colors.cardSurface)
+        assertEquals(Color(0xFFFFFFFF), colors.raisedSurface)
         assertEquals(Color(0xFF0B1230), colors.ink)
         assertEquals(Color(0xFF0B1230), colors.inkText)
         assertEquals(Color(0xFF0B1230), colors.border)
@@ -39,24 +40,30 @@ class ThemeTest {
     fun testDarkBoldColorsTokens() {
         val colors = DarkBoldColors
         assertTrue(colors.isDark)
-        assertEquals(Color(0xFF0B1230), colors.background)
-        assertEquals(Color(0xFF172050), colors.cardSurface)
+        assertEquals(Color(0xFF070B20), colors.background)
+        assertEquals(Color(0xFF1A2560), colors.cardSurface)
+        assertEquals(Color(0xFF24307A), colors.raisedSurface)
         assertEquals(Color(0xFFFFF4DC), colors.ink)
         assertEquals(Color(0xFFFFF4DC), colors.inkText)
         assertEquals(Color(0xFFFFF4DC), colors.border)
-        assertEquals(Color(0xFF050A1E), colors.shadowColor)
+        assertEquals(Color(0xFF000000), colors.shadowColor)
         assertEquals(Color(0xFF6C8CFF), colors.mainBlue)
         assertEquals(Color(0xFFFFC93C), colors.mainYellow)
         assertEquals(Color(0xFF0B1230), colors.onYellowText)
         assertEquals(Color(0xFFB8C0E0), colors.mutedText)
-        assertEquals(Color(0xFF2B3F8F), colors.softLightBlue)
-        assertEquals(Color(0xFF2B3F8F), colors.paleBlue)
-        assertEquals(Color(0xFF7A4A1E), colors.softPeach)
+        assertEquals(Color(0xFF9DB8FF), colors.softLightBlue)
+        assertEquals(Color(0xFFDCE6FF), colors.paleBlue)
+        assertEquals(Color(0xFFFFD6A5), colors.softPeach)
         assertEquals(Color(0xFF5A2D6E), colors.softPink)
-        assertEquals(Color(0xFF4B3A8C), colors.softLavender)
+        assertEquals(Color(0xFFC9B8FF), colors.softLavender)
         assertEquals(Color(0xFFC9B8FF), colors.statusInStock)
         assertEquals(Color(0xFFFF9F5A), colors.statusLowStock)
         assertEquals(Color(0xFFE5484D), colors.statusDangerRed)
+
+        // Dark theme surface hierarchy: background < card surface < raised surface
+        assertNotEquals("Card surface must differ from screen background", colors.background, colors.cardSurface)
+        assertNotEquals("Raised surface must differ from card surface", colors.cardSurface, colors.raisedSurface)
+        assertNotEquals("Raised surface must differ from background", colors.background, colors.raisedSurface)
     }
 
     @Test

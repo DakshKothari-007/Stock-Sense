@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -207,8 +208,8 @@ fun BoldChip(
     isSelected: Boolean = false,
     selected: Boolean = false,
     selectedColor: Color = MainYellow,
-    backgroundColor: Color = CardWhite,
-    textColor: Color = InkDark,
+    backgroundColor: Color = RaisedSurface,
+    textColor: Color = if (isSelected || selected) Color(0xFF0B1230) else InkDark,
     borderColor: Color = InkDark,
     borderWidth: Dp = 2.dp,
     shape: CornerBasedShape = RoundedCornerShape(10.dp),
@@ -216,6 +217,11 @@ fun BoldChip(
 ) {
     val chipSelected = isSelected || selected
     val activeBg = if (chipSelected) selectedColor else backgroundColor
+    val resolvedTextColor = if (chipSelected && (activeBg == MainYellow || selectedColor == MainYellow) && textColor == InkDark) {
+        Color(0xFF0B1230)
+    } else {
+        textColor
+    }
     Box(
         modifier = modifier
             .defaultMinSize(minHeight = 36.dp)
@@ -235,7 +241,7 @@ fun BoldChip(
                 fontSize = 11.sp,
                 letterSpacing = 0.6.sp
             ),
-            color = textColor,
+            color = resolvedTextColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -333,9 +339,9 @@ fun BoldTextField(
                 )
             },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = CardWhite,
-                unfocusedContainerColor = CardWhite,
-                disabledContainerColor = CardWhite.copy(alpha = 0.5f),
+                focusedContainerColor = RaisedSurface,
+                unfocusedContainerColor = RaisedSurface,
+                disabledContainerColor = RaisedSurface.copy(alpha = 0.5f),
                 errorContainerColor = SoftPink,
                 focusedBorderColor = InkDark,
                 unfocusedBorderColor = InkDark,
@@ -581,3 +587,50 @@ fun StockSenseLogo(
         )
     }
 }
+
+/**
+ * BoldInfoRow:
+ * Shared label/value row component used across Settings and Profile cards.
+ * - Fixed-width label on the left (about 88dp), aligned to top of row.
+ * - Value on the right taking remaining width (Modifier.weight(1f)), right-aligned.
+ * - Values may wrap to 2 lines, staying right-aligned when wrapped while the label stays at the top.
+ */
+@Composable
+fun BoldInfoRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    labelWidth: Dp = 88.dp,
+    maxLines: Int = 2
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MutedInk,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            modifier = Modifier.width(labelWidth)
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(
+            text = value.ifBlank { "—" },
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold,
+            color = InkDark,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            textAlign = TextAlign.End,
+            maxLines = maxLines,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+

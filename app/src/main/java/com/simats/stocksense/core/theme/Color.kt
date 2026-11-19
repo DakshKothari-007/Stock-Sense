@@ -48,6 +48,7 @@ data class BoldColors(
     val isDark: Boolean,
     val background: Color,
     val cardSurface: Color,
+    val raisedSurface: Color,
     val ink: Color,
     val inkText: Color,
     val border: Color,
@@ -70,6 +71,7 @@ val LightBoldColors = BoldColors(
     isDark = false,
     background = Color(0xFFFFF4DC),
     cardSurface = Color(0xFFFFFFFF),
+    raisedSurface = Color(0xFFFFFFFF),
     ink = Color(0xFF0B1230),
     inkText = Color(0xFF0B1230),
     border = Color(0xFF0B1230),
@@ -90,21 +92,22 @@ val LightBoldColors = BoldColors(
 
 val DarkBoldColors = BoldColors(
     isDark = true,
-    background = Color(0xFF0B1230),
-    cardSurface = Color(0xFF172050),
+    background = Color(0xFF070B20),
+    cardSurface = Color(0xFF1A2560),
+    raisedSurface = Color(0xFF24307A),
     ink = Color(0xFFFFF4DC),
     inkText = Color(0xFFFFF4DC),
     border = Color(0xFFFFF4DC),
-    shadowColor = Color(0xFF050A1E),
+    shadowColor = Color(0xFF000000),
     mainBlue = Color(0xFF6C8CFF),
     mainYellow = Color(0xFFFFC93C),
     onYellowText = Color(0xFF0B1230),
     mutedText = Color(0xFFB8C0E0),
-    softLightBlue = Color(0xFF2B3F8F),
-    paleBlue = Color(0xFF2B3F8F),
-    softPeach = Color(0xFF7A4A1E),
+    softLightBlue = Color(0xFF9DB8FF),
+    paleBlue = Color(0xFFDCE6FF),
+    softPeach = Color(0xFFFFD6A5),
     softPink = Color(0xFF5A2D6E),
-    softLavender = Color(0xFF4B3A8C),
+    softLavender = Color(0xFFC9B8FF),
     statusInStock = Color(0xFFC9B8FF),
     statusLowStock = Color(0xFFFF9F5A),
     statusDangerRed = Color(0xFFE5484D)
@@ -127,6 +130,13 @@ val MainBlue: Color
 
 val CardWhite: Color
     get() = ThemeState.currentBoldColors.cardSurface
+
+val RaisedSurface: Color
+    get() = ThemeState.currentBoldColors.raisedSurface
+
+val OnPastelInk: Color = Color(0xFF0B1230)
+
+val OnPastelMuted: Color = Color(0xFF4A5275)
 
 val SoftLightBlue: Color
     get() = ThemeState.currentBoldColors.softLightBlue

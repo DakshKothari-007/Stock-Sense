@@ -62,7 +62,7 @@ import java.util.*
 
 private val UserBubbleColor: Color
     @Composable
-    get() = if (ThemeState.isDark) SoftLightBlue else SoftPeach
+    get() = SoftPeach
 
 @Composable
 fun AiChatScreen(
@@ -668,7 +668,7 @@ private fun UserMessageRow(message: ChatMessage) {
         ) {
             Text(
                 text = message.text,
-                color = InkDark,
+                color = OnPastelInk,
                 fontWeight = FontWeight.Medium,
                 fontSize = 15.sp,
                 lineHeight = 21.sp
@@ -1064,7 +1064,7 @@ private fun InputBar(
                     .weight(1f)
                     .height(52.dp)
                     .clip(RoundedCornerShape(26.dp))
-                    .background(CardWhite)
+                    .background(RaisedSurface)
                     .border(2.dp, InkDark, RoundedCornerShape(26.dp))
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -1306,7 +1306,7 @@ private fun ListeningSheet(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(if (isSelected) MainYellow else CardWhite)
+                                .background(if (isSelected) MainYellow else RaisedSurface)
                                 .border(if (isSelected) 2.dp else 1.5.dp, InkDark, RoundedCornerShape(20.dp))
                                 .clickable {
                                     onLanguageSelected(code)
@@ -1315,7 +1315,7 @@ private fun ListeningSheet(
                         ) {
                             Text(
                                 text = label,
-                                color = InkDark,
+                                color = if (isSelected) Color(0xFF0B1230) else InkDark,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp
                             )

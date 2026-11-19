@@ -172,8 +172,8 @@ fun ProfileContent(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = InkDark,
                             unfocusedBorderColor = InkDark,
-                            focusedContainerColor = CardWhite,
-                            unfocusedContainerColor = CardWhite,
+                            focusedContainerColor = RaisedSurface,
+                            unfocusedContainerColor = RaisedSurface,
                             focusedTextColor = InkDark,
                             unfocusedTextColor = InkDark
                         )
@@ -193,8 +193,8 @@ fun ProfileContent(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = InkDark,
                             unfocusedBorderColor = InkDark,
-                            focusedContainerColor = CardWhite,
-                            unfocusedContainerColor = CardWhite,
+                            focusedContainerColor = RaisedSurface,
+                            unfocusedContainerColor = RaisedSurface,
                             focusedTextColor = InkDark,
                             unfocusedTextColor = InkDark
                         )
@@ -217,8 +217,8 @@ fun ProfileContent(
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = InkDark,
                                 unfocusedBorderColor = InkDark,
-                                focusedContainerColor = CardWhite,
-                                unfocusedContainerColor = CardWhite,
+                                focusedContainerColor = RaisedSurface,
+                                unfocusedContainerColor = RaisedSurface,
                                 focusedTextColor = InkDark,
                                 unfocusedTextColor = InkDark
                             )
@@ -353,8 +353,8 @@ fun ProfileContent(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = InkDark,
                             unfocusedBorderColor = InkDark,
-                            focusedContainerColor = CardWhite,
-                            unfocusedContainerColor = CardWhite,
+                            focusedContainerColor = RaisedSurface,
+                            unfocusedContainerColor = RaisedSurface,
                             focusedTextColor = InkDark,
                             unfocusedTextColor = InkDark
                         )
@@ -373,8 +373,8 @@ fun ProfileContent(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = InkDark,
                             unfocusedBorderColor = InkDark,
-                            focusedContainerColor = CardWhite,
-                            unfocusedContainerColor = CardWhite,
+                            focusedContainerColor = RaisedSurface,
+                            unfocusedContainerColor = RaisedSurface,
                             focusedTextColor = InkDark,
                             unfocusedTextColor = InkDark
                         )
@@ -474,8 +474,8 @@ fun ProfileContent(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = InkDark,
                             unfocusedBorderColor = InkDark,
-                            focusedContainerColor = CardWhite,
-                            unfocusedContainerColor = CardWhite,
+                            focusedContainerColor = RaisedSurface,
+                            unfocusedContainerColor = RaisedSurface,
                             focusedTextColor = InkDark,
                             unfocusedTextColor = InkDark
                         ),
@@ -525,8 +525,8 @@ fun ProfileContent(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = InkDark,
                             unfocusedBorderColor = InkDark,
-                            focusedContainerColor = CardWhite,
-                            unfocusedContainerColor = CardWhite,
+                            focusedContainerColor = RaisedSurface,
+                            unfocusedContainerColor = RaisedSurface,
                             focusedTextColor = InkDark,
                             unfocusedTextColor = InkDark
                         ),
@@ -577,8 +577,8 @@ fun ProfileContent(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = InkDark,
                             unfocusedBorderColor = InkDark,
-                            focusedContainerColor = CardWhite,
-                            unfocusedContainerColor = CardWhite,
+                            focusedContainerColor = RaisedSurface,
+                            unfocusedContainerColor = RaisedSurface,
                             focusedTextColor = InkDark,
                             unfocusedTextColor = InkDark,
                             errorBorderColor = StatusDangerRed
@@ -810,7 +810,7 @@ fun ProfileContent(
                             Text(
                                 text = profileSuccessMessage ?: "",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
                             )
@@ -822,7 +822,7 @@ fun ProfileContent(
                             Text(
                                 text = "✕",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
                             )
@@ -865,7 +865,7 @@ fun ProfileContent(
                             Text(
                                 text = passwordSuccessMessage ?: "",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
                             )
@@ -877,7 +877,7 @@ fun ProfileContent(
                             Text(
                                 text = "✕",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
                             )
@@ -1042,8 +1042,11 @@ fun ProfileContent(
                     }
 
                     if (storeProfile.email.isNotBlank()) {
-                        HorizontalDivider(color = InkDark.copy(alpha = 0.15f), thickness = 1.dp)
-                        InfoRow("Email address", storeProfile.email)
+                        HorizontalDivider(color = InkDark.copy(alpha = 0.12f), thickness = 1.dp)
+                        BoldInfoRow(
+                            label = "Email",
+                            value = storeProfile.email
+                        )
                     }
                 }
             }
@@ -1209,19 +1212,24 @@ fun ProfileContent(
                             storeProfile.lastUpdated.isNotBlank()
 
                     if (hasDetails) {
-                        HorizontalDivider(color = InkDark.copy(alpha = 0.15f), thickness = 1.dp)
+                        HorizontalDivider(color = InkDark.copy(alpha = 0.12f), thickness = 1.dp)
 
-                        if (storeProfile.storeType.isNotBlank()) {
-                            InfoRow("Store type", storeProfile.storeType)
-                        }
-                        if (storeProfile.storeId.isNotBlank()) {
-                            InfoRow("Store ID", storeProfile.storeId)
-                        }
-                        if (storeProfile.currency.isNotBlank()) {
-                            InfoRow("Currency / timezone", storeProfile.currency)
-                        }
-                        if (storeProfile.lastUpdated.isNotBlank()) {
-                            InfoRow("Data snapshot", storeProfile.lastUpdated)
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            if (storeProfile.storeType.isNotBlank()) {
+                                BoldInfoRow(label = "Store type", value = storeProfile.storeType)
+                            }
+                            if (storeProfile.storeId.isNotBlank()) {
+                                BoldInfoRow(label = "Store ID", value = storeProfile.storeId)
+                            }
+                            if (storeProfile.currency.isNotBlank()) {
+                                BoldInfoRow(label = "Currency / timezone", value = storeProfile.currency)
+                            }
+                            if (storeProfile.lastUpdated.isNotBlank()) {
+                                BoldInfoRow(label = "Data snapshot", value = storeProfile.lastUpdated)
+                            }
                         }
                     }
                 }
@@ -1537,30 +1545,7 @@ fun ProfileContent(
 
 @Composable
 private fun InfoRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MutedInk,
-            fontSize = 12.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f, fill = false)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Bold,
-            color = InkDark,
-            fontSize = 12.sp,
-            maxLines = 1
-        )
-    }
+    BoldInfoRow(label = label, value = value)
 }
 
 @Preview(showBackground = true)

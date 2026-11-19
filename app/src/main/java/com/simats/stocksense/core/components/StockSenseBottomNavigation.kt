@@ -64,7 +64,7 @@ fun StockSenseBottomNavigation(
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val activeColor = InkDark
+    val activeColor = Color(0xFF0B1230)
     val inactiveColor = MutedInk
 
     val density = LocalDensity.current

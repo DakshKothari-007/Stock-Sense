@@ -308,8 +308,8 @@ fun InventoryContent(
                     },
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = CardWhite,
-                        unfocusedContainerColor = CardWhite,
+                        focusedContainerColor = RaisedSurface,
+                        unfocusedContainerColor = RaisedSurface,
                         focusedBorderColor = InkDark,
                         unfocusedBorderColor = InkDark,
                         focusedTextColor = InkDark,
@@ -396,13 +396,13 @@ fun InventoryContent(
                                     text = "No products in inventory",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = InkDark
+                                    color = OnPastelInk
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
                                     text = "Your store has no inventory yet. Import your stock spreadsheet to start tracking products, stock levels, and sales.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = InkDark,
+                                    color = OnPastelInk,
                                     textAlign = TextAlign.Center,
                                     fontSize = 13.sp
                                 )
