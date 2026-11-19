@@ -16,6 +16,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 enum class ThemeMode {
@@ -39,7 +40,9 @@ object ThemeState {
         appContext = context.applicationContext
         coroutineScope.launch {
             try {
-                ThemePreferences.getThemeMode(context.applicationContext).collect { savedMode ->
+                val flow = ThemePreferences.getThemeMode(context.applicationContext)
+                _themeMode.value = flow.first()
+                flow.collect { savedMode ->
                     _themeMode.value = savedMode
                 }
             } catch (_: Throwable) {

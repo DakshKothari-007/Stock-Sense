@@ -160,11 +160,26 @@ class AiChatViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         viewModelScope.launch {
-            val result = repository.chat(
+            var result = repository.chat(
                 message = trimmed,
                 languageHint = languageHint,
                 history = if (priorHistory.isEmpty()) null else priorHistory
             )
+
+            // One automatic retry before surfacing the error
+            if (result.isFailure) {
+                val err = result.exceptionOrNull()
+                val is401 = err?.message?.contains("Session expired", ignoreCase = true) == true
+                if (!is401) {
+                    delay(500L)
+                    result = repository.chat(
+                        message = trimmed,
+                        languageHint = languageHint,
+                        history = if (priorHistory.isEmpty()) null else priorHistory
+                    )
+                }
+            }
+
             thinkingJob?.cancel()
             thinkingJob = null
 

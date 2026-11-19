@@ -48,14 +48,6 @@ class SettingsViewModel(
             val result = repository.fetchSettings()
             result.fold(
                 onSuccess = { data ->
-                    // Synchronize local ThemeState with server preference
-                    val remoteTheme = when (data.appearance?.themeMode?.uppercase()) {
-                        "LIGHT" -> ThemeMode.LIGHT
-                        "DARK" -> ThemeMode.DARK
-                        else -> ThemeMode.SYSTEM
-                    }
-                    ThemeState.setThemeMode(remoteTheme)
-
                     _uiState.update {
                         it.copy(
                             isLoading = false,

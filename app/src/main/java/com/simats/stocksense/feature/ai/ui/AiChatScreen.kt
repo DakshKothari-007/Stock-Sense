@@ -964,15 +964,26 @@ private fun TypingIndicatorRow(showStillThinking: Boolean = false) {
                     .clip(RoundedCornerShape(16.dp))
                     .background(CardWhite)
                     .border(2.dp, InkDark, RoundedCornerShape(16.dp))
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
-                ThreeDotsTypingIndicator()
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (showStillThinking) "Still thinking..." else "Thinking...",
+                        color = InkDark,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    ThreeDotsTypingIndicator()
+                }
             }
 
             if (showStillThinking) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Still thinking...",
+                    text = "Taking a little longer than usual...",
                     color = MutedInk,
                     fontSize = 11.sp,
                     modifier = Modifier.padding(start = 4.dp)

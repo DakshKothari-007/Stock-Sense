@@ -95,13 +95,13 @@ object NetworkClient {
     }
 
     // Dedicated timeouts for Dukaan Mitra AI endpoints (/ai/chat.php, /ai/explain.php):
-    // connectTimeout 10 s, readTimeout 100 s, callTimeout 110 s.
+    // connectTimeout 15 s, readTimeout 60 s, callTimeout 75 s (>= 45s).
     private val aiOkHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(100, TimeUnit.SECONDS)
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
-            .callTimeout(110, TimeUnit.SECONDS)
+            .callTimeout(75, TimeUnit.SECONDS)
             .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
             .build()

@@ -386,54 +386,79 @@ fun ImportInventoryPreviewScreen(
 
                         HorizontalDivider(color = InkDark.copy(alpha = 0.15f), thickness = 1.dp)
 
-                        // Product Rows
-                        displayedRows.forEach { row ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                        // Product Rows or Header Failure Message
+                        if (displayedRows.isEmpty() || (previewData != null && !isNameMapped && !isUnitsMapped && (previewData.matchedCount ?: 0) == 0)) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 20.dp, horizontal = 12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                Column(modifier = Modifier.weight(2.4f)) {
+                                Text(
+                                    text = "Unable to detect column headers",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = StatusDangerRed,
+                                    fontSize = 14.sp
+                                )
+                                Text(
+                                    text = "Please ensure your spreadsheet contains a clear header row with Product Name, Quantity, and Price.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MutedInk,
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        } else {
+                            displayedRows.forEach { row ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(2.4f)) {
+                                        Text(
+                                            text = row.name?.takeIf { it.isNotBlank() } ?: "Unknown Product",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = InkDark,
+                                            fontSize = 13.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = row.skuWithSellPrice?.takeIf { it.isNotBlank() } ?: (row.sku ?: ""),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MutedInk,
+                                            fontSize = 11.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+
                                     Text(
-                                        text = row.name?.takeIf { it.isNotBlank() } ?: "Unknown Product",
+                                        text = row.unitsToAdd?.takeIf { it.isNotBlank() } ?: "0",
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = InkDark,
+                                        color = if (row.isHighlighted == true) StatusDangerRed else InkDark,
                                         fontSize = 13.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                                        textAlign = TextAlign.End,
+                                        modifier = Modifier.weight(0.8f)
                                     )
+
                                     Text(
-                                        text = row.skuWithSellPrice?.takeIf { it.isNotBlank() } ?: (row.sku ?: ""),
-                                        style = MaterialTheme.typography.bodySmall,
+                                        text = row.costPrice?.takeIf { it.isNotBlank() } ?: "₹0",
+                                        style = MaterialTheme.typography.bodyMedium,
                                         color = MutedInk,
-                                        fontSize = 11.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                                        fontSize = 12.sp,
+                                        textAlign = TextAlign.End,
+                                        modifier = Modifier.weight(0.8f)
                                     )
                                 }
 
-                                Text(
-                                    text = row.unitsToAdd?.takeIf { it.isNotBlank() } ?: "0",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (row.isHighlighted == true) StatusDangerRed else InkDark,
-                                    fontSize = 13.sp,
-                                    textAlign = TextAlign.End,
-                                    modifier = Modifier.weight(0.8f)
-                                )
-
-                                Text(
-                                    text = row.costPrice?.takeIf { it.isNotBlank() } ?: "₹0",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MutedInk,
-                                    fontSize = 12.sp,
-                                    textAlign = TextAlign.End,
-                                    modifier = Modifier.weight(0.8f)
-                                )
-                            }
-
-                            if (row != displayedRows.lastOrNull()) {
-                                HorizontalDivider(color = InkDark.copy(alpha = 0.15f), thickness = 0.5.dp)
+                                if (row != displayedRows.lastOrNull()) {
+                                    HorizontalDivider(color = InkDark.copy(alpha = 0.15f), thickness = 0.5.dp)
+                                }
                             }
                         }
                     }

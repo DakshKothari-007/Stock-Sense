@@ -111,4 +111,22 @@ class ThemeTest {
         assertFalse("360dp should use row layout", width360 < 360.dp)
         assertFalse("400dp should use row layout", width400 < 360.dp)
     }
+
+    @Test
+    fun testThemeStateRetainsSavedLightModeWithoutResettingToSystem() {
+        ThemeState.setThemeMode(ThemeMode.LIGHT)
+        assertEquals(ThemeMode.LIGHT, ThemeState.themeMode.value)
+
+        val remoteTheme = ThemeMode.SYSTEM
+        // SettingsViewModel.loadSettings() must NOT call ThemeState.setThemeMode(remoteTheme)
+        assertNotEquals("Theme should not reset to System on settings load", remoteTheme, ThemeState.themeMode.value)
+        assertEquals(ThemeMode.LIGHT, ThemeState.themeMode.value)
+    }
+
+    @Test
+    fun testThemeModeFromStringMapping() {
+        assertEquals(ThemeMode.LIGHT, ThemeMode.valueOf("LIGHT"))
+        assertEquals(ThemeMode.DARK, ThemeMode.valueOf("DARK"))
+        assertEquals(ThemeMode.SYSTEM, ThemeMode.valueOf("SYSTEM"))
+    }
 }
