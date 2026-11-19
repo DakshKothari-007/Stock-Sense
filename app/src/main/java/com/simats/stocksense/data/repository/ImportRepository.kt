@@ -98,6 +98,7 @@ class ImportRepository(
         columnMapping: Map<String, String?>? = null,
         corrections: List<ImportCorrection>? = null,
         confirmReplace: Boolean = false,
+        skipInvalidRows: Boolean = false,
         idempotencyKey: String? = null
     ): Result<ImportExecuteData> = withContext(Dispatchers.IO) {
         try {
@@ -107,6 +108,7 @@ class ImportRepository(
                 columnMapping = columnMapping,
                 corrections = corrections,
                 confirmReplace = confirmReplace,
+                skipInvalidRows = skipInvalidRows,
                 idempotencyKey = idempotencyKey
             )
             val response = apiService.executeImport(

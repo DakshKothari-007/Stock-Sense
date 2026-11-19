@@ -833,6 +833,9 @@ fun StockSenseAppNavigation(
                 },
                 onValidationPassed = {
                     navController.navigate("inventory_ready")
+                },
+                onImportCompleted = {
+                    navController.navigate("inventory_success")
                 }
             )
         }

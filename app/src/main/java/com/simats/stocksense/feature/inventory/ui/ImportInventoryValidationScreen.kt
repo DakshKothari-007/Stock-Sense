@@ -37,7 +37,8 @@ import com.simats.stocksense.feature.inventory.viewmodel.ImportViewModel
 fun ImportInventoryValidationScreen(
     viewModel: ImportViewModel = viewModel(),
     onBackClick: () -> Unit = {},
-    onValidationPassed: () -> Unit = {}
+    onValidationPassed: () -> Unit = {},
+    onImportCompleted: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
     val errorColor = Color(0xFFC62828)
@@ -61,7 +62,13 @@ fun ImportInventoryValidationScreen(
         )
     )
 
-    val fixableError = errors.firstOrNull { it.suggestedCorrection != null }
+    val fixableError = errors.firstOrNull { it.suggestedCorrection != null || it.actions?.isNotEmpty() == true }
+    val isZeroStockError = fixableError != null && (
+        fixableError.errorType == "QUANTITY_ZERO_EXISTING" ||
+        (fixableError.field == "units" && fixableError.importedValue == "0") ||
+        fixableError.reason?.contains("existing products", ignoreCase = true) == true
+    )
+
     val rowsChecked = validationData?.rowsChecked ?: 5
     val readyRows = validationData?.readyRows ?: 4
     val errorsRemaining = validationData?.errorsRemaining ?: errors.size
@@ -400,71 +407,128 @@ fun ImportInventoryValidationScreen(
                                 fontSize = 14.sp
                             )
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
+                            if (isZeroStockError) {
                                 Text(
-                                    text = "Replace \"${fixableError.importedValue}\" with",
+                                    text = "${fixableError.productName} is an existing product with 0 quantity in the file. StockSense will never invent stock. Choose how to handle this product:",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = InkDark,
+                                    fontSize = 12.sp,
+                                    lineHeight = 16.sp
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                BoldButton(
+                                    text = if (uiState.isValidating) "Applying..." else "Import with 0 units (out of stock)",
+                                    onClick = {
+                                        viewModel.importWithZeroUnits(
+                                            error = fixableError,
+                                            onSuccess = { ready -> if (ready) onValidationPassed() },
+                                            onError = { }
+                                        )
+                                    },
+                                    enabled = !uiState.isValidating,
+                                    isPrimary = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                BoldButton(
+                                    text = if (uiState.isValidating) "Applying..." else "Skip this row",
+                                    onClick = {
+                                        viewModel.skipRow(
+                                            error = fixableError,
+                                            onSuccess = { ready -> if (ready) onValidationPassed() },
+                                            onError = { }
+                                        )
+                                    },
+                                    enabled = !uiState.isValidating,
+                                    isPrimary = false,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            } else {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Replace \"${fixableError.importedValue}\" with",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MutedInk,
+                                        fontSize = 12.sp
+                                    )
+                                    Text(
+                                        text = fixableError.suggestedLabel ?: "${fixableError.suggestedCorrection}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MainBlue,
+                                        fontSize = 13.sp
+                                    )
+                                }
+
+                                Text(
+                                    text = "The source appears to have an invalid value or stray letter. Apply the fix to re-validate.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MutedInk,
-                                    fontSize = 12.sp
+                                    fontSize = 11.sp,
+                                    lineHeight = 15.sp
                                 )
-                                Text(
-                                    text = fixableError.suggestedLabel ?: "${fixableError.suggestedCorrection}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MainBlue,
-                                    fontSize = 13.sp
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                BoldButton(
+                                    text = if (uiState.isValidating) "Applying correction..." else "Apply Fix · Use ${fixableError.suggestedLabel ?: fixableError.suggestedCorrection.toString()}",
+                                    onClick = {
+                                        viewModel.applyCorrection(
+                                            error = fixableError,
+                                            onSuccess = { ready ->
+                                                if (ready) onValidationPassed()
+                                            },
+                                            onError = { }
+                                        )
+                                    },
+                                    enabled = !uiState.isValidating,
+                                    isPrimary = true,
+                                    modifier = Modifier.fillMaxWidth()
                                 )
                             }
-
-                            Text(
-                                text = "The source appears to have an invalid value or stray letter. Apply the fix to re-validate.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MutedInk,
-                                fontSize = 11.sp,
-                                lineHeight = 15.sp
-                            )
                         }
                     }
                 }
 
                 // 7. Footer Note
                 Text(
-                    text = "No products have been imported. $readyRows valid rows are held until all $rowsChecked are ready.",
+                    text = "No products have been imported yet. $readyRows valid rows are held until all $rowsChecked are ready, or you can skip invalid rows.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MutedInk,
                     fontSize = 11.sp,
                     lineHeight = 15.sp
                 )
 
-                // 8. Action Button
-                if (fixableError != null) {
+                // 8. Skip Invalid Rows and Import the Rest (when readyRows > 0)
+                if (readyRows > 0) {
                     BoldButton(
-                        text = if (uiState.isValidating) "Applying correction..." else "Apply Fix · Use ${fixableError.suggestedLabel ?: fixableError.suggestedCorrection.toString()}",
+                        text = if (uiState.isExecuting) "Importing valid rows..." else "Skip invalid rows and import the rest ($readyRows ready)",
                         onClick = {
-                            viewModel.applyCorrection(
-                                error = fixableError,
-                                onSuccess = { ready ->
-                                    if (ready) onValidationPassed()
-                                },
+                            viewModel.executeImport(
+                                skipInvalidRows = true,
+                                onSuccess = onImportCompleted,
                                 onError = { }
                             )
                         },
-                        enabled = !uiState.isValidating,
-                        isPrimary = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                } else {
-                    BoldButton(
-                        text = "Fix in Spreadsheet · Upload Again",
-                        onClick = onBackClick,
-                        isPrimary = true,
+                        enabled = !uiState.isExecuting && !uiState.isValidating,
+                        isPrimary = (fixableError == null),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
+
+                // 9. Back / Re-upload Option
+                BoldButton(
+                    text = "Fix in Spreadsheet · Upload Again",
+                    onClick = onBackClick,
+                    isPrimary = false,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 Spacer(modifier = Modifier.height(20.dp))
             }

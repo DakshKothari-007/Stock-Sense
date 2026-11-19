@@ -95,10 +95,18 @@ data class ImportValidateData(
     @SerializedName("rows_checked") val rowsChecked: Int? = 0,
     @SerializedName("ready_rows") val readyRows: Int? = 0,
     @SerializedName("errors_remaining") val errorsRemaining: Int? = 0,
+    @SerializedName("skipped_rows") val skippedRows: Int? = 0,
+    @SerializedName("can_skip_invalid") val canSkipInvalid: Boolean? = false,
     @SerializedName("ready_to_import") val readyToImport: Boolean? = false,
     @SerializedName("errors") val errors: List<ImportValidationError>? = emptyList(),
     @SerializedName("summary") val summary: ImportSummary? = null,
     @SerializedName("stock_preview") val stockPreview: List<ImportStockPreviewItem>? = emptyList()
+)
+
+data class ImportValidateAction(
+    @SerializedName("action") val action: String? = "",
+    @SerializedName("label") val label: String? = "",
+    @SerializedName("value") val value: Any? = null
 )
 
 data class ImportValidationError(
@@ -111,12 +119,14 @@ data class ImportValidationError(
     @SerializedName("imported_value") val importedValue: String? = "",
     @SerializedName("reason") val reason: String? = "",
     @SerializedName("suggested_correction") val suggestedCorrection: Any? = null,
-    @SerializedName("suggested_label") val suggestedLabel: String? = null
+    @SerializedName("suggested_label") val suggestedLabel: String? = null,
+    @SerializedName("actions") val actions: List<ImportValidateAction>? = emptyList()
 )
 
 data class ImportSummary(
     @SerializedName("existing_products_to_update") val existingProductsToUpdate: Int? = 0,
     @SerializedName("new_products_to_create") val newProductsToCreate: Int? = 0,
+    @SerializedName("skipped_rows") val skippedRows: Int? = 0,
     @SerializedName("total_stock_to_add") val totalStockToAdd: Int? = 0,
     @SerializedName("total_stock_to_add_formatted") val totalStockToAddFormatted: String? = "0 units",
     @SerializedName("inventory_value_to_add") val inventoryValueToAdd: Double? = 0.0,
@@ -131,6 +141,7 @@ data class ImportStockPreviewItem(
     @SerializedName("new_units") val newUnits: Int? = 0,
     @SerializedName("display_calculation") val displayCalculation: String? = "",
     @SerializedName("is_new") val isNew: Boolean? = false,
+    @SerializedName("is_out_of_stock") val isOutOfStock: Boolean? = false,
     @SerializedName("cost_price") val costPrice: Double? = 0.0,
     @SerializedName("price") val price: Double? = 0.0
 )
@@ -142,7 +153,15 @@ data class ImportExecuteRequest(
     @SerializedName("column_mapping") val columnMapping: Map<String, String?>? = null,
     @SerializedName("corrections") val corrections: List<ImportCorrection>? = null,
     @SerializedName("confirm_replace") val confirmReplace: Boolean = false,
+    @SerializedName("skip_invalid_rows") val skipInvalidRows: Boolean = false,
     @SerializedName("idempotency_key") val idempotencyKey: String? = null
+)
+
+data class ImportOutOfStockProduct(
+    @SerializedName("name") val name: String? = "",
+    @SerializedName("sku") val sku: String? = "",
+    @SerializedName("category") val category: String? = "",
+    @SerializedName("units") val units: Int? = 0
 )
 
 data class ImportExecuteResponse(
@@ -162,10 +181,13 @@ data class ImportExecuteData(
     @SerializedName("stock_added_count") val stockAddedCount: Int? = 0,
     @SerializedName("corrected_rows") val correctedRows: Int? = 0,
     @SerializedName("skipped_rows") val skippedRows: Int? = 0,
+    @SerializedName("skipped_count") val skippedCount: Int? = 0,
     @SerializedName("corrected_skipped_text") val correctedSkippedText: String? = "0 / 0 rows",
     @SerializedName("total_active_products") val totalActiveProducts: Int? = 0,
     @SerializedName("new_inventory_value") val newInventoryValue: String? = "₹0",
-    @SerializedName("new_inventory_value_raw") val newInventoryValueRaw: Double? = 0.0
+    @SerializedName("new_inventory_value_raw") val newInventoryValueRaw: Double? = 0.0,
+    @SerializedName("out_of_stock_products") val outOfStockProducts: List<ImportOutOfStockProduct>? = emptyList(),
+    @SerializedName("out_of_stock_count") val outOfStockCount: Int? = 0
 )
 
 // 5. History Response

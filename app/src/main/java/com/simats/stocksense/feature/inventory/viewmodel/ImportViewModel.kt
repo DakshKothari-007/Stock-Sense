@@ -304,7 +304,56 @@ class ImportViewModel(
         validateImport(onSuccess, onError)
     }
 
+    fun skipRow(
+        error: ImportValidationError,
+        onSuccess: (readyToImport: Boolean) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val newCorrection = ImportCorrection(
+            rowNumber = error.rowNumber ?: 0,
+            field = "action",
+            value = "skip"
+        )
+        val updatedCorrections = _uiState.value.corrections.filterNot {
+            it.rowNumber == error.rowNumber
+        } + newCorrection
+
+        val summaryText = "Row ${error.rowNumber}: ${error.productName} skipped."
+        _uiState.update {
+            it.copy(
+                corrections = updatedCorrections,
+                appliedCorrectionSummary = summaryText
+            )
+        }
+        validateImport(onSuccess, onError)
+    }
+
+    fun importWithZeroUnits(
+        error: ImportValidationError,
+        onSuccess: (readyToImport: Boolean) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val newCorrection = ImportCorrection(
+            rowNumber = error.rowNumber ?: 0,
+            field = "units",
+            value = "set_zero"
+        )
+        val updatedCorrections = _uiState.value.corrections.filterNot {
+            it.rowNumber == error.rowNumber && it.field == error.field
+        } + newCorrection
+
+        val summaryText = "Row ${error.rowNumber}: ${error.productName} will be imported with 0 units (out of stock)."
+        _uiState.update {
+            it.copy(
+                corrections = updatedCorrections,
+                appliedCorrectionSummary = summaryText
+            )
+        }
+        validateImport(onSuccess, onError)
+    }
+
     fun executeImport(
+        skipInvalidRows: Boolean = false,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
@@ -344,6 +393,7 @@ class ImportViewModel(
                 columnMapping = activeMapping,
                 corrections = _uiState.value.corrections.takeIf { it.isNotEmpty() },
                 confirmReplace = false,
+                skipInvalidRows = skipInvalidRows,
                 idempotencyKey = activeIdempotencyKey
             )
             result.fold(

@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -46,6 +47,8 @@ fun InventoryImportedScreen(
     val productsAdded = execResult?.productsAdded ?: 1
     val dataRowsImported = execResult?.dataRowsImported ?: "5 of 5"
     val stockAdded = execResult?.stockAdded ?: "134 units"
+    val skippedRowsCount = execResult?.skippedRows ?: execResult?.skippedCount ?: 0
+    val outOfStockProducts = execResult?.outOfStockProducts ?: emptyList()
     val correctedSkipped = execResult?.correctedSkippedText ?: "1 / 0 rows"
     val totalActiveProducts = execResult?.totalActiveProducts?.toString() ?: "129"
     val newInventoryValue = execResult?.newInventoryValue ?: "₹1,56,212"
@@ -222,6 +225,162 @@ fun InventoryImportedScreen(
                     }
                 }
 
+                // 4b. Skipped Rows Banner (if any rows were skipped)
+                if (skippedRowsCount > 0) {
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = SoftPeach,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 2.dp,
+                        contentPadding = PaddingValues(14.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Canvas(modifier = Modifier.size(20.dp)) {
+                                drawCircle(
+                                    color = StatusLowStock,
+                                    radius = size.width / 2f,
+                                    style = Stroke(width = 1.8.dp.toPx())
+                                )
+                                drawLine(
+                                    color = StatusLowStock,
+                                    start = Offset(size.width * 0.5f, size.height * 0.25f),
+                                    end = Offset(size.width * 0.5f, size.height * 0.6f),
+                                    strokeWidth = 2.dp.toPx(),
+                                    cap = StrokeCap.Round
+                                )
+                                drawCircle(
+                                    color = StatusLowStock,
+                                    radius = 1.5.dp.toPx(),
+                                    center = Offset(size.width * 0.5f, size.height * 0.75f)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = if (skippedRowsCount == 1) "1 row was skipped" else "$skippedRowsCount rows were skipped",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = InkDark,
+                                    fontSize = 13.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "$dataRowsImported imported. Skipped invalid rows were not added to inventory.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MutedInk,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // 4c. Out-of-Stock Products Created Card (if any new products created with 0 units)
+                if (outOfStockProducts.isNotEmpty()) {
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = CardWhite,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp,
+                        contentPadding = PaddingValues(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Out-of-stock products created",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = InkDark,
+                                    fontSize = 14.sp
+                                )
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = SoftPink,
+                                    border = BorderStroke(1.dp, InkDark)
+                                ) {
+                                    Text(
+                                        text = "${outOfStockProducts.size} item${if (outOfStockProducts.size > 1) "s" else ""}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = StatusDangerRed,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 10.sp,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = "These products were created with 0 units and are marked Out of Stock.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MutedInk,
+                                fontSize = 11.sp
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(1.dp)
+                                    .background(InkDark.copy(alpha = 0.15f))
+                            )
+
+                            outOfStockProducts.forEach { prod ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = prod.name?.takeIf { it.isNotBlank() } ?: "Product",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = InkDark,
+                                            fontSize = 13.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = "${prod.sku?.takeIf { it.isNotBlank() } ?: "SKU"} · ${prod.category?.takeIf { it.isNotBlank() } ?: "General"}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MutedInk,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = SoftPink,
+                                        border = BorderStroke(1.dp, InkDark)
+                                    ) {
+                                        Text(
+                                            text = "0 units · Out of stock",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = StatusDangerRed,
+                                            fontSize = 10.sp,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // 5. Statistics Card
                 BoldCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -237,6 +396,12 @@ fun InventoryImportedScreen(
                     ) {
                         StatRow("Data rows imported", dataRowsImported)
                         StatRow("Stock added", stockAdded)
+                        if (skippedRowsCount > 0) {
+                            StatRow("Rows skipped", "$skippedRowsCount")
+                        }
+                        if (outOfStockProducts.isNotEmpty()) {
+                            StatRow("Out-of-stock created", "${outOfStockProducts.size}")
+                        }
                         StatRow("Corrected / skipped", correctedSkipped)
                         StatRow("Total active products", totalActiveProducts)
                         StatRow("New inventory value", newInventoryValue)
