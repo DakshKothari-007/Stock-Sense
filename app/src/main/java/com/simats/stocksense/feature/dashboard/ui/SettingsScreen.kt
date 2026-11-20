@@ -32,6 +32,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.simats.stocksense.BuildConfig
 import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
@@ -503,7 +504,7 @@ fun SettingsScreen(
 
                                 BoldInfoRow(
                                     label = "Version",
-                                    value = com.simats.stocksense.BuildConfig.VERSION_NAME
+                                    value = BuildConfig.VERSION_NAME
                                 )
 
                                 BoldInfoRow(
@@ -513,7 +514,7 @@ fun SettingsScreen(
                             }
                         }
 
-                        if (com.simats.stocksense.BuildConfig.DEBUG) {
+                        if (BuildConfig.DEBUG) {
                             Text(
                                 text = "DEVELOPER / DEBUG",
                                 style = MaterialTheme.typography.labelSmall,
@@ -530,14 +531,16 @@ fun SettingsScreen(
                                 borderWidth = 2.dp,
                                 shadowOffset = 3.dp,
                                 onClick = {
-                                    try {
-                                        val intent = android.content.Intent(
-                                            context,
-                                            Class.forName("com.simats.stocksense.feature.debug.DebugIconGalleryActivity")
-                                        )
-                                        context.startActivity(intent)
-                                    } catch (e: Exception) {
-                                        android.util.Log.e("SettingsScreen", "Failed to launch icon gallery", e)
+                                    if (BuildConfig.DEBUG) {
+                                        try {
+                                            val intent = android.content.Intent(
+                                                context,
+                                                Class.forName("com.simats.stocksense.feature.debug.DebugIconGalleryActivity")
+                                            )
+                                            context.startActivity(intent)
+                                        } catch (e: Exception) {
+                                            android.util.Log.e("SettingsScreen", "Failed to launch icon gallery", e)
+                                        }
                                     }
                                 },
                                 contentPadding = PaddingValues(18.dp)

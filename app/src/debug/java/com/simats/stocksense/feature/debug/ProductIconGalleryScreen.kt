@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.simats.stocksense.BuildConfig
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.core.theme.ThemeMode
 import com.simats.stocksense.feature.inventory.icon.ProductAvatar
@@ -47,6 +48,10 @@ import com.simats.stocksense.feature.inventory.icon.ProductIconItem
 fun ProductIconGalleryScreen(
     onBackClick: () -> Unit
 ) {
+    if (!BuildConfig.DEBUG) {
+        return
+    }
+
     var isDarkTheme by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedDepartment by remember { mutableStateOf<ProductDepartment?>(null) }
