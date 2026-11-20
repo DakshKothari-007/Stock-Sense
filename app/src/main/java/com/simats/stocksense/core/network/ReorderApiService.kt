@@ -53,5 +53,13 @@ interface ReorderApiService {
     suspend fun cancelOrder(
         @Body request: OrderActionRequest
     ): Response<OrderActionResponse>
+
+    /**
+     * Module 7.6 Delete Purchase Order
+     */
+    @POST("reorder/delete.php")
+    suspend fun deleteOrder(
+        @Body request: OrderActionRequest
+    ): Response<OrderActionResponse>
 }
 

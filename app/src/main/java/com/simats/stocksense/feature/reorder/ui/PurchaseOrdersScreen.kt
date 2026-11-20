@@ -317,12 +317,19 @@ private fun PurchaseOrderCard(
         else -> SoftLightBlue to InkDark // placed
     }
 
-    val firstItem = order.items?.firstOrNull()
-    val extraItemsCount = (order.items?.size ?: 1) - 1
-    val productTitle = if (extraItemsCount > 0 && firstItem != null) {
-        "${firstItem.displayName} + $extraItemsCount more"
+    val firstItem = order.firstItem
+    val totalItemsCount = order.totalItems ?: order.items?.size ?: 0
+    val extraItemsCount = if (totalItemsCount > 1) {
+        totalItemsCount - 1
     } else {
-        firstItem?.displayName ?: "—"
+        maxOf(0, (order.items?.size ?: 1) - 1)
+    }
+
+    val baseName = order.cardProductName
+    val productTitle = if (extraItemsCount > 0 && baseName != "—") {
+        "$baseName + $extraItemsCount more"
+    } else {
+        baseName
     }
 
     val totalItems = order.totalItems ?: order.items?.size ?: 0
@@ -401,8 +408,9 @@ private fun PurchaseOrderCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 ProductAvatar(
-                    name = firstItem?.displayName,
-                    category = firstItem?.category,
+                    name = baseName,
+                    category = order.cardCategory,
+                    iconKey = order.cardIconKey,
                     size = 40.dp
                 )
 

@@ -102,8 +102,24 @@ data class PurchaseOrderDto(
     @SerializedName("notes") val notes: String? = null,
     @SerializedName("created_at") val createdAt: String? = null,
     @SerializedName("received_at") val receivedAt: String? = null,
+    @SerializedName("first_product_name") val firstProductName: String? = null,
+    @SerializedName("first_product_category") val firstProductCategory: String? = null,
+    @SerializedName("first_product_icon") val firstProductIcon: String? = null,
     @SerializedName("items") val items: List<PurchaseOrderItemDto>? = emptyList()
-)
+) {
+    val firstItem: PurchaseOrderItemDto? get() = items?.firstOrNull()
+
+    val cardProductName: String get() {
+        val item = firstItem
+        if (item != null && item.displayName != "—") return item.displayName
+        if (!firstProductName.isNullOrBlank()) return firstProductName
+        return if (!orderNo.isNullOrBlank()) "Order $orderNo" else "Purchase Order"
+    }
+
+    val cardCategory: String? get() = firstItem?.category ?: firstProductCategory
+
+    val cardIconKey: String? get() = firstItem?.resolvedIconKey ?: firstProductIcon
+}
 
 data class PurchaseOrderItemDto(
     @SerializedName("item_id") val itemId: Int? = null,
@@ -112,12 +128,15 @@ data class PurchaseOrderItemDto(
     @SerializedName("product_name") val productName: String? = null,
     @SerializedName("sku") val sku: String? = null,
     @SerializedName("category") val category: String? = null,
+    @SerializedName("icon_key") val iconKey: String? = null,
+    @SerializedName("icon") val icon: String? = null,
     @SerializedName("quantity") val quantity: Int? = 0,
     @SerializedName("cost_price") val costPrice: Double? = null,
     @SerializedName("line_estimated_cost") val lineEstimatedCost: Double? = null,
     @SerializedName("current_stock") val currentStock: Int? = null
 ) {
     val displayName: String get() = name ?: productName ?: "—"
+    val resolvedIconKey: String? get() = iconKey ?: icon
 }
 
 // --- 3. GET /reorder/orders.php ---

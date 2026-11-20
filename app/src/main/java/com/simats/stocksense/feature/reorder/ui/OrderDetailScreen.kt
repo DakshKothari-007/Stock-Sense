@@ -55,6 +55,8 @@ fun OrderDetailScreen(
 
     var showReceiveDialog by remember { mutableStateOf(false) }
     var showCancelDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDeleteRefusedDialog by remember { mutableStateOf(false) }
 
     // Refresh on resume
     DisposableEffect(lifecycleOwner) {
@@ -122,6 +124,8 @@ fun OrderDetailScreen(
 
         val status = order.status?.lowercase() ?: "placed"
         val isPlaced = status == "placed"
+        val isReceived = status == "received" || status == "partially_received" || !order.receivedAt.isNullOrBlank()
+        val isCancelled = status == "cancelled"
 
         val subtitleDate = PurchaseOrdersViewModel.formatOrderDetailDate(
             status = order.status,
@@ -383,37 +387,132 @@ fun OrderDetailScreen(
                     }
                 }
 
-                // 5. Actions (Only shown for PLACED orders per Requirement 5)
-                if (isPlaced) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        BoldButton(
-                            text = "Receive order",
-                            onClick = { showReceiveDialog = true },
-                            enabled = !uiState.isActionRunning,
-                            isPrimary = true,
-                            isLoading = uiState.isActionRunning
-                        )
+                // 5. Actions (Enforce delete & cancel rules)
+                when {
+                    isPlaced -> {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            BoldButton(
+                                text = "Receive order",
+                                onClick = { showReceiveDialog = true },
+                                enabled = !uiState.isActionRunning,
+                                isPrimary = true,
+                                isLoading = uiState.isActionRunning
+                            )
 
-                        BoldButton(
-                            text = "Cancel order",
-                            onClick = { showCancelDialog = true },
-                            enabled = !uiState.isActionRunning,
-                            isPrimary = false,
-                            containerColor = SoftPink,
-                            contentColor = StatusDangerRed
-                        )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                BoldButton(
+                                    modifier = Modifier.weight(1f),
+                                    text = "Cancel order",
+                                    onClick = { showCancelDialog = true },
+                                    enabled = !uiState.isActionRunning,
+                                    isPrimary = false,
+                                    containerColor = SoftPink,
+                                    contentColor = StatusDangerRed
+                                )
 
-                        Text(
-                            text = "Receiving adds the units to your stock. You will be asked to confirm.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MutedInk,
-                            fontSize = 11.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                                BoldButton(
+                                    modifier = Modifier.weight(1f),
+                                    text = "Delete order",
+                                    onClick = { showDeleteDialog = true },
+                                    enabled = !uiState.isActionRunning,
+                                    isPrimary = false,
+                                    containerColor = CardWhite,
+                                    contentColor = StatusDangerRed
+                                )
+                            }
+
+                            Text(
+                                text = "Receiving adds units to your stock. Open orders with 0 received can be deleted.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MutedInk,
+                                fontSize = 11.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+
+                    isReceived -> {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                BoldButton(
+                                    modifier = Modifier.weight(1f),
+                                    text = "Cancel order",
+                                    onClick = { showCancelDialog = true },
+                                    enabled = !uiState.isActionRunning,
+                                    isPrimary = false,
+                                    containerColor = SoftPink,
+                                    contentColor = StatusDangerRed
+                                )
+
+                                BoldButton(
+                                    modifier = Modifier.weight(1f),
+                                    text = "Delete order",
+                                    onClick = { showDeleteRefusedDialog = true },
+                                    enabled = !uiState.isActionRunning,
+                                    isPrimary = false,
+                                    containerColor = SoftPink.copy(alpha = 0.5f),
+                                    contentColor = MutedInk
+                                )
+                            }
+
+                            Text(
+                                text = "Received orders cannot be deleted to keep stock correct. Cancel instead if needed.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MutedInk,
+                                fontSize = 11.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+
+                    isCancelled -> {
+                        if (order.receivedAt.isNullOrBlank()) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                BoldButton(
+                                    text = "Delete order",
+                                    onClick = { showDeleteDialog = true },
+                                    enabled = !uiState.isActionRunning,
+                                    isPrimary = false,
+                                    containerColor = CardWhite,
+                                    contentColor = StatusDangerRed
+                                )
+
+                                Text(
+                                    text = "Permanently removes this cancelled order record.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MutedInk,
+                                    fontSize = 11.sp,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = "This order had received items. Cannot be deleted to keep stock correct.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MutedInk,
+                                fontSize = 11.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
                 }
 
@@ -452,10 +551,16 @@ fun OrderDetailScreen(
 
         // Cancel Confirm Dialog (Requirement 4)
         if (showCancelDialog) {
+            val cancelText = if (isReceived) {
+                "Are you sure you want to cancel order ${order.orderNo ?: ""}? Received stock will remain in your inventory."
+            } else {
+                "Are you sure you want to cancel order ${order.orderNo ?: ""}? This action cannot be undone."
+            }
+
             BoldDialog(
                 onDismissRequest = { if (!uiState.isActionRunning) showCancelDialog = false },
                 title = "Cancel purchase order?",
-                text = "Are you sure you want to cancel order ${order.orderNo ?: ""}? This action cannot be undone.",
+                text = cancelText,
                 confirmButton = {
                     BoldButton(
                         text = "Cancel order",
@@ -474,6 +579,62 @@ fun OrderDetailScreen(
                         text = "Keep order",
                         onClick = { showCancelDialog = false },
                         enabled = !uiState.isActionRunning,
+                        isPrimary = false
+                    )
+                }
+            )
+        }
+
+        // Delete Confirm Dialog (For open unreceived orders)
+        if (showDeleteDialog) {
+            BoldDialog(
+                onDismissRequest = { if (!uiState.isActionRunning) showDeleteDialog = false },
+                title = "Delete purchase order?",
+                text = "Are you sure you want to permanently delete order ${order.orderNo ?: ""}? This action cannot be undone.",
+                confirmButton = {
+                    BoldButton(
+                        text = "Delete",
+                        onClick = {
+                            showDeleteDialog = false
+                            viewModel.deleteOrder(order, onSuccess = { onBackClick() })
+                        },
+                        enabled = !uiState.isActionRunning,
+                        isPrimary = false,
+                        containerColor = StatusDangerRed,
+                        contentColor = Color.White
+                    )
+                },
+                dismissButton = {
+                    BoldButton(
+                        text = "Keep order",
+                        onClick = { showDeleteDialog = false },
+                        enabled = !uiState.isActionRunning,
+                        isPrimary = false
+                    )
+                }
+            )
+        }
+
+        // Delete Refused Dialog (For partly received or received orders)
+        if (showDeleteRefusedDialog) {
+            BoldDialog(
+                onDismissRequest = { showDeleteRefusedDialog = false },
+                title = "Delete refused",
+                text = "Cannot delete purchase order with received items. Cancel the order instead to keep stock correct.",
+                confirmButton = {
+                    BoldButton(
+                        text = "Cancel order instead",
+                        onClick = {
+                            showDeleteRefusedDialog = false
+                            showCancelDialog = true
+                        },
+                        isPrimary = true
+                    )
+                },
+                dismissButton = {
+                    BoldButton(
+                        text = "Close",
+                        onClick = { showDeleteRefusedDialog = false },
                         isPrimary = false
                     )
                 }
@@ -514,6 +675,7 @@ private fun OrderDetailItemCard(item: PurchaseOrderItemDto) {
                 ProductAvatar(
                     name = item.displayName,
                     category = item.category,
+                    iconKey = item.resolvedIconKey,
                     size = 40.dp
                 )
 

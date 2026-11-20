@@ -262,6 +262,7 @@ class PurchaseOrdersViewModel(
             result.fold(
                 onSuccess = { msg ->
                     val updatedOrder = order.copy(status = "cancelled")
+                    val wasPlaced = order.status.equals("placed", ignoreCase = true)
 
                     _uiState.update { current ->
                         val updatedList = current.orders.map {
@@ -273,13 +274,81 @@ class PurchaseOrdersViewModel(
                             actionErrorMessage = null,
                             orders = updatedList,
                             selectedOrder = updatedOrder,
-                            placedOrdersCount = maxOf(0, current.placedOrdersCount - 1)
+                            placedOrdersCount = if (wasPlaced) maxOf(0, current.placedOrdersCount - 1) else current.placedOrdersCount
                         )
                     }
                     onSuccess()
                 },
                 onFailure = { err ->
                     val errorMsg = err.message ?: "Failed to cancel order."
+                    val isExpired = errorMsg.contains("Session expired", ignoreCase = true)
+                    _uiState.update {
+                        it.copy(
+                            isActionRunning = false,
+                            actionErrorMessage = errorMsg,
+                            isSessionExpired = isExpired
+                        )
+                    }
+                    onError(errorMsg)
+                }
+            )
+        }
+    }
+
+    /**
+     * Deletes a purchase order.
+     * Enforces the rule:
+     * - Open purchase orders: allow delete only if nothing has been received on them.
+     * - Partly received or received orders: never delete. Cancel instead. Stock stays correct.
+     */
+    fun deleteOrder(
+        order: PurchaseOrderDto,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        val targetId = order.id ?: order.orderId ?: return
+        if (_uiState.value.isActionRunning) return
+
+        val status = order.status?.lowercase() ?: ""
+        val isReceived = status == "received" || status == "partially_received" || !order.receivedAt.isNullOrBlank()
+        if (isReceived) {
+            val refusalMsg = "Cannot delete purchase order with received items. Cancel the order instead to keep stock correct."
+            _uiState.update { it.copy(actionErrorMessage = refusalMsg) }
+            onError(refusalMsg)
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                isActionRunning = true,
+                actionSuccessMessage = null,
+                actionErrorMessage = null
+            )
+        }
+
+        viewModelScope.launch {
+            val result = repository.deleteOrder(targetId)
+            result.fold(
+                onSuccess = { msg ->
+                    val wasPlaced = status == "placed"
+                    _uiState.update { current ->
+                        val updatedList = current.orders.filterNot {
+                            it.id == targetId || it.orderId == targetId
+                        }
+                        current.copy(
+                            isActionRunning = false,
+                            actionSuccessMessage = msg,
+                            actionErrorMessage = null,
+                            orders = updatedList,
+                            selectedOrder = null,
+                            totalOrdersCount = maxOf(0, current.totalOrdersCount - 1),
+                            placedOrdersCount = if (wasPlaced) maxOf(0, current.placedOrdersCount - 1) else current.placedOrdersCount
+                        )
+                    }
+                    onSuccess()
+                },
+                onFailure = { err ->
+                    val errorMsg = err.message ?: "Failed to delete order."
                     val isExpired = errorMsg.contains("Session expired", ignoreCase = true)
                     _uiState.update {
                         it.copy(

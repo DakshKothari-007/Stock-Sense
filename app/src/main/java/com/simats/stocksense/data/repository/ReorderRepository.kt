@@ -156,7 +156,7 @@ class ReorderRepository(
     }
 
     /**
-     * Cancels an open purchase order via POST /reorder/cancel.php.
+     * Cancels an open or received purchase order via POST /reorder/cancel.php.
      */
     suspend fun cancelOrder(orderId: Int): Result<String> = withContext(Dispatchers.IO) {
         try {
@@ -167,6 +167,29 @@ class ReorderRepository(
                     Result.success(body.message ?: "Order cancelled successfully.")
                 } else {
                     Result.failure(Exception(body?.message ?: "Failed to cancel order."))
+                }
+            } else {
+                val errorMsg = extractErrorMessage(response.errorBody()?.string(), response.code())
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Deletes a purchase order via POST /reorder/delete.php.
+     * Allowed only for open orders where nothing was received.
+     */
+    suspend fun deleteOrder(orderId: Int): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.deleteOrder(OrderActionRequest(orderId = orderId))
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.status == true) {
+                    Result.success(body.message ?: "Purchase order deleted successfully.")
+                } else {
+                    Result.failure(Exception(body?.message ?: "Failed to delete order."))
                 }
             } else {
                 val errorMsg = extractErrorMessage(response.errorBody()?.string(), response.code())
