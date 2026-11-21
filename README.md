@@ -237,3 +237,11 @@ Create at `C:\xampp\StockSense_private\gemini.json`:
 ```
 
 *All secrets, passwords, and tokens shown in this document and throughout the repository are placeholders only.*
+
+---
+
+## Privacy Policy
+
+StockSense respects the privacy of retail store owners and complies with India's Digital Personal Data Protection (DPDP) Act, 2023. All inventory, sales, and customer data are strictly isolated per store and are never sold or shared for advertising.
+
+👉 [**Privacy Policy (`privacy/index.html`)**](privacy/index.html) (also accessible inside the mobile app under **Settings > About > Privacy policy**).

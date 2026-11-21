@@ -33,6 +33,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.BuildConfig
+import com.simats.stocksense.core.network.ApiConstants
 import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
@@ -511,6 +512,49 @@ fun SettingsScreen(
                                     label = "Icon Credits",
                                     value = "Icons: Google Noto Emoji, Apache 2.0"
                                 )
+
+                                HorizontalDivider(color = InkDark.copy(alpha = 0.15f), thickness = 1.dp)
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            try {
+                                                val privacyUrl = "${ApiConstants.BASE_URL}privacy/index.html"
+                                                val intent = android.content.Intent(
+                                                    android.content.Intent.ACTION_VIEW,
+                                                    android.net.Uri.parse(privacyUrl)
+                                                )
+                                                context.startActivity(intent)
+                                            } catch (e: Exception) {
+                                                android.util.Log.e("SettingsScreen", "Failed to open privacy policy", e)
+                                            }
+                                        }
+                                        .padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            "Privacy policy",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = InkDark
+                                        )
+                                        Text(
+                                            "Read how your store data and privacy are protected",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MutedInk,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+                                    Text(
+                                        "Open ↗",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MainBlue,
+                                        fontWeight = FontWeight.Black
+                                    )
+                                }
                             }
                         }
 
