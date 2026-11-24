@@ -72,6 +72,7 @@ fun SalesAnalyticsScreen(
                 lineTotal = itemDto.lineTotal ?: ((itemDto.quantity ?: 1) * (itemDto.unitPrice ?: 0.0))
             )
         }
+        val gstin = sessionManager.getGstin() ?: sessionManager.getStoreProfile().gstin
         val billData = BillReceiptData(
             shopName = shopName,
             billNo = b.billNo ?: "—",
@@ -79,7 +80,8 @@ fun SalesAnalyticsScreen(
             items = receiptItems,
             totalAmount = b.totalAmount ?: 0.0,
             totalQuantity = b.totalQuantity ?: receiptItems.sumOf { it.quantity },
-            totalItems = b.itemCount ?: receiptItems.size
+            totalItems = b.itemCount ?: receiptItems.size,
+            gstin = gstin
         )
         BillReceiptScreen(
             bill = billData,

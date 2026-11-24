@@ -70,7 +70,8 @@ class ProfileRepository(
                         storeId = user.storeId?.takeIf { it.isNotBlank() } ?: (if ((user.id ?: 0) > 0) "GB-BLR-00${user.id}" else ""),
                         currency = user.currency.orEmpty(),
                         role = user.role.orEmpty(),
-                        plan = user.plan.orEmpty()
+                        plan = user.plan.orEmpty(),
+                        gstin = user.gstin
                     )
                     sessionManager?.saveStoreProfile(updatedProfile, user.id)
                     Result.success(updatedProfile)
@@ -93,11 +94,13 @@ class ProfileRepository(
     suspend fun updateShop(
         shopName: String,
         location: String,
-        storeType: String
+        storeType: String,
+        gstin: String? = null
     ): Result<StoreProfile> = withContext(Dispatchers.IO) {
         val trimmedShop = shopName.trim()
         val trimmedLocation = location.trim()
         val trimmedStoreType = storeType.trim()
+        val trimmedGstin = gstin?.trim()?.uppercase()?.ifBlank { null }
 
         if (trimmedShop.isEmpty()) {
             return@withContext Result.failure(Exception("Shop name cannot be empty."))
@@ -112,6 +115,8 @@ class ProfileRepository(
                     shopName = trimmedShop,
                     location = trimmedLocation,
                     storeType = trimmedStoreType,
+                    currency = null,
+                    gstin = trimmedGstin,
                     userId = userId,
                     email = email,
                     token = token
@@ -132,7 +137,8 @@ class ProfileRepository(
                         storeId = user.storeId?.takeIf { it.isNotBlank() } ?: (if ((user.id ?: 0) > 0) "GB-BLR-00${user.id}" else ""),
                         currency = user.currency.orEmpty(),
                         role = user.role.orEmpty(),
-                        plan = user.plan.orEmpty()
+                        plan = user.plan.orEmpty(),
+                        gstin = user.gstin ?: trimmedGstin
                     )
                     sessionManager?.saveStoreProfile(updatedProfile, user.id ?: userId)
                     Result.success(updatedProfile)
@@ -141,7 +147,8 @@ class ProfileRepository(
                     val updated = current.copy(
                         name = trimmedShop,
                         location = trimmedLocation,
-                        storeType = trimmedStoreType
+                        storeType = trimmedStoreType,
+                        gstin = trimmedGstin
                     )
                     sessionManager?.saveStoreProfile(updated, userId)
                     Result.success(updated)
@@ -206,7 +213,8 @@ class ProfileRepository(
                         storeId = user.storeId?.takeIf { it.isNotBlank() } ?: (if ((user.id ?: 0) > 0) "GB-BLR-00${user.id}" else ""),
                         currency = user.currency.orEmpty(),
                         role = user.role.orEmpty(),
-                        plan = user.plan.orEmpty()
+                        plan = user.plan.orEmpty(),
+                        gstin = user.gstin
                     )
                     sessionManager?.saveStoreProfile(updatedProfile, user.id ?: userId)
                     sessionManager?.updateProfileUser(trimmedName, trimmedEmail)

@@ -10,5 +10,6 @@ data class StoreProfile(
     val storeId: String = "",
     val currency: String = "",
     val role: String = "",
-    val plan: String = ""
+    val plan: String = "",
+    val gstin: String? = null
 )

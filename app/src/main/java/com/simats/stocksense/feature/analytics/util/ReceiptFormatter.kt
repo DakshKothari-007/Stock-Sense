@@ -9,6 +9,32 @@ import java.nio.charset.StandardCharsets
 
 object ReceiptFormatter {
 
+    const val GSTIN_REGEX = "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
+    private val gstinPattern = Regex(GSTIN_REGEX)
+
+    /**
+     * Validates optional GSTIN:
+     * - If null or empty / blank -> true (empty is valid).
+     * - Trims and uppercases.
+     * - Must match 15-character GSTIN pattern:
+     *   ^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$
+     */
+    fun validateGstin(raw: String?): Boolean {
+        if (raw == null || raw.trim().isEmpty()) {
+            return true
+        }
+        val trimmed = raw.trim().uppercase()
+        return gstinPattern.matches(trimmed)
+    }
+
+    /**
+     * Cleans GSTIN: null or blank becomes null, otherwise trimmed and uppercase.
+     */
+    fun cleanGstin(raw: String?): String? {
+        if (raw == null || raw.trim().isEmpty()) return null
+        return raw.trim().uppercase()
+    }
+
     /**
      * Cleans and validates optional phone number:
      * - Strips spaces and dashes.
@@ -85,7 +111,11 @@ object ReceiptFormatter {
      */
     fun formatPlainTextBill(bill: BillReceiptData): String {
         val sb = StringBuilder()
-        sb.appendLine("🧾 *${bill.shopName}*")
+        sb.appendLine("🧾 *RECEIPT*")
+        sb.appendLine("*${bill.shopName}*")
+        if (!bill.gstin.isNullOrBlank()) {
+            sb.appendLine("GSTIN: ${bill.gstin}")
+        }
         sb.appendLine("Bill No: ${bill.billNo}")
         sb.appendLine("Date: ${bill.dateFormatted}")
         sb.appendLine("────────────────────────────")

@@ -38,6 +38,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.network.NetworkClient
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.core.util.ResponsiveContainer
@@ -407,6 +408,8 @@ fun RecordSaleScreen(
                         lineTotal = itemDto.lineTotal ?: ((itemDto.quantity ?: 1) * (itemDto.unitPrice ?: 0.0))
                     )
                 }
+                val gstin = NetworkClient.getSessionManager()?.getGstin()
+                    ?: NetworkClient.getSessionManager()?.getStoreProfile()?.gstin
                 val billReceiptData = BillReceiptData(
                     shopName = shopName,
                     billNo = savedData.billNo ?: "—",
@@ -414,7 +417,8 @@ fun RecordSaleScreen(
                     items = receiptItems,
                     totalAmount = savedData.totalAmount ?: 0.0,
                     totalQuantity = savedData.totalQuantity ?: receiptItems.sumOf { it.quantity },
-                    totalItems = savedData.totalItems ?: receiptItems.size
+                    totalItems = savedData.totalItems ?: receiptItems.size,
+                    gstin = gstin
                 )
 
                 BillReceiptScreen(

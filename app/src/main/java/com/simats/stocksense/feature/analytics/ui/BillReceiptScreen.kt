@@ -125,6 +125,15 @@ fun BillReceiptScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
+                                    text = "RECEIPT",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.2.sp,
+                                    color = MutedInk,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
                                     text = bill.shopName.ifBlank { "StockSense Store" },
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
@@ -132,15 +141,17 @@ fun BillReceiptScreen(
                                     fontSize = 20.sp,
                                     textAlign = TextAlign.Center
                                 )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "RETAIL INVOICE / RECEIPT",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = 1.sp,
-                                    color = MutedInk,
-                                    textAlign = TextAlign.Center
-                                )
+                                if (!bill.gstin.isNullOrBlank()) {
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "GSTIN: ${bill.gstin}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MutedInk,
+                                        fontSize = 12.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             }
 
                             DottedDivider()
@@ -240,8 +251,6 @@ fun BillReceiptScreen(
                                                 style = MaterialTheme.typography.bodySmall,
                                                 fontWeight = FontWeight.Medium,
                                                 color = InkDark,
-                                                maxLines = 2,
-                                                overflow = TextOverflow.Ellipsis,
                                                 modifier = Modifier.weight(0.44f)
                                             )
                                             Text(
@@ -325,13 +334,6 @@ fun BillReceiptScreen(
                                     style = MaterialTheme.typography.bodySmall,
                                     fontStyle = FontStyle.Italic,
                                     color = MutedInk,
-                                    textAlign = TextAlign.Center
-                                )
-                                Text(
-                                    text = "Please visit again!",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = InkDark,
                                     textAlign = TextAlign.Center
                                 )
                             }

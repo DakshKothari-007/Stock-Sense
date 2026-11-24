@@ -39,6 +39,7 @@ class SessionManager private constructor(context: Context) {
             user.role?.let { editor.putString(KEY_ROLE, it) }
             user.plan?.let { editor.putString(KEY_PLAN, it) }
             user.storeId?.let { editor.putString(KEY_STORE_ID, it) }
+            user.gstin?.let { editor.putString(KEY_GSTIN, it) }
             (user.dataSnapshot ?: user.updatedAt)?.let { editor.putString(KEY_LAST_UPDATED, it) }
         }
         editor.commit()
@@ -59,6 +60,7 @@ class SessionManager private constructor(context: Context) {
             .putString(KEY_ROLE, profile.role)
             .putString(KEY_PLAN, profile.plan)
             .putString(KEY_STORE_ID, profile.storeId)
+            .putString(KEY_GSTIN, profile.gstin)
 
         if (userId != null && userId > 0) {
             editor.putInt(KEY_USER_ID, userId)
@@ -98,6 +100,7 @@ class SessionManager private constructor(context: Context) {
         val lastUpdated = prefs.getString(KEY_LAST_UPDATED, "") ?: ""
         val role = prefs.getString(KEY_ROLE, "") ?: ""
         val plan = prefs.getString(KEY_PLAN, "") ?: ""
+        val gstin = prefs.getString(KEY_GSTIN, null)
         val userId = prefs.getInt(KEY_USER_ID, 0)
         val storeId = prefs.getString(KEY_STORE_ID, "")?.takeIf { it.isNotBlank() } ?: (if (userId > 0) "GB-BLR-00$userId" else "")
 
@@ -111,9 +114,12 @@ class SessionManager private constructor(context: Context) {
             storeId = storeId,
             currency = currency,
             role = role,
-            plan = plan
+            plan = plan,
+            gstin = gstin
         )
     }
+
+    fun getGstin(): String? = prefs.getString(KEY_GSTIN, null)
 
     fun getUserId(): Int = prefs.getInt(KEY_USER_ID, 0)
 
@@ -195,6 +201,7 @@ class SessionManager private constructor(context: Context) {
         private const val KEY_ROLE = "role"
         private const val KEY_PLAN = "plan"
         private const val KEY_STORE_ID = "store_id"
+        private const val KEY_GSTIN = "gstin"
 
         @Volatile
         private var instance: SessionManager? = null

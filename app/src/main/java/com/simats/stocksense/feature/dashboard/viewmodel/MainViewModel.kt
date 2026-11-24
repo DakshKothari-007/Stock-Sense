@@ -122,11 +122,13 @@ class MainViewModel(
         shopName: String,
         location: String,
         storeType: String,
+        gstin: String? = null,
         onResult: (Boolean, String?) -> Unit = { _, _ -> }
     ) {
         val trimmedShop = shopName.trim()
         val trimmedLocation = location.trim()
         val trimmedType = storeType.trim()
+        val trimmedGstin = gstin?.trim()?.uppercase()?.ifBlank { null }
 
         if (trimmedShop.isEmpty()) {
             onResult(false, "Shop name cannot be empty.")
@@ -134,7 +136,7 @@ class MainViewModel(
         }
 
         viewModelScope.launch {
-            val result = profileRepository.updateShop(trimmedShop, trimmedLocation, trimmedType)
+            val result = profileRepository.updateShop(trimmedShop, trimmedLocation, trimmedType, trimmedGstin)
             result.fold(
                 onSuccess = { updatedProfile ->
                     _uiState.update { it.copy(storeProfile = updatedProfile) }
@@ -154,7 +156,8 @@ class MainViewModel(
         val trimmed = newName.trim()
         val currentLoc = _uiState.value.storeProfile.location
         val currentType = _uiState.value.storeProfile.storeType
-        updateShop(trimmed, currentLoc, currentType, onResult)
+        val currentGstin = _uiState.value.storeProfile.gstin
+        updateShop(trimmed, currentLoc, currentType, currentGstin, onResult)
     }
 
     /**

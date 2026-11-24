@@ -156,9 +156,79 @@ class BillReceiptTest {
         assertTrue(plainText.contains("Tata Salt 1kg"))
 
         // Totals & Thank you message
+        assertTrue(plainText.contains("RECEIPT"))
         assertTrue(plainText.contains("TOTAL:"))
         assertTrue(plainText.contains("350"))
         assertTrue(plainText.contains("Thank you for shopping with us!"))
+    }
+
+    @Test
+    fun formatPlainTextBill_withGstin_includesGstinLine() {
+        val bill = createSampleBill().copy(gstin = "29ABCDE1234F1Z5")
+        val plainText = ReceiptFormatter.formatPlainTextBill(bill)
+        assertTrue(plainText.contains("GSTIN: 29ABCDE1234F1Z5"))
+    }
+
+    @Test
+    fun formatPlainTextBill_withoutGstin_omitsGstinLine() {
+        val bill = createSampleBill().copy(gstin = null)
+        val plainText = ReceiptFormatter.formatPlainTextBill(bill)
+        org.junit.Assert.assertFalse(plainText.contains("GSTIN:"))
+    }
+
+    // ==========================================
+    // 4. GSTIN Validation Tests (Synthetic Only)
+    // ==========================================
+
+    @Test
+    fun validateGstin_validSyntheticGstin_returnsTrue() {
+        val validInputs = listOf(
+            "29ABCDE1234F1Z5",
+            "07AAAAA0000A1Z5",
+            "33AAAAA1111A1Z1",
+            " 29abcde1234f1z5 ", // lowercase with whitespace
+            "99ZZZZZ9999Z9Z9"
+        )
+        for (gstin in validInputs) {
+            assertTrue("Expected valid for synthetic GSTIN: $gstin", ReceiptFormatter.validateGstin(gstin))
+        }
+    }
+
+    @Test
+    fun validateGstin_emptyOrNullOrWhitespace_returnsTrue() {
+        val emptyInputs = listOf(
+            null,
+            "",
+            "   ",
+            "\t\n"
+        )
+        for (input in emptyInputs) {
+            assertTrue("Expected valid (empty) for: '$input'", ReceiptFormatter.validateGstin(input))
+        }
+    }
+
+    @Test
+    fun validateGstin_invalidLengthsAndPatterns_returnsFalse() {
+        val invalidInputs = listOf(
+            "29ABCDE1234F1Z",      // 14 chars (too short)
+            "29ABCDE1234F1Z5A",    // 16 chars (too long)
+            "A9ABCDE1234F1Z5",     // State code letters instead of numbers
+            "29123451234F1Z5",     // PAN letters replaced with numbers
+            "29ABCDE1234F1A5",     // 14th char is not 'Z'
+            "29ABCDE1234F1Z!",     // Special characters
+            "INVALID_GSTIN"        // Malformed string
+        )
+        for (gstin in invalidInputs) {
+            org.junit.Assert.assertFalse("Expected invalid for: $gstin", ReceiptFormatter.validateGstin(gstin))
+        }
+    }
+
+    @Test
+    fun cleanGstin_trimsAndUppercasesOrReturnsNull() {
+        assertEquals("29ABCDE1234F1Z5", ReceiptFormatter.cleanGstin(" 29abcde1234f1z5 "))
+        org.junit.Assert.assertNull(ReceiptFormatter.cleanGstin(null))
+        org.junit.Assert.assertNull(ReceiptFormatter.cleanGstin("   "))
+        org.junit.Assert.assertNull(ReceiptFormatter.cleanGstin(""))
     }
 
     private fun createSampleBill(): BillReceiptData {

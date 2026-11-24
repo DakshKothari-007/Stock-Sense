@@ -140,8 +140,8 @@ fun MainScreen(
                                     isProfileLoading = uiState.isProfileLoading,
                                     profileErrorMessage = uiState.profileErrorMessage,
                                     onRetryClick = { viewModel.refreshProfile() },
-                                    onUpdateShop = { name, loc, type, cb ->
-                                        viewModel.updateShop(name, loc, type, cb)
+                                    onUpdateShop = { name, loc, type, gstin, cb ->
+                                        viewModel.updateShop(name, loc, type, gstin, cb)
                                     },
                                     onShopNameChange = { viewModel.updateShopName(it) },
                                     onUserNameChange = { viewModel.updateUserName(it) },

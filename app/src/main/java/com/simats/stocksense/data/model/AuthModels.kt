@@ -46,6 +46,7 @@ data class AuthUser(
     @SerializedName("location") val location: String? = null,
     @SerializedName("store_type") val storeType: String? = null,
     @SerializedName("currency") val currency: String? = null,
+    @SerializedName("gstin") val gstin: String? = null,
     @SerializedName("email") val email: String? = null,
     @SerializedName("role") val role: String? = null,
     @SerializedName("plan") val plan: String? = null,
@@ -112,6 +113,7 @@ data class UpdateShopRequest(
     @SerializedName("location") val location: String? = null,
     @SerializedName("store_type") val storeType: String? = null,
     @SerializedName("currency") val currency: String? = null,
+    @SerializedName("gstin") val gstin: String? = null,
     @SerializedName("user_id") val userId: Int? = null,
     @SerializedName("email") val email: String? = null,
     @SerializedName("token") val token: String? = null

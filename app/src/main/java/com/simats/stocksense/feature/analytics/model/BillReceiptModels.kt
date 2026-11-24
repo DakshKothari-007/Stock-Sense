@@ -11,7 +11,8 @@ data class BillReceiptData(
     val totalAmount: Double,
     val totalQuantity: Int,
     val totalItems: Int = items.size,
-    val thankYouMessage: String = "Thank you for shopping with us! Please visit again."
+    val thankYouMessage: String = "Thank you for shopping with us! Please visit again.",
+    val gstin: String? = null
 )
 
 @Keep

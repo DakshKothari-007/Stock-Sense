@@ -49,7 +49,7 @@ fun ProfileContent(
     isProfileLoading: Boolean = false,
     profileErrorMessage: String? = null,
     onRetryClick: () -> Unit = {},
-    onUpdateShop: (String, String, String, (Boolean, String?) -> Unit) -> Unit = { _, _, _, cb -> cb(true, null) },
+    onUpdateShop: (String, String, String, String?, (Boolean, String?) -> Unit) -> Unit = { _, _, _, _, cb -> cb(true, null) },
     onShopNameChange: (String) -> Unit = {},
     onUserNameChange: (String) -> Unit = {},
     onEmailChange: (String) -> Unit = {},
@@ -69,6 +69,7 @@ fun ProfileContent(
     var shopNameInput by remember(storeProfile.name) { mutableStateOf(storeProfile.name) }
     var locationInput by remember(storeProfile.location) { mutableStateOf(storeProfile.location) }
     var storeTypeInput by remember(storeProfile.storeType) { mutableStateOf(storeProfile.storeType) }
+    var gstinInput by remember(storeProfile.gstin) { mutableStateOf(storeProfile.gstin.orEmpty()) }
     var storeTypeExpanded by remember { mutableStateOf(false) }
     var isSavingShop by remember { mutableStateOf(false) }
     var shopDialogErrorMessage by remember { mutableStateOf<String?>(null) }
@@ -241,6 +242,29 @@ fun ProfileContent(
                     }
 
                     OutlinedTextField(
+                        value = gstinInput,
+                        onValueChange = {
+                            if (it.length <= 15) {
+                                gstinInput = it.uppercase()
+                            }
+                            shopDialogErrorMessage = null
+                        },
+                        label = { Text("GSTIN (Optional)") },
+                        placeholder = { Text("e.g. 29ABCDE1234F1Z5") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = InkDark,
+                            unfocusedBorderColor = InkDark,
+                            focusedContainerColor = RaisedSurface,
+                            unfocusedContainerColor = RaisedSurface,
+                            focusedTextColor = InkDark,
+                            unfocusedTextColor = InkDark
+                        )
+                    )
+
+                    OutlinedTextField(
                         value = storeProfile.currency.ifBlank { "₹ INR / IST" },
                         onValueChange = {},
                         readOnly = true,
@@ -272,12 +296,18 @@ fun ProfileContent(
                 BoldButton(
                     text = "Save",
                     onClick = {
+                        val trimmedGstin = gstinInput.trim().uppercase()
+                        if (trimmedGstin.isNotEmpty() && !com.simats.stocksense.feature.analytics.util.ReceiptFormatter.validateGstin(trimmedGstin)) {
+                            shopDialogErrorMessage = "Invalid GSTIN format. Expected 15 characters (e.g. 29ABCDE1234F1Z5)."
+                            return@BoldButton
+                        }
                         isSavingShop = true
                         shopDialogErrorMessage = null
                         onUpdateShop(
                             shopNameInput.trim(),
                             locationInput.trim(),
-                            storeTypeInput.trim()
+                            storeTypeInput.trim(),
+                            trimmedGstin.ifBlank { null }
                         ) { success, msg ->
                             isSavingShop = false
                             if (success) {
@@ -1126,6 +1156,7 @@ fun ProfileContent(
                                     shopNameInput = storeProfile.name
                                     locationInput = storeProfile.location
                                     storeTypeInput = storeProfile.storeType
+                                    gstinInput = storeProfile.gstin.orEmpty()
                                     shopDialogErrorMessage = null
                                     showEditShopDialog = true
                                 },
@@ -1197,6 +1228,7 @@ fun ProfileContent(
                                     shopNameInput = storeProfile.name
                                     locationInput = storeProfile.location
                                     storeTypeInput = storeProfile.storeType
+                                    gstinInput = storeProfile.gstin.orEmpty()
                                     shopDialogErrorMessage = null
                                     showEditShopDialog = true
                                 },
@@ -1207,6 +1239,7 @@ fun ProfileContent(
                     }
 
                     val hasDetails = storeProfile.storeType.isNotBlank() ||
+                            !storeProfile.gstin.isNullOrBlank() ||
                             storeProfile.storeId.isNotBlank() ||
                             storeProfile.currency.isNotBlank() ||
                             storeProfile.lastUpdated.isNotBlank()
@@ -1220,6 +1253,9 @@ fun ProfileContent(
                         ) {
                             if (storeProfile.storeType.isNotBlank()) {
                                 BoldInfoRow(label = "Store type", value = storeProfile.storeType)
+                            }
+                            if (!storeProfile.gstin.isNullOrBlank()) {
+                                BoldInfoRow(label = "GSTIN", value = storeProfile.gstin)
                             }
                             if (storeProfile.storeId.isNotBlank()) {
                                 BoldInfoRow(label = "Store ID", value = storeProfile.storeId)
