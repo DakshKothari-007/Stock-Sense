@@ -7,6 +7,7 @@ import com.simats.stocksense.data.model.CreateSaleData
 import com.simats.stocksense.data.model.CreateSaleItemRequest
 import com.simats.stocksense.data.model.CreateSaleRequest
 import com.simats.stocksense.data.model.NetworkInventoryProduct
+import com.simats.stocksense.data.model.SaleBillItemDto
 import com.simats.stocksense.data.repository.InventoryRepository
 import com.simats.stocksense.data.repository.SalesRepository
 import kotlinx.coroutines.FlowPreview
@@ -309,17 +310,32 @@ class RecordSaleViewModel(
             val result = salesRepository.createSale(request)
             result.fold(
                 onSuccess = { data ->
+                    val resolvedItems = if (!data.items.isNullOrEmpty()) {
+                        data.items
+                    } else {
+                        currentState.items.map { ci ->
+                            SaleBillItemDto(
+                                productId = ci.productId,
+                                name = ci.name,
+                                productName = ci.name,
+                                quantity = ci.quantity,
+                                unitPrice = ci.unitPrice,
+                                lineTotal = ci.quantity * ci.unitPrice
+                            )
+                        }
+                    }
+                    val finalData = data.copy(items = resolvedItems)
                     _uiState.update {
                         it.copy(
                             isSaving = false,
-                            savedSaleData = data,
+                            savedSaleData = finalData,
                             items = emptyList(),
                             errorMessage = null
                         )
                     }
                     // Requirement 2: After successful sale, reload products list so stock is updated for the next bill
                     refreshStock()
-                    onSuccess(data)
+                    onSuccess(finalData)
                 },
                 onFailure = { err ->
                     val errorMsg = err.message ?: "Failed to record sale bill."
@@ -328,11 +344,22 @@ class RecordSaleViewModel(
                     val isExpired = errorMsg.contains("Session expired", ignoreCase = true)
 
                     if (isDuplicate) {
+                        val fallbackItems = currentState.items.map { ci ->
+                            SaleBillItemDto(
+                                productId = ci.productId,
+                                name = ci.name,
+                                productName = ci.name,
+                                quantity = ci.quantity,
+                                unitPrice = ci.unitPrice,
+                                lineTotal = ci.quantity * ci.unitPrice
+                            )
+                        }
                         val fallbackSavedData = CreateSaleData(
                             billNo = activeBillNo,
                             totalAmount = currentState.totalAmount,
                             totalItems = currentState.totalItemsCount,
-                            totalQuantity = currentState.totalUnitsCount
+                            totalQuantity = currentState.totalUnitsCount,
+                            items = fallbackItems
                         )
                         _uiState.update {
                             it.copy(

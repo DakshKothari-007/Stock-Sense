@@ -82,6 +82,7 @@ class SalesAnalyticsViewModel(
                     cached30DaysData = days30Result.getOrNull() ?: cached30DaysData
 
                     applyCurrentPeriodState(_uiState.value.selectedPeriodIndex)
+                    loadBills(page = 1)
                 } else {
                     val errorMsg = days7Result.exceptionOrNull()?.message
                         ?: todayResult.exceptionOrNull()?.message

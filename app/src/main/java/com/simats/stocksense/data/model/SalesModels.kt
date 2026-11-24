@@ -103,12 +103,15 @@ data class SaleBillItemDto(
     @SerializedName("item_id") val itemId: Int? = null,
     @SerializedName("product_id") val productId: Int? = null,
     @SerializedName("name") val name: String? = null,
+    @SerializedName("product_name") val productName: String? = null,
     @SerializedName("sku") val sku: String? = null,
     @SerializedName("category") val category: String? = null,
     @SerializedName("quantity") val quantity: Int? = 0,
     @SerializedName("unit_price") val unitPrice: Double? = 0.0,
     @SerializedName("line_total") val lineTotal: Double? = 0.0
-)
+) {
+    val displayName: String get() = name?.ifBlank { null } ?: productName?.ifBlank { null } ?: "Unknown Product"
+}
 
 // --- 3. sales/create.php ---
 data class CreateSaleRequest(

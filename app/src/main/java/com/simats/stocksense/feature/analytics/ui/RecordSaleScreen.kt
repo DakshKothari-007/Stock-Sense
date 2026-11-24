@@ -42,6 +42,8 @@ import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
+import com.simats.stocksense.feature.analytics.model.BillReceiptData
+import com.simats.stocksense.feature.analytics.model.BillReceiptItem
 import com.simats.stocksense.feature.analytics.viewmodel.BillItem
 import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 import com.simats.stocksense.feature.analytics.viewmodel.RecordSaleViewModel
@@ -384,133 +386,47 @@ fun RecordSaleScreen(
                     }
                 }
 
-            // Success Overlay State (Requirement 4)
+            // Bill Receipt Screen (Requirement 1)
             if (uiState.savedSaleData != null) {
                 val savedData = uiState.savedSaleData!!
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = CreamBackground
-                ) {
-                    ResponsiveContainer(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .statusBarsPadding()
-                            .navigationBarsPadding(),
-                        maxWidth = 520.dp
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(24.dp),
-                            verticalArrangement = Arrangement.SpaceBetween,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                // Circular checkmark icon
-                                Box(
-                                    modifier = Modifier
-                                        .size(80.dp)
-                                        .clip(CircleShape)
-                                        .background(SoftLavender)
-                                        .border(2.5.dp, InkDark, CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Canvas(modifier = Modifier.size(36.dp)) {
-                                        val checkPath = Path().apply {
-                                            moveTo(size.width * 0.2f, size.height * 0.52f)
-                                            lineTo(size.width * 0.42f, size.height * 0.74f)
-                                            lineTo(size.width * 0.8f, size.height * 0.26f)
-                                        }
-                                        drawPath(
-                                            path = checkPath,
-                                            color = InkDark,
-                                            style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                        )
-                                    }
-                                }
-
-                                Text(
-                                    text = "Sale Recorded Successfully",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = InkDark,
-                                    fontSize = 20.sp,
-                                    textAlign = TextAlign.Center
-                                )
-
-                                BoldCard(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    backgroundColor = CardWhite,
-                                    borderColor = InkDark,
-                                    borderWidth = 2.dp,
-                                    shadowOffset = 3.dp,
-                                    contentPadding = PaddingValues(18.dp)
-                                ) {
-                                    Column(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text("Bill Number", style = MaterialTheme.typography.bodySmall, color = MutedInk)
-                                            Text(savedData.billNo ?: "—", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = InkDark)
-                                        }
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text("Total Amount", style = MaterialTheme.typography.bodySmall, color = MutedInk)
-                                            Text(NumberFormatUtil.formatIndianRupees(savedData.totalAmount), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MainBlue)
-                                        }
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text("Items & Units", style = MaterialTheme.typography.bodySmall, color = MutedInk)
-                                            Text("${savedData.totalItems} items · ${savedData.totalQuantity} units", style = MaterialTheme.typography.bodySmall, color = InkDark)
-                                        }
-                                        if (!savedData.saleDate.isNullOrBlank()) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween
-                                            ) {
-                                                Text("Date & Time", style = MaterialTheme.typography.bodySmall, color = MutedInk)
-                                                Text(savedData.saleDate, style = MaterialTheme.typography.bodySmall, color = MutedInk)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                BoldButton(
-                                    text = "Record Another Sale",
-                                    onClick = { viewModel.dismissSuccessState() },
-                                    isPrimary = true
-                                )
-
-                                BoldButton(
-                                    text = "Back to Sales Analytics",
-                                    onClick = {
-                                        viewModel.dismissSuccessState()
-                                        onBackClick()
-                                    },
-                                    isPrimary = false
-                                )
-                            }
-                        }
-                    }
+                val shopName = if (uiState.storeName.isNotBlank() && uiState.storeName != "—") {
+                    uiState.storeName
+                } else {
+                    "StockSense Store"
                 }
+                val formattedDate = if (!savedData.saleDate.isNullOrBlank()) {
+                    savedData.saleDate
+                } else {
+                    SimpleDateFormat("d MMM yyyy, hh:mm a", Locale.ENGLISH).format(Date())
+                }
+                val receiptItems = savedData.items.orEmpty().map { itemDto ->
+                    BillReceiptItem(
+                        name = itemDto.displayName,
+                        quantity = itemDto.quantity ?: 1,
+                        unitPrice = itemDto.unitPrice ?: 0.0,
+                        lineTotal = itemDto.lineTotal ?: ((itemDto.quantity ?: 1) * (itemDto.unitPrice ?: 0.0))
+                    )
+                }
+                val billReceiptData = BillReceiptData(
+                    shopName = shopName,
+                    billNo = savedData.billNo ?: "—",
+                    dateFormatted = formattedDate,
+                    items = receiptItems,
+                    totalAmount = savedData.totalAmount ?: 0.0,
+                    totalQuantity = savedData.totalQuantity ?: receiptItems.sumOf { it.quantity },
+                    totalItems = savedData.totalItems ?: receiptItems.size
+                )
+
+                BillReceiptScreen(
+                    bill = billReceiptData,
+                    onRecordAnotherSaleClick = {
+                        viewModel.dismissSuccessState()
+                    },
+                    onDoneClick = {
+                        viewModel.dismissSuccessState()
+                        onBackClick()
+                    }
+                )
             }
 
             // Discard Confirmation Dialog (Requirement 10)

@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -34,11 +35,16 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.components.*
+import com.simats.stocksense.core.network.SessionManager
 import com.simats.stocksense.core.theme.*
+import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.core.util.ResponsiveContainer
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
-import com.simats.stocksense.feature.inventory.icon.ProductAvatar
+import com.simats.stocksense.data.model.SaleBillDto
+import com.simats.stocksense.feature.analytics.model.BillReceiptData
+import com.simats.stocksense.feature.analytics.model.BillReceiptItem
 import com.simats.stocksense.feature.analytics.viewmodel.SalesAnalyticsViewModel
+import com.simats.stocksense.feature.inventory.icon.ProductAvatar
 
 @Composable
 fun SalesAnalyticsScreen(
@@ -50,6 +56,43 @@ fun SalesAnalyticsScreen(
     val primaryColor = MainBlue
     val accentColor = SoftLightBlue
     val lifecycleOwner = LocalLifecycleOwner.current
+    var selectedBill by remember { mutableStateOf<SaleBillDto?>(null) }
+
+    if (selectedBill != null) {
+        val b = selectedBill!!
+        val context = LocalContext.current
+        val sessionManager = remember { SessionManager.getInstance(context) }
+        val shopName = sessionManager.getShopName()?.ifBlank { null }
+            ?: sessionManager.getStoreProfile().name.ifBlank { "StockSense Store" }
+        val receiptItems = b.items.orEmpty().map { itemDto ->
+            BillReceiptItem(
+                name = itemDto.displayName,
+                quantity = itemDto.quantity ?: 1,
+                unitPrice = itemDto.unitPrice ?: 0.0,
+                lineTotal = itemDto.lineTotal ?: ((itemDto.quantity ?: 1) * (itemDto.unitPrice ?: 0.0))
+            )
+        }
+        val billData = BillReceiptData(
+            shopName = shopName,
+            billNo = b.billNo ?: "—",
+            dateFormatted = b.saleDate ?: "—",
+            items = receiptItems,
+            totalAmount = b.totalAmount ?: 0.0,
+            totalQuantity = b.totalQuantity ?: receiptItems.sumOf { it.quantity },
+            totalItems = b.itemCount ?: receiptItems.size
+        )
+        BillReceiptScreen(
+            bill = billData,
+            onRecordAnotherSaleClick = {
+                selectedBill = null
+                onRecordSaleClick()
+            },
+            onDoneClick = {
+                selectedBill = null
+            }
+        )
+        return
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -646,6 +689,134 @@ fun SalesAnalyticsScreen(
                                                 maxLines = 1,
                                                 softWrap = false,
                                                 modifier = Modifier.wrapContentWidth()
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 7. Recent Bills Card (Tapping a past sale opens the bill receipt)
+                        BoldCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = CardWhite,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp,
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Recent bills",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = InkDark,
+                                        fontSize = 16.sp
+                                    )
+                                    if (uiState.bills.isNotEmpty()) {
+                                        Text(
+                                            text = "${uiState.bills.size} bills",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MutedInk
+                                        )
+                                    }
+                                }
+
+                                if (uiState.isBillsLoading && uiState.bills.isEmpty()) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            color = MainBlue,
+                                            modifier = Modifier.size(24.dp),
+                                            strokeWidth = 2.dp
+                                        )
+                                    }
+                                } else if (uiState.bills.isEmpty()) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "No sales bills recorded yet",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MutedInk
+                                        )
+                                    }
+                                } else {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        uiState.bills.forEach { bill ->
+                                            Surface(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .clickable { selectedBill = bill },
+                                                color = Color.Transparent
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(vertical = 6.dp),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Column(
+                                                        modifier = Modifier.weight(1f),
+                                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = bill.billNo ?: "—",
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = InkDark,
+                                                            fontSize = 14.sp
+                                                        )
+                                                        Text(
+                                                            text = "${bill.saleDate ?: "—"} · ${bill.itemCount ?: 0} items (${bill.totalQuantity ?: 0} units)",
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = MutedInk,
+                                                            fontSize = 12.sp
+                                                        )
+                                                    }
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = NumberFormatUtil.formatIndianRupees(bill.totalAmount),
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = MainBlue,
+                                                            fontSize = 14.sp
+                                                        )
+                                                        Text(
+                                                            text = "→",
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = MutedInk
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            HorizontalDivider(
+                                                color = InkDark.copy(alpha = 0.08f),
+                                                thickness = 1.dp
                                             )
                                         }
                                     }
