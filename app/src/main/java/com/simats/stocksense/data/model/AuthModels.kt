@@ -1,6 +1,7 @@
 package com.simats.stocksense.data.model
 
 import com.google.gson.annotations.SerializedName
+import com.simats.stocksense.core.avatar.AvatarCode
 
 /**
  * Request payload for POST auth/login.php
@@ -47,6 +48,7 @@ data class AuthUser(
     @SerializedName("store_type") val storeType: String? = null,
     @SerializedName("currency") val currency: String? = null,
     @SerializedName("gstin") val gstin: String? = null,
+    @SerializedName("avatar") val avatar: AvatarCode? = null,
     @SerializedName("email") val email: String? = null,
     @SerializedName("role") val role: String? = null,
     @SerializedName("plan") val plan: String? = null,
@@ -85,6 +87,7 @@ data class ProfileResponse(
     @SerializedName("status") val status: Boolean? = null,
     @SerializedName("success") val success: Boolean? = null,
     @SerializedName("message") val message: String? = null,
+    @SerializedName("avatar") val avatar: AvatarCode? = null,
     @SerializedName("profile") val profile: AuthUser? = null,
     @SerializedName("user") val user: AuthUser? = null,
     @SerializedName("data") val data: AuthUser? = null,

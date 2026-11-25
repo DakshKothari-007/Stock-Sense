@@ -1,6 +1,7 @@
 package com.simats.stocksense.data.repository
 
 import com.google.gson.Gson
+import com.simats.stocksense.core.avatar.AvatarCatalog
 import com.simats.stocksense.core.network.NetworkClient
 import com.simats.stocksense.core.network.SettingsApiService
 import com.simats.stocksense.data.model.ChangePasswordSettingsRequest
@@ -22,6 +23,9 @@ class SettingsRepository(
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.status == true && body.data != null) {
+                    body.data.account?.let { account ->
+                        NetworkClient.getSessionManager()?.saveAvatar(AvatarCatalog.parseAvatarCode(account.avatar))
+                    }
                     Result.success(body.data)
                 } else {
                     Result.failure(Exception(body?.message?.ifBlank { "Failed to retrieve settings." } ?: "Failed to retrieve settings."))
@@ -40,6 +44,9 @@ class SettingsRepository(
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.status == true && body.data != null) {
+                    body.data.account?.let { account ->
+                        NetworkClient.getSessionManager()?.saveAvatar(AvatarCatalog.parseAvatarCode(account.avatar))
+                    }
                     Result.success(body.data)
                 } else {
                     Result.failure(Exception(body?.message?.ifBlank { "Failed to update settings." } ?: "Failed to update settings."))
@@ -58,6 +65,9 @@ class SettingsRepository(
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.status == true && body.data != null) {
+                    body.data.account?.let { account ->
+                        NetworkClient.getSessionManager()?.saveAvatar(AvatarCatalog.parseAvatarCode(account.avatar))
+                    }
                     Result.success(body.data)
                 } else {
                     Result.failure(Exception(body?.message?.ifBlank { "Failed to reset settings." } ?: "Failed to reset settings."))

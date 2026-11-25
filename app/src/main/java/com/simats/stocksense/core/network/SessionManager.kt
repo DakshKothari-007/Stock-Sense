@@ -2,15 +2,20 @@ package com.simats.stocksense.core.network
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.simats.stocksense.core.avatar.AvatarCatalog
+import com.simats.stocksense.core.avatar.AvatarCode
 import com.simats.stocksense.data.model.AuthUser
 import com.simats.stocksense.data.model.StoreProfile
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 /**
  * Central session manager persisting authentication tokens, login state,
- * and store owner profile details using Android SharedPreferences.
+ * and store owner profile details (including anonymous avatar code) using SharedPreferences.
  */
 class SessionManager private constructor(context: Context) {
 
@@ -18,6 +23,12 @@ class SessionManager private constructor(context: Context) {
         PREFS_NAME,
         Context.MODE_PRIVATE
     )
+
+    private val _avatarState = MutableStateFlow<AvatarCode?>(readAvatarFromPrefs())
+    val avatarState: StateFlow<AvatarCode?> = _avatarState.asStateFlow()
+
+    private fun readAvatarFromPrefs(): AvatarCode? =
+        AvatarCatalog.parseAvatarJson(prefs.getString(KEY_AVATAR_JSON, null))
 
     /**
      * Saves complete session upon successful login or registration.
@@ -28,6 +39,7 @@ class SessionManager private constructor(context: Context) {
             .putString(KEY_TOKEN, token)
             .putString(KEY_EXPIRES_AT, expiresAt)
 
+        var parsedAvatar: AvatarCode? = null
         if (user != null) {
             user.id?.let { editor.putInt(KEY_USER_ID, it) }
             user.fullName?.let { editor.putString(KEY_FULL_NAME, it) }
@@ -40,15 +52,27 @@ class SessionManager private constructor(context: Context) {
             user.plan?.let { editor.putString(KEY_PLAN, it) }
             user.storeId?.let { editor.putString(KEY_STORE_ID, it) }
             user.gstin?.let { editor.putString(KEY_GSTIN, it) }
+            parsedAvatar = AvatarCatalog.parseAvatarCode(user.avatar)
+            val avatarJson = AvatarCatalog.toJson(parsedAvatar)
+            if (avatarJson != null) {
+                editor.putString(KEY_AVATAR_JSON, avatarJson)
+            } else {
+                editor.remove(KEY_AVATAR_JSON)
+            }
             (user.dataSnapshot ?: user.updatedAt)?.let { editor.putString(KEY_LAST_UPDATED, it) }
         }
         editor.commit()
+        if (user != null) {
+            _avatarState.value = parsedAvatar
+        }
     }
 
     /**
      * Updates stored profile information from backend response.
      */
     fun saveStoreProfile(profile: StoreProfile, userId: Int? = null) {
+        val cleanAvatar = AvatarCatalog.parseAvatarCode(profile.avatar)
+        val avatarJson = AvatarCatalog.toJson(cleanAvatar)
         val editor = prefs.edit()
             .putString(KEY_SHOP_NAME, profile.name)
             .putString(KEY_FULL_NAME, profile.ownerName)
@@ -62,11 +86,36 @@ class SessionManager private constructor(context: Context) {
             .putString(KEY_STORE_ID, profile.storeId)
             .putString(KEY_GSTIN, profile.gstin)
 
+        if (avatarJson != null) {
+            editor.putString(KEY_AVATAR_JSON, avatarJson)
+        } else {
+            editor.remove(KEY_AVATAR_JSON)
+        }
+
         if (userId != null && userId > 0) {
             editor.putInt(KEY_USER_ID, userId)
         }
         editor.commit()
+        _avatarState.value = cleanAvatar
     }
+
+    /**
+     * Persists or removes the user's avatar code and notifies active collectors immediately.
+     */
+    fun saveAvatar(avatar: AvatarCode?) {
+        val cleanAvatar = AvatarCatalog.parseAvatarCode(avatar)
+        val avatarJson = AvatarCatalog.toJson(cleanAvatar)
+        val editor = prefs.edit()
+        if (avatarJson != null) {
+            editor.putString(KEY_AVATAR_JSON, avatarJson)
+        } else {
+            editor.remove(KEY_AVATAR_JSON)
+        }
+        editor.commit()
+        _avatarState.value = cleanAvatar
+    }
+
+    fun getAvatar(): AvatarCode? = readAvatarFromPrefs()
 
     /**
      * Updates user owner full name and email in SharedPreferences.
@@ -115,7 +164,8 @@ class SessionManager private constructor(context: Context) {
             currency = currency,
             role = role,
             plan = plan,
-            gstin = gstin
+            gstin = gstin,
+            avatar = getAvatar()
         )
     }
 
@@ -169,6 +219,7 @@ class SessionManager private constructor(context: Context) {
      */
     fun clearSession() {
         prefs.edit().clear().commit()
+        _avatarState.value = null
         try {
             com.simats.stocksense.feature.ai.AiChatStore.clear()
         } catch (_: Throwable) { }
@@ -202,6 +253,7 @@ class SessionManager private constructor(context: Context) {
         private const val KEY_PLAN = "plan"
         private const val KEY_STORE_ID = "store_id"
         private const val KEY_GSTIN = "gstin"
+        private const val KEY_AVATAR_JSON = "avatar_json"
 
         @Volatile
         private var instance: SessionManager? = null
@@ -213,4 +265,3 @@ class SessionManager private constructor(context: Context) {
         }
     }
 }
-

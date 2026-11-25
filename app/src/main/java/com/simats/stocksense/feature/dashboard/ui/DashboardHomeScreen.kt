@@ -44,6 +44,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.simats.stocksense.core.avatar.AvatarCode
 import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.fcm.FcmTokenManager
 import com.simats.stocksense.core.theme.*
@@ -63,6 +64,9 @@ import com.simats.stocksense.feature.dashboard.viewmodel.DashboardViewModel
 @Composable
 fun DashboardHomeScreen(
     viewModel: DashboardViewModel = viewModel(),
+    avatarCode: AvatarCode? = null,
+    ownerName: String? = null,
+    onAvatarClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
     onLowStockClick: (sku: String?, id: Int?) -> Unit = { _, _ -> },
     onSlowMovingClick: () -> Unit = {},
@@ -171,6 +175,9 @@ fun DashboardHomeScreen(
 
     DashboardHomeScreenContent(
         uiState = uiState,
+        avatarCode = avatarCode,
+        ownerName = ownerName,
+        onAvatarClick = onAvatarClick,
         onRefresh = { viewModel.refresh() },
         onNotificationsClick = onNotificationsClick,
         onLowStockClick = onLowStockClick,
@@ -189,6 +196,9 @@ fun DashboardHomeScreen(
 @Composable
 fun DashboardHomeScreenContent(
     uiState: DashboardUiState,
+    avatarCode: AvatarCode? = null,
+    ownerName: String? = null,
+    onAvatarClick: () -> Unit = {},
     onRefresh: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
     onLowStockClick: (sku: String?, id: Int?) -> Unit = { _, _ -> },
@@ -264,6 +274,9 @@ fun DashboardHomeScreenContent(
             uiState.dashboardData != null -> {
                 DashboardHomeContent(
                     data = uiState.dashboardData,
+                    avatarCode = avatarCode,
+                    ownerName = ownerName,
+                    onAvatarClick = onAvatarClick,
                     dailySummary = uiState.dailySummary,
                     unreadCount = uiState.unreadCount,
                     lastUpdatedText = uiState.lastUpdatedText,
@@ -287,6 +300,9 @@ fun DashboardHomeScreenContent(
 @Composable
 fun DashboardHomeContent(
     data: DashboardSummaryData,
+    avatarCode: AvatarCode? = null,
+    ownerName: String? = null,
+    onAvatarClick: () -> Unit = {},
     dailySummary: String? = null,
     unreadCount: Int = 0,
     lastUpdatedText: String = "",
@@ -354,7 +370,26 @@ fun DashboardHomeContent(
                     }
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // User Avatar Badge (min 48dp touch target)
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clickable { onAvatarClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    UserAvatarBadge(
+                        avatarCode = avatarCode,
+                        displayName = ownerName?.takeIf { it.isNotBlank() } ?: storeName,
+                        size = 40.dp,
+                        borderWidth = 2.dp,
+                        fontSize = 14.sp,
+                        contentDescription = "User avatar"
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(4.dp))
 
                 // Bell Notification Icon Box (min 48dp touch target)
                 Box(

@@ -1,6 +1,8 @@
 package com.simats.stocksense.data.repository
 
 import android.util.Log
+import com.simats.stocksense.core.avatar.AvatarCatalog
+import com.simats.stocksense.core.avatar.AvatarCode
 import com.simats.stocksense.core.network.AuthApiService
 import com.simats.stocksense.core.network.NetworkClient
 import com.simats.stocksense.core.network.SessionManager
@@ -71,7 +73,8 @@ class ProfileRepository(
                         currency = user.currency.orEmpty(),
                         role = user.role.orEmpty(),
                         plan = user.plan.orEmpty(),
-                        gstin = user.gstin
+                        gstin = user.gstin,
+                        avatar = AvatarCatalog.parseAvatarCode(user.avatar ?: body.avatar)
                     )
                     sessionManager?.saveStoreProfile(updatedProfile, user.id)
                     Result.success(updatedProfile)
@@ -138,7 +141,8 @@ class ProfileRepository(
                         currency = user.currency.orEmpty(),
                         role = user.role.orEmpty(),
                         plan = user.plan.orEmpty(),
-                        gstin = user.gstin ?: trimmedGstin
+                        gstin = user.gstin ?: trimmedGstin,
+                        avatar = AvatarCatalog.parseAvatarCode(user.avatar ?: body.avatar)
                     )
                     sessionManager?.saveStoreProfile(updatedProfile, user.id ?: userId)
                     Result.success(updatedProfile)
@@ -214,7 +218,8 @@ class ProfileRepository(
                         currency = user.currency.orEmpty(),
                         role = user.role.orEmpty(),
                         plan = user.plan.orEmpty(),
-                        gstin = user.gstin
+                        gstin = user.gstin,
+                        avatar = AvatarCatalog.parseAvatarCode(user.avatar ?: body.avatar)
                     )
                     sessionManager?.saveStoreProfile(updatedProfile, user.id ?: userId)
                     sessionManager?.updateProfileUser(trimmedName, trimmedEmail)
@@ -268,6 +273,62 @@ class ProfileRepository(
             if (response.isSuccessful) {
                 val msg = response.body()?.message ?: "Password changed successfully."
                 Result.success(msg)
+            } else {
+                val err = parseHttpError(response.code(), response.errorBody()?.string())
+                Result.failure(Exception(err))
+            }
+        } catch (e: Throwable) {
+            Result.failure(Exception(parseNetworkException(e)))
+        }
+    }
+
+    /**
+     * Saves user's DiceBear avatar code via POST auth/update_avatar.php and updates SessionManager.
+     */
+    suspend fun saveAvatar(avatar: AvatarCode): Result<AvatarCode?> = withContext(Dispatchers.IO) {
+        val sanitized = AvatarCatalog.parseAvatarCode(avatar)
+            ?: return@withContext Result.failure(Exception("Invalid avatar selection."))
+        val serializedJson = AvatarCatalog.toJson(sanitized)
+        if (serializedJson == null) {
+            return@withContext Result.failure(Exception("Avatar configuration is too large or invalid."))
+        }
+
+        try {
+            val response = apiService.updateAvatar(sanitized)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && (body.status == true || body.success == true)) {
+                    val savedAvatar = AvatarCatalog.parseAvatarCode(
+                        body.avatar ?: body.getEffectiveUser()?.avatar
+                    ) ?: sanitized
+                    sessionManager?.saveAvatar(savedAvatar)
+                    Result.success(savedAvatar)
+                } else {
+                    Result.failure(Exception(body?.message ?: "Failed to update avatar."))
+                }
+            } else {
+                val err = parseHttpError(response.code(), response.errorBody()?.string())
+                Result.failure(Exception(err))
+            }
+        } catch (e: Throwable) {
+            Result.failure(Exception(parseNetworkException(e)))
+        }
+    }
+
+    /**
+     * Removes user's avatar via POST auth/remove_avatar.php, returning UI to letter badge.
+     */
+    suspend fun removeAvatar(): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.removeAvatar()
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && (body.status == true || body.success == true)) {
+                    sessionManager?.saveAvatar(null)
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception(body?.message ?: "Failed to remove avatar."))
+                }
             } else {
                 val err = parseHttpError(response.code(), response.errorBody()?.string())
                 Result.failure(Exception(err))

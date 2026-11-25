@@ -43,6 +43,7 @@ import com.simats.stocksense.feature.dashboard.viewmodel.SettingsViewModel
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(),
+    onAvatarClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onSessionExpired: () -> Unit = {}
 ) {
@@ -274,6 +275,62 @@ fun SettingsScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onAvatarClick() }
+                                        .padding(vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        UserAvatarBadge(
+                                            avatarCode = uiState.avatarCode,
+                                            displayName = account?.ownerName,
+                                            size = 52.dp,
+                                            borderWidth = 2.dp,
+                                            fontSize = 18.sp,
+                                            showEditBadge = true,
+                                            contentDescription = "Customize avatar",
+                                            onClick = onAvatarClick
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = account?.ownerName?.takeIf { it.isNotBlank() } ?: "Owner Avatar",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = InkDark,
+                                                fontSize = 15.sp,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = if (uiState.avatarCode != null) {
+                                                    "Tap to change or remove avatar"
+                                                } else {
+                                                    "Tap to choose a cartoon avatar"
+                                                },
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MutedInk,
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Edit →",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MainBlue,
+                                        fontWeight = FontWeight.Black
+                                    )
+                                }
+
+                                HorizontalDivider(color = InkDark.copy(alpha = 0.12f), thickness = 1.dp)
+
                                 BoldInfoRow(
                                     label = "Owner",
                                     value = account?.ownerName?.takeIf { it.isNotBlank() } ?: "—"
@@ -511,6 +568,12 @@ fun SettingsScreen(
                                 BoldInfoRow(
                                     label = "Icon Credits",
                                     value = "Icons: Google Noto Emoji, Apache 2.0"
+                                )
+
+                                BoldInfoRow(
+                                    label = "Avatar Credits",
+                                    value = "Avatars by DiceBear. Open Peeps by Pablo Stanley (CC0).\nMicah by Micah Lanier (CC BY 4.0).\nPersonas by Draftbit (CC BY 4.0).",
+                                    maxLines = 6
                                 )
 
                                 HorizontalDivider(color = InkDark.copy(alpha = 0.15f), thickness = 1.dp)

@@ -2,6 +2,7 @@ package com.simats.stocksense.feature.dashboard.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.simats.stocksense.core.avatar.AvatarCode
 import com.simats.stocksense.core.network.NetworkClient
 import com.simats.stocksense.core.network.SessionManager
 import com.simats.stocksense.data.model.*
@@ -49,6 +50,13 @@ class MainViewModel(
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            sessionManager?.avatarState?.collect { avatar ->
+                _uiState.update { current ->
+                    current.copy(storeProfile = current.storeProfile.copy(avatar = avatar))
+                }
+            }
+        }
         refreshProfile()
     }
 

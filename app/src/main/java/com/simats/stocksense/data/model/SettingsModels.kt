@@ -1,6 +1,7 @@
 package com.simats.stocksense.data.model
 
 import com.google.gson.annotations.SerializedName
+import com.simats.stocksense.core.avatar.AvatarCode
 
 /**
  * Top-level response for Settings API endpoints.
@@ -29,7 +30,8 @@ data class SettingsAccountData(
     @SerializedName("shop_name") val shopName: String? = null,
     @SerializedName("location") val location: String? = null,
     @SerializedName("currency") val currency: String? = null,
-    @SerializedName("timezone") val timezone: String? = null
+    @SerializedName("timezone") val timezone: String? = null,
+    @SerializedName("avatar") val avatar: AvatarCode? = null
 )
 
 data class SettingsAppearanceData(

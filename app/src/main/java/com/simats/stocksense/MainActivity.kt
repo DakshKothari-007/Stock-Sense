@@ -30,6 +30,7 @@ import com.simats.stocksense.core.network.TokenStore
 import com.simats.stocksense.core.theme.StockSenseTheme
 import com.simats.stocksense.feature.ai.AiChatStore
 import com.simats.stocksense.feature.ai.ui.AiChatScreen
+import com.simats.stocksense.feature.avatar.ui.AvatarCustomizerScreen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.simats.stocksense.feature.analytics.ui.AddProductToBillScreen
@@ -496,6 +497,11 @@ fun StockSenseAppNavigation(
                         launchSingleTop = true
                     }
                 },
+                onAvatarClick = {
+                    navController.navigate("avatar_customizer") {
+                        launchSingleTop = true
+                    }
+                },
                 onSettingsClick = {
                     navController.navigate("settings") {
                         launchSingleTop = true
@@ -557,6 +563,11 @@ fun StockSenseAppNavigation(
         }
         composable("settings") {
             SettingsScreen(
+                onAvatarClick = {
+                    navController.navigate("avatar_customizer") {
+                        launchSingleTop = true
+                    }
+                },
                 onBackClick = {
                     navController.popBackStack()
                 },
@@ -566,6 +577,16 @@ fun StockSenseAppNavigation(
                         popUpTo(0) { inclusive = true }
                         launchSingleTop = true
                     }
+                }
+            )
+        }
+        composable("avatar_customizer") {
+            AvatarCustomizerScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onDone = {
+                    navController.popBackStack()
                 }
             )
         }

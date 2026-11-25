@@ -1,5 +1,7 @@
 package com.simats.stocksense.data.model
 
+import com.simats.stocksense.core.avatar.AvatarCode
+
 data class StoreProfile(
     val name: String = "",
     val location: String = "",
@@ -11,5 +13,6 @@ data class StoreProfile(
     val currency: String = "",
     val role: String = "",
     val plan: String = "",
-    val gstin: String? = null
+    val gstin: String? = null,
+    val avatar: AvatarCode? = null
 )

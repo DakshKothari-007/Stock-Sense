@@ -45,6 +45,7 @@ fun MainScreen(
     onClearancePriorityClick: (productId: Int?, sku: String?) -> Unit = { _, _ -> },
     onInventoryImportedClick: () -> Unit = {},
     onAddProductClick: () -> Unit = {},
+    onAvatarClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {},
     onDeleteAccountClick: () -> Unit = {},
@@ -115,6 +116,9 @@ fun MainScreen(
                             when (tabIndex) {
                                 0 -> DashboardHomeScreen(
                                     viewModel = dashboardViewModel,
+                                    avatarCode = uiState.storeProfile.avatar,
+                                    ownerName = uiState.storeProfile.ownerName,
+                                    onAvatarClick = onAvatarClick,
                                     onNotificationsClick = onNotificationsClick,
                                     onLowStockClick = onLowStockClick,
                                     onSlowMovingClick = onSlowMovingRecommendationClick,
@@ -154,6 +158,7 @@ fun MainScreen(
                                     onChangePassword = { cur, new, conf, cb ->
                                         viewModel.changePassword(cur, new, conf, cb)
                                     },
+                                    onAvatarClick = onAvatarClick,
                                     onSettingsClick = onSettingsClick,
                                     onSignOutClick = onSignOutClick,
                                     onDeleteAccountClick = onDeleteAccountClick

@@ -1,5 +1,6 @@
 package com.simats.stocksense.core.network
 
+import com.simats.stocksense.core.avatar.AvatarCode
 import com.simats.stocksense.data.model.BaseResponse
 import com.simats.stocksense.data.model.ChangePasswordRequest
 import com.simats.stocksense.data.model.DeleteAccountRequest
@@ -50,6 +51,14 @@ interface AuthApiService {
     suspend fun updateShop(
         @Body request: UpdateShopRequest
     ): Response<ProfileResponse>
+
+    @POST("auth/update_avatar.php")
+    suspend fun updateAvatar(
+        @Body request: AvatarCode
+    ): Response<ProfileResponse>
+
+    @POST("auth/remove_avatar.php")
+    suspend fun removeAvatar(): Response<ProfileResponse>
 
     @POST("auth/change_password.php")
     suspend fun changePassword(

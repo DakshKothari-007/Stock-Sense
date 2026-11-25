@@ -2,6 +2,8 @@ package com.simats.stocksense.feature.dashboard.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.simats.stocksense.core.avatar.AvatarCode
+import com.simats.stocksense.core.network.NetworkClient
 import com.simats.stocksense.core.theme.ThemeMode
 import com.simats.stocksense.core.theme.ThemeState
 import com.simats.stocksense.data.model.SettingsData
@@ -19,6 +21,7 @@ data class SettingsUiState(
     val isSaving: Boolean = false,
     val errorMessage: String? = null,
     val settingsData: SettingsData? = null,
+    val avatarCode: AvatarCode? = null,
     val isSessionExpired: Boolean = false
 )
 
@@ -30,10 +33,19 @@ class SettingsViewModel(
     private val repository: SettingsRepository = SettingsRepository()
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(SettingsUiState())
+    private val _uiState = MutableStateFlow(
+        SettingsUiState(
+            avatarCode = NetworkClient.getSessionManager()?.getAvatar()
+        )
+    )
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            NetworkClient.getSessionManager()?.avatarState?.collect { avatar ->
+                _uiState.update { it.copy(avatarCode = avatar) }
+            }
+        }
         loadSettings()
     }
 

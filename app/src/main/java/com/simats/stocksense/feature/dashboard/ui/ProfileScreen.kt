@@ -55,6 +55,7 @@ fun ProfileContent(
     onEmailChange: (String) -> Unit = {},
     onUpdateProfile: (String, String, (Boolean, String?) -> Unit) -> Unit = { _, _, cb -> cb(true, null) },
     onChangePassword: (String, String, String, (Boolean, String) -> Unit) -> Unit = { _, _, _, cb -> cb(true, "Password changed successfully") },
+    onAvatarClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {},
     onDeleteAccountClick: () -> Unit = {}
@@ -103,14 +104,6 @@ fun ProfileContent(
     var isChangingPassword by remember { mutableStateOf(false) }
     var passwordErrorMessage by remember { mutableStateOf<String?>(null) }
     var passwordSuccessMessage by remember { mutableStateOf<String?>(null) }
-
-    val initials = remember(storeProfile.ownerName) {
-        storeProfile.ownerName.trim().split(" ")
-            .mapNotNull { it.firstOrNull()?.uppercase() }
-            .take(2)
-            .joinToString("")
-            .ifEmpty { "U" }
-    }
 
     val isCurrentPasswordValid = currentPasswordInput.isNotEmpty()
     val isNewPasswordValid = newPasswordInput.length >= 8
@@ -940,22 +933,16 @@ fun ProfileContent(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(52.dp)
-                                        .clip(CircleShape)
-                                        .background(MainYellow)
-                                        .border(2.dp, InkDark, CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = initials,
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Black,
-                                        color = InkDark,
-                                        fontSize = 18.sp
-                                    )
-                                }
+                                UserAvatarBadge(
+                                    avatarCode = storeProfile.avatar,
+                                    displayName = storeProfile.ownerName,
+                                    size = 52.dp,
+                                    borderWidth = 2.dp,
+                                    fontSize = 18.sp,
+                                    showEditBadge = true,
+                                    contentDescription = "Customize avatar",
+                                    onClick = onAvatarClick
+                                )
 
                                 Spacer(modifier = Modifier.width(14.dp))
 
@@ -1008,22 +995,16 @@ fun ProfileContent(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(52.dp)
-                                        .clip(CircleShape)
-                                        .background(MainYellow)
-                                        .border(2.dp, InkDark, CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = initials,
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Black,
-                                        color = InkDark,
-                                        fontSize = 18.sp
-                                    )
-                                }
+                                UserAvatarBadge(
+                                    avatarCode = storeProfile.avatar,
+                                    displayName = storeProfile.ownerName,
+                                    size = 52.dp,
+                                    borderWidth = 2.dp,
+                                    fontSize = 18.sp,
+                                    showEditBadge = true,
+                                    contentDescription = "Customize avatar",
+                                    onClick = onAvatarClick
+                                )
 
                                 Spacer(modifier = Modifier.width(14.dp))
 

@@ -10,3 +10,10 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+# Preserve Gson-serialized avatar models in release builds
+-keep class com.simats.stocksense.core.avatar.AvatarCode { *; }
+-keep class com.simats.stocksense.data.model.AuthUser { *; }
+-keep class com.simats.stocksense.data.model.ProfileResponse { *; }
+-keep class com.simats.stocksense.data.model.SettingsAccountData { *; }
+-keep class coil.decode.SvgDecoder$Factory { *; }
