@@ -48,12 +48,49 @@ class InsightsViewModel(
     private val _uiState = MutableStateFlow(InsightsUiState(isLoading = true))
     val uiState: StateFlow<InsightsUiState> = _uiState.asStateFlow()
 
+    private var pendingSlowMovingProductId: Int? = null
+    private var pendingSlowMovingSku: String? = null
+
     init {
         refresh()
     }
 
     fun selectSlowMovingIndex(index: Int) {
+        pendingSlowMovingProductId = null
+        pendingSlowMovingSku = null
         _uiState.update { it.copy(selectedSlowMovingIndex = index) }
+    }
+
+    fun selectSlowMovingProduct(productId: Int? = null, sku: String? = null) {
+        val validId = productId?.takeIf { it > 0 }
+        val cleanSku = sku?.trim()?.takeIf { it.isNotBlank() }
+        if (validId == null && cleanSku == null) {
+            pendingSlowMovingProductId = null
+            pendingSlowMovingSku = null
+            return
+        }
+
+        val currentItems = _uiState.value.slowMovingItems
+        val matchIdx = findSlowMovingMatchIndex(currentItems, validId, cleanSku)
+        if (matchIdx >= 0) {
+            pendingSlowMovingProductId = null
+            pendingSlowMovingSku = null
+            _uiState.update { it.copy(selectedSlowMovingIndex = matchIdx) }
+        } else {
+            pendingSlowMovingProductId = validId
+            pendingSlowMovingSku = cleanSku
+        }
+    }
+
+    private fun findSlowMovingMatchIndex(
+        items: List<SlowMovingItemDto>,
+        productId: Int?,
+        sku: String?
+    ): Int {
+        return items.indexOfFirst { item ->
+            (productId != null && item.productId == productId) ||
+                (!sku.isNullOrBlank() && item.sku.equals(sku, ignoreCase = true))
+        }
     }
 
     fun selectPairIndex(index: Int) {
@@ -133,6 +170,14 @@ class InsightsViewModel(
                 onFailure = { }
             )
 
+            val resolvedPendingIdx = if (pendingSlowMovingProductId != null || pendingSlowMovingSku != null) {
+                findSlowMovingMatchIndex(newSlowItems, pendingSlowMovingProductId, pendingSlowMovingSku)
+            } else -1
+            if (resolvedPendingIdx >= 0) {
+                pendingSlowMovingProductId = null
+                pendingSlowMovingSku = null
+            }
+
             _uiState.update {
                 it.copy(
                     isLoading = false,
@@ -146,7 +191,8 @@ class InsightsViewModel(
                     productPairItems = newPairItems,
                     hasEnoughPairsHistory = hasEnoughPairsHist,
                     productPairsHistoryMessage = pairsHistMsg,
-                    reorderItems = newReorderItems
+                    reorderItems = newReorderItems,
+                    selectedSlowMovingIndex = if (resolvedPendingIdx >= 0) resolvedPendingIdx else it.selectedSlowMovingIndex
                 )
             }
         }

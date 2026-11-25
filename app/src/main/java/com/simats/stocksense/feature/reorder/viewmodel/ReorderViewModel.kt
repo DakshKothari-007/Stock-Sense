@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.simats.stocksense.core.util.NumberFormatUtil
 import com.simats.stocksense.data.model.*
 import com.simats.stocksense.data.repository.ReorderRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,10 +16,13 @@ import java.util.Locale
 data class ReorderUiState(
     val isLoading: Boolean = false,
     val isOrdering: Boolean = false,
+    val isAwaitingSelection: Boolean = false,
     val errorMessage: String? = null,
     val items: List<ReorderItemDto> = emptyList(),
-    val currentIndex: Int = 0,
     val recommendation: ReorderRecommendation? = null,
+    val selectedTargetProductId: Int? = null,
+    val selectedTargetSku: String? = null,
+    val selectionNotice: String? = null,
     val isAccepted: Boolean = false,
     val isDismissed: Boolean = false,
     val lastPlacedOrder: PurchaseOrderDto? = null
@@ -31,38 +35,58 @@ class ReorderViewModel(
     private val _uiState = MutableStateFlow(ReorderUiState(isLoading = true))
     val uiState: StateFlow<ReorderUiState> = _uiState.asStateFlow()
 
+    private var activeRefreshJob: Job? = null
+
     init {
-        refresh()
+        refresh(force = true)
+    }
+
+    /**
+     * Selects a reorder item by product ID first, then SKU.
+     * Waits for loading to finish if recommendations are not loaded or need refresh.
+     */
+    fun selectReorderProduct(productId: Int? = null, sku: String? = null) {
+        var shouldFetch = false
+        _uiState.update { current ->
+            val (nextState, needsFetch) = applySelectProduct(current, productId, sku)
+            shouldFetch = needsFetch
+            nextState
+        }
+        if (shouldFetch) {
+            refresh(force = true)
+        }
+    }
+
+    /**
+     * Clears any active product selection and notices when leaving the screen.
+     */
+    fun clearSelection() {
+        _uiState.update { applyClearSelection(it) }
     }
 
     /**
      * Refreshes recommendations from GET /reorder/list.php.
      */
-    fun refresh() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = it.items.isEmpty(), errorMessage = null) }
+    fun refresh(force: Boolean = false) {
+        if (!force && activeRefreshJob?.isActive == true) {
+            return
+        }
+        activeRefreshJob?.cancel()
+        activeRefreshJob = viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             val result = repository.fetchRecommendations()
             result.fold(
                 onSuccess = { data ->
                     val rawItems = data.items.orEmpty()
-                    val idx = if (_uiState.value.currentIndex < rawItems.size) _uiState.value.currentIndex else 0
-                    val currentItem = rawItems.getOrNull(idx)
-                    val domainRec = currentItem?.let { mapToDomainRecommendation(it) }
-
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = null,
-                            items = rawItems,
-                            currentIndex = idx,
-                            recommendation = domainRec
-                        )
+                    _uiState.update { current ->
+                        applyLoadedItems(current, rawItems)
                     }
                 },
                 onFailure = { err ->
-                    _uiState.update {
-                        it.copy(
+                    _uiState.update { current ->
+                        current.copy(
                             isLoading = false,
+                            isAwaitingSelection = false,
                             errorMessage = err.message ?: "Failed to load reorder recommendations."
                         )
                     }
@@ -102,14 +126,14 @@ class ReorderViewModel(
             result.fold(
                 onSuccess = { order ->
                     _uiState.update {
-                        it.copy(
+                        applyClearSelection(it).copy(
                             isOrdering = false,
                             isAccepted = true,
                             lastPlacedOrder = order
                         )
                     }
                     // Refresh recommendations list so ordered product updates or disappears
-                    refresh()
+                    refresh(force = true)
                     onSuccess(order)
                 },
                 onFailure = { err ->
@@ -121,23 +145,10 @@ class ReorderViewModel(
     }
 
     /**
-     * Dismisses current recommendation and moves to next item if available.
+     * Dismisses current recommendation and advances to the next available item by product identity.
      */
     fun dismissReorder() {
-        val current = _uiState.value
-        val nextIdx = current.currentIndex + 1
-        if (nextIdx < current.items.size) {
-            val nextItem = current.items[nextIdx]
-            _uiState.update {
-                it.copy(
-                    currentIndex = nextIdx,
-                    recommendation = mapToDomainRecommendation(nextItem),
-                    isDismissed = false
-                )
-            }
-        } else {
-            _uiState.update { it.copy(isDismissed = true) }
-        }
+        _uiState.update { applyDismissCurrent(it) }
     }
 
     /**
@@ -147,7 +158,183 @@ class ReorderViewModel(
         _uiState.update { it.copy(lastPlacedOrder = order) }
     }
 
-    private fun mapToDomainRecommendation(item: ReorderItemDto): ReorderRecommendation {
+    data class SelectionMatch(
+        val selectedItem: ReorderItemDto?,
+        val itemNotFound: Boolean
+    )
+
+    companion object {
+        const val ITEM_NOT_FOUND_NOTICE =
+            "That item is no longer in your reorder list. Showing the first available recommendation."
+
+        /**
+         * Resolves a target reorder item by product ID first, then SKU.
+         * Never selects by list position.
+         */
+        fun resolveSelection(
+            items: List<ReorderItemDto>,
+            targetProductId: Int?,
+            targetSku: String?
+        ): SelectionMatch {
+            if (items.isEmpty()) {
+                return SelectionMatch(selectedItem = null, itemNotFound = false)
+            }
+
+            val validId = targetProductId?.takeIf { it > 0 }
+            val validSku = targetSku?.trim()?.takeIf { it.isNotBlank() }
+
+            if (validId == null && validSku == null) {
+                return SelectionMatch(selectedItem = items.firstOrNull(), itemNotFound = false)
+            }
+
+            val byId = if (validId != null) {
+                items.firstOrNull { it.product?.id == validId }
+            } else null
+            if (byId != null) {
+                return SelectionMatch(selectedItem = byId, itemNotFound = false)
+            }
+
+            val bySku = if (validSku != null) {
+                items.firstOrNull { it.product?.sku?.trim().equals(validSku, ignoreCase = true) }
+            } else null
+            if (bySku != null) {
+                return SelectionMatch(selectedItem = bySku, itemNotFound = false)
+            }
+
+            return SelectionMatch(selectedItem = items.firstOrNull(), itemNotFound = true)
+        }
+
+        fun applySelectProduct(
+            current: ReorderUiState,
+            productId: Int?,
+            sku: String?
+        ): Pair<ReorderUiState, Boolean> {
+            val validId = productId?.takeIf { it > 0 }
+            val validSku = sku?.trim()?.takeIf { it.isNotBlank() }
+
+            if (validId == null && validSku == null) {
+                val firstRec = current.items.firstOrNull()?.let { mapToDomainRecommendation(it) }
+                return current.copy(
+                    selectedTargetProductId = null,
+                    selectedTargetSku = null,
+                    isAwaitingSelection = false,
+                    selectionNotice = null,
+                    isDismissed = false,
+                    recommendation = firstRec
+                ) to false
+            }
+
+            if (current.isLoading && current.items.isEmpty()) {
+                return current.copy(
+                    selectedTargetProductId = validId,
+                    selectedTargetSku = validSku,
+                    isAwaitingSelection = true,
+                    selectionNotice = null,
+                    isDismissed = false
+                ) to false
+            }
+
+            val match = resolveSelection(current.items, validId, validSku)
+            return if (current.items.isNotEmpty() && !match.itemNotFound && match.selectedItem != null) {
+                current.copy(
+                    selectedTargetProductId = match.selectedItem.product?.id ?: validId,
+                    selectedTargetSku = match.selectedItem.product?.sku?.trim()?.takeIf { it.isNotBlank() } ?: validSku,
+                    isAwaitingSelection = false,
+                    selectionNotice = null,
+                    isDismissed = false,
+                    recommendation = mapToDomainRecommendation(match.selectedItem)
+                ) to false
+            } else {
+                current.copy(
+                    selectedTargetProductId = validId,
+                    selectedTargetSku = validSku,
+                    isAwaitingSelection = true,
+                    selectionNotice = null,
+                    isDismissed = false
+                ) to true
+            }
+        }
+
+        fun applyLoadedItems(
+            current: ReorderUiState,
+            rawItems: List<ReorderItemDto>
+        ): ReorderUiState {
+            if (rawItems.isEmpty()) {
+                return current.copy(
+                    isLoading = false,
+                    isAwaitingSelection = false,
+                    errorMessage = null,
+                    items = emptyList(),
+                    recommendation = null,
+                    selectionNotice = null
+                )
+            }
+
+            val hasTarget = (current.selectedTargetProductId != null && current.selectedTargetProductId > 0) ||
+                !current.selectedTargetSku.isNullOrBlank()
+            val match = resolveSelection(rawItems, current.selectedTargetProductId, current.selectedTargetSku)
+            val selected = match.selectedItem ?: rawItems.first()
+            val showNotFoundNotice = hasTarget && match.itemNotFound
+
+            return current.copy(
+                isLoading = false,
+                isAwaitingSelection = false,
+                errorMessage = null,
+                items = rawItems,
+                recommendation = mapToDomainRecommendation(selected),
+                selectedTargetProductId = if (showNotFoundNotice) current.selectedTargetProductId else (selected.product?.id ?: current.selectedTargetProductId),
+                selectedTargetSku = if (showNotFoundNotice) current.selectedTargetSku else (selected.product?.sku ?: current.selectedTargetSku),
+                selectionNotice = if (showNotFoundNotice) ITEM_NOT_FOUND_NOTICE else null,
+                isDismissed = false
+            )
+        }
+
+        fun applyDismissCurrent(current: ReorderUiState): ReorderUiState {
+            if (current.items.isEmpty()) {
+                return current.copy(isDismissed = true, selectionNotice = null)
+            }
+            val activeId = current.recommendation?.productId?.takeIf { it > 0 }
+            val activeSku = current.recommendation?.sku?.trim()?.takeIf { it.isNotBlank() }
+
+            val currentPos = current.items.indexOfFirst { item ->
+                (activeId != null && item.product?.id == activeId) ||
+                    (activeId == null && activeSku != null && item.product?.sku?.trim().equals(activeSku, ignoreCase = true))
+            }
+
+            val nextItem = if (currentPos >= 0 && currentPos + 1 < current.items.size) {
+                current.items[currentPos + 1]
+            } else {
+                null
+            }
+
+            return if (nextItem != null) {
+                current.copy(
+                    recommendation = mapToDomainRecommendation(nextItem),
+                    selectedTargetProductId = nextItem.product?.id,
+                    selectedTargetSku = nextItem.product?.sku,
+                    selectionNotice = null,
+                    isDismissed = false
+                )
+            } else {
+                current.copy(
+                    isDismissed = true,
+                    selectionNotice = null
+                )
+            }
+        }
+
+        fun applyClearSelection(current: ReorderUiState): ReorderUiState {
+            return current.copy(
+                selectedTargetProductId = null,
+                selectedTargetSku = null,
+                isAwaitingSelection = false,
+                selectionNotice = null,
+                isDismissed = false,
+                recommendation = current.items.firstOrNull()?.let { mapToDomainRecommendation(it) }
+            )
+        }
+
+        fun mapToDomainRecommendation(item: ReorderItemDto): ReorderRecommendation {
         val prod = item.product
         val name = prod?.name?.takeIf { it.isNotBlank() } ?: "—"
         val sku = prod?.sku?.takeIf { it.isNotBlank() } ?: "—"
@@ -207,6 +394,7 @@ class ReorderViewModel(
 
         return ReorderRecommendation(
             productId = prod?.id,
+            sku = prod?.sku?.trim()?.takeIf { it.isNotBlank() },
             title = fullTitle,
             productName = displayName,
             recommendedUnits = recUnits,
@@ -222,5 +410,6 @@ class ReorderViewModel(
             estimatedCost = item.estimatedCost,
             unitCost = costPrice
         )
+    }
     }
 }

@@ -22,6 +22,8 @@ data class PurchaseOrdersUiState(
     val errorMessage: String? = null,
     val actionSuccessMessage: String? = null,
     val actionErrorMessage: String? = null,
+    val completedActionMessage: String? = null,
+    val isSelectedOrderDeleted: Boolean = false,
     val isSessionExpired: Boolean = false,
 
     val shopName: String = "",
@@ -166,7 +168,9 @@ class PurchaseOrdersViewModel(
             it.copy(
                 selectedOrder = order,
                 actionSuccessMessage = null,
-                actionErrorMessage = null
+                actionErrorMessage = null,
+                completedActionMessage = null,
+                isSelectedOrderDeleted = false
             )
         }
     }
@@ -181,7 +185,9 @@ class PurchaseOrdersViewModel(
                 it.copy(
                     selectedOrder = found,
                     actionSuccessMessage = null,
-                    actionErrorMessage = null
+                    actionErrorMessage = null,
+                    completedActionMessage = null,
+                    isSelectedOrderDeleted = false
                 )
             }
         }
@@ -199,7 +205,9 @@ class PurchaseOrdersViewModel(
             it.copy(
                 isActionRunning = true,
                 actionSuccessMessage = null,
-                actionErrorMessage = null
+                actionErrorMessage = null,
+                completedActionMessage = null,
+                isSelectedOrderDeleted = false
             )
         }
 
@@ -218,6 +226,8 @@ class PurchaseOrdersViewModel(
                             isActionRunning = false,
                             actionSuccessMessage = msg,
                             actionErrorMessage = null,
+                            completedActionMessage = "Order received",
+                            isSelectedOrderDeleted = false,
                             orders = updatedList,
                             selectedOrder = updatedOrder,
                             placedOrdersCount = maxOf(0, current.placedOrdersCount - 1)
@@ -253,7 +263,9 @@ class PurchaseOrdersViewModel(
             it.copy(
                 isActionRunning = true,
                 actionSuccessMessage = null,
-                actionErrorMessage = null
+                actionErrorMessage = null,
+                completedActionMessage = null,
+                isSelectedOrderDeleted = false
             )
         }
 
@@ -272,6 +284,8 @@ class PurchaseOrdersViewModel(
                             isActionRunning = false,
                             actionSuccessMessage = msg,
                             actionErrorMessage = null,
+                            completedActionMessage = "Order cancelled",
+                            isSelectedOrderDeleted = false,
                             orders = updatedList,
                             selectedOrder = updatedOrder,
                             placedOrdersCount = if (wasPlaced) maxOf(0, current.placedOrdersCount - 1) else current.placedOrdersCount
@@ -322,7 +336,8 @@ class PurchaseOrdersViewModel(
             it.copy(
                 isActionRunning = true,
                 actionSuccessMessage = null,
-                actionErrorMessage = null
+                actionErrorMessage = null,
+                completedActionMessage = null
             )
         }
 
@@ -339,8 +354,10 @@ class PurchaseOrdersViewModel(
                             isActionRunning = false,
                             actionSuccessMessage = msg,
                             actionErrorMessage = null,
+                            completedActionMessage = "Order deleted",
+                            isSelectedOrderDeleted = true,
                             orders = updatedList,
-                            selectedOrder = null,
+                            selectedOrder = order,
                             totalOrdersCount = maxOf(0, current.totalOrdersCount - 1),
                             placedOrdersCount = if (wasPlaced) maxOf(0, current.placedOrdersCount - 1) else current.placedOrdersCount
                         )

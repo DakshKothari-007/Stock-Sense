@@ -71,12 +71,22 @@ fun ReorderRecommendationScreen(
         }
     }
 
+    // Clear target selection when leaving this screen (preserving across rotation)
+    val hostActivity = context as? android.app.Activity
+    DisposableEffect(Unit) {
+        onDispose {
+            if (hostActivity?.isChangingConfigurations != true) {
+                viewModel.clearSelection()
+            }
+        }
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = CreamBackground
     ) {
         when {
-            uiState.isLoading && uiState.items.isEmpty() -> {
+            (uiState.isLoading && uiState.items.isEmpty()) || uiState.isAwaitingSelection -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -259,6 +269,26 @@ fun ReorderRecommendationScreen(
                                     )
                                 }
                             )
+                        }
+
+                        // Short fallback notice when previously selected item is no longer in list
+                        if (!uiState.selectionNotice.isNullOrBlank()) {
+                            BoldCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                backgroundColor = PaleBlue,
+                                borderColor = InkDark,
+                                borderWidth = 2.dp,
+                                shadowOffset = 2.dp,
+                                contentPadding = PaddingValues(12.dp)
+                            ) {
+                                Text(
+                                    text = uiState.selectionNotice ?: "",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Medium,
+                                    color = InkDark,
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
 
                         // 2. High Priority Badge & Why Button

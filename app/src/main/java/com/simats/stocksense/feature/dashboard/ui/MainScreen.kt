@@ -38,9 +38,11 @@ fun MainScreen(
     onProductDetailClick: (com.simats.stocksense.data.model.InventoryProduct) -> Unit = {},
     onLowStockClick: (sku: String?, id: Int?) -> Unit = { _, _ -> },
     onSalesAnalyticsClick: () -> Unit = {},
-    onReorderRecommendationClick: () -> Unit = {},
+    onReorderRecommendationClick: (productId: Int?, sku: String?) -> Unit = { _, _ -> },
+    onReorderPriorityClick: (productId: Int?, sku: String?) -> Unit = { _, _ -> },
     onRecommendationPairsClick: () -> Unit = {},
     onSlowMovingRecommendationClick: () -> Unit = {},
+    onClearancePriorityClick: (productId: Int?, sku: String?) -> Unit = { _, _ -> },
     onInventoryImportedClick: () -> Unit = {},
     onAddProductClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
@@ -118,8 +120,8 @@ fun MainScreen(
                                     onSlowMovingClick = onSlowMovingRecommendationClick,
                                     onAnalyticsClick = onSalesAnalyticsClick,
                                     onInsightsClick = { viewModel.selectTab(2) },
-                                    onReorderMilkClick = onReorderRecommendationClick,
-                                    onFreeUpStockClick = onSlowMovingRecommendationClick,
+                                    onReorderPriorityClick = onReorderPriorityClick,
+                                    onFreeUpStockClick = onClearancePriorityClick,
                                     onImportClick = onInventoryImportedClick
                                 )
                                 1 -> InventoryScreen(
@@ -130,7 +132,7 @@ fun MainScreen(
                                 )
                                 2 -> InsightsContent(
                                     storeName = uiState.storeProfile.name.takeIf { it.isNotBlank() },
-                                    onReorderMilkClick = onReorderRecommendationClick,
+                                    onReorderClick = onReorderRecommendationClick,
                                     onMoveBiscuitsClick = onSlowMovingRecommendationClick,
                                     onTeaPairClick = onRecommendationPairsClick,
                                     viewModel = insightsViewModel

@@ -68,8 +68,8 @@ fun DashboardHomeScreen(
     onSlowMovingClick: () -> Unit = {},
     onAnalyticsClick: () -> Unit = {},
     onInsightsClick: () -> Unit = {},
-    onReorderMilkClick: () -> Unit = {},
-    onFreeUpStockClick: () -> Unit = {},
+    onReorderPriorityClick: (productId: Int?, sku: String?) -> Unit = { _, _ -> },
+    onFreeUpStockClick: (productId: Int?, sku: String?) -> Unit = { _, _ -> },
     onImportClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -177,7 +177,7 @@ fun DashboardHomeScreen(
         onSlowMovingClick = onSlowMovingClick,
         onAnalyticsClick = onAnalyticsClick,
         onInsightsClick = onInsightsClick,
-        onReorderMilkClick = onReorderMilkClick,
+        onReorderPriorityClick = onReorderPriorityClick,
         onFreeUpStockClick = onFreeUpStockClick,
         onImportClick = onImportClick
     )
@@ -195,8 +195,8 @@ fun DashboardHomeScreenContent(
     onSlowMovingClick: () -> Unit = {},
     onAnalyticsClick: () -> Unit = {},
     onInsightsClick: () -> Unit = {},
-    onReorderMilkClick: () -> Unit = {},
-    onFreeUpStockClick: () -> Unit = {},
+    onReorderPriorityClick: (productId: Int?, sku: String?) -> Unit = { _, _ -> },
+    onFreeUpStockClick: (productId: Int?, sku: String?) -> Unit = { _, _ -> },
     onImportClick: () -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -272,7 +272,7 @@ fun DashboardHomeScreenContent(
                     onSlowMovingClick = onSlowMovingClick,
                     onAnalyticsClick = onAnalyticsClick,
                     onInsightsClick = onInsightsClick,
-                    onReorderMilkClick = onReorderMilkClick,
+                    onReorderPriorityClick = onReorderPriorityClick,
                     onFreeUpStockClick = onFreeUpStockClick,
                     onImportClick = onImportClick
                 )
@@ -295,8 +295,8 @@ fun DashboardHomeContent(
     onSlowMovingClick: () -> Unit = {},
     onAnalyticsClick: () -> Unit = {},
     onInsightsClick: () -> Unit = {},
-    onReorderMilkClick: () -> Unit = {},
-    onFreeUpStockClick: () -> Unit = {},
+    onReorderPriorityClick: (productId: Int?, sku: String?) -> Unit = { _, _ -> },
+    onFreeUpStockClick: (productId: Int?, sku: String?) -> Unit = { _, _ -> },
     onImportClick: () -> Unit = {}
 ) {
     val storeName = data.store?.name?.takeIf { it.isNotBlank() } ?: "—"
@@ -574,7 +574,7 @@ fun DashboardHomeContent(
                     modifier = Modifier.weight(1f),
                     backgroundColor = if (isLowStockActive) SoftLavender else CardWhite,
                     onClick = {
-                        val topId = topLowItem?.id?.toString()?.toIntOrNull()
+                        val topId = parseProductId(topLowItem?.id)
                         onLowStockClick(topLowItem?.sku, topId)
                     }
                 ) {
@@ -981,10 +981,12 @@ fun DashboardHomeContent(
                             priority = priority,
                             primaryColor = MainBlue,
                             onClick = {
+                                val productId = parseProductId(priority.productId)
+                                val sku = priority.sku?.trim()?.takeIf { it.isNotBlank() }
                                 if (priority.type.equals("reorder", ignoreCase = true)) {
-                                    onReorderMilkClick()
+                                    onReorderPriorityClick(productId, sku)
                                 } else {
-                                    onFreeUpStockClick()
+                                    onFreeUpStockClick(productId, sku)
                                 }
                             }
                         )
@@ -1091,6 +1093,28 @@ fun DashboardHomeContent(
             Spacer(modifier = Modifier.height(96.dp))
         }
     }
+}
+
+/**
+ * Safely converts an Any? product ID (e.g., Gson Double 42.0, Int, Long, or String) to a positive Int?.
+ */
+internal fun parseProductId(rawId: Any?): Int? {
+    val parsed = when (rawId) {
+        is Int -> rawId
+        is Long -> rawId.takeIf { it in Int.MIN_VALUE..Int.MAX_VALUE }?.toInt()
+        is Number -> {
+            val d = rawId.toDouble()
+            if (d.isFinite() && d % 1.0 == 0.0 && d <= Int.MAX_VALUE && d >= Int.MIN_VALUE) d.toInt() else null
+        }
+        is String -> {
+            val trimmed = rawId.trim()
+            trimmed.toIntOrNull() ?: trimmed.toDoubleOrNull()?.let { d ->
+                if (d.isFinite() && d % 1.0 == 0.0 && d <= Int.MAX_VALUE && d >= Int.MIN_VALUE) d.toInt() else null
+            }
+        }
+        else -> null
+    }
+    return parsed?.takeIf { it > 0 }
 }
 
 /**

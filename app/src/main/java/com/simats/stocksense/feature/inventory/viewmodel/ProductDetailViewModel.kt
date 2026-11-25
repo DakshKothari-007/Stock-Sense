@@ -67,11 +67,7 @@ class ProductDetailViewModel(
     val uiState: StateFlow<ProductDetailUiState> = _uiState.asStateFlow()
 
     private var currentProductId: Int? = null
-    private var currentProductSku: String? = "DAI-001"
-
-    init {
-        loadProduct(productId = null, sku = "DAI-001")
-    }
+    private var currentProductSku: String? = null
 
     /**
      * Loads product details from GET /inventory/get_product_detail.php
@@ -90,6 +86,11 @@ class ProductDetailViewModel(
         }
         currentProductId = targetId
         currentProductSku = targetSku
+
+        if (targetId == null && targetSku.isNullOrBlank()) {
+            _uiState.update { it.copy(isLoading = false, errorMessage = "Product details unavailable.") }
+            return
+        }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }

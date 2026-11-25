@@ -70,7 +70,7 @@ sealed class InsightItem {
         val item: ReorderItemDto,
         val originalIndex: Int
     ) : InsightItem() {
-        override val id: String = "reorder_${item.product?.id ?: originalIndex}_${item.product?.sku ?: ""}"
+        override val id: String = "reorder_${item.product?.id ?: "pos_$originalIndex"}_${item.product?.sku ?: ""}_$originalIndex"
         override val category: InsightFilterCategory = InsightFilterCategory.REORDER
         override val priorityRank: Int
             get() = when (item.priority?.lowercase(Locale.ENGLISH)) {
@@ -108,7 +108,7 @@ sealed class InsightItem {
 @Composable
 fun InsightsContent(
     storeName: String? = null,
-    onReorderMilkClick: () -> Unit = {},
+    onReorderClick: (productId: Int?, sku: String?) -> Unit = { _, _ -> },
     onMoveBiscuitsClick: () -> Unit = {},
     onTeaPairClick: () -> Unit = {},
     viewModel: InsightsViewModel = viewModel()
@@ -132,7 +132,7 @@ fun InsightsContent(
         storeName = storeName,
         uiState = uiState,
         onRefresh = { viewModel.refresh() },
-        onReorderMilkClick = onReorderMilkClick,
+        onReorderClick = onReorderClick,
         onMoveBiscuitsClick = onMoveBiscuitsClick,
         onTeaPairClick = onTeaPairClick,
         onSlowMovingIndexSelected = { viewModel.selectSlowMovingIndex(it) },
@@ -145,7 +145,7 @@ fun InsightsListContent(
     storeName: String? = null,
     uiState: InsightsUiState,
     onRefresh: () -> Unit = {},
-    onReorderMilkClick: () -> Unit = {},
+    onReorderClick: (productId: Int?, sku: String?) -> Unit = { _, _ -> },
     onMoveBiscuitsClick: () -> Unit = {},
     onTeaPairClick: () -> Unit = {},
     onSlowMovingIndexSelected: (Int) -> Unit = {},
@@ -420,7 +420,11 @@ fun InsightsListContent(
                         ReorderInsightCard(
                             reorder = insight.item,
                             primaryColor = primaryColor,
-                            onClick = onReorderMilkClick
+                            onClick = {
+                                val pid = insight.item.product?.id?.takeIf { it > 0 }
+                                val sku = insight.item.product?.sku?.trim()?.takeIf { it.isNotBlank() }
+                                onReorderClick(pid, sku)
+                            }
                         )
                     }
                     is InsightItem.SlowMoving -> {

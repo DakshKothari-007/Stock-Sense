@@ -50,6 +50,7 @@ import com.simats.stocksense.feature.auth.viewmodel.AuthViewModel
 import com.simats.stocksense.feature.dashboard.ui.MainScreen
 import com.simats.stocksense.feature.dashboard.ui.NotificationsScreen
 import com.simats.stocksense.feature.dashboard.ui.SettingsScreen
+import com.simats.stocksense.feature.dashboard.viewmodel.MainViewModel
 import com.simats.stocksense.feature.inventory.ui.AddProductScreen
 import com.simats.stocksense.feature.inventory.ui.EditProductScreen
 import com.simats.stocksense.feature.inventory.ui.ImportInventoryPreviewScreen
@@ -154,6 +155,7 @@ fun StockSenseAppNavigation(
     val purchaseOrdersViewModel: PurchaseOrdersViewModel = viewModel()
     val inventoryViewModel: InventoryViewModel = viewModel()
     val productFormViewModel: ProductFormViewModel = viewModel()
+    val mainViewModel: MainViewModel = viewModel()
 
     val pendingPayload by pendingPushPayloadFlow.collectAsState()
 
@@ -189,6 +191,11 @@ fun StockSenseAppNavigation(
                 }
             }
             "reorder_suggestion" -> {
+                if (productId != null && productId > 0) {
+                    reorderViewModel.selectReorderProduct(productId = productId, sku = null)
+                } else {
+                    reorderViewModel.clearSelection()
+                }
                 navController.popBackStack("main", inclusive = false)
                 navController.navigate("reorder_recommendation") {
                     launchSingleTop = true
@@ -422,18 +429,18 @@ fun StockSenseAppNavigation(
                     }
                 },
                 onLowStockClick = { sku, id ->
-                    if (id != null || !sku.isNullOrBlank()) {
-                        productDetailViewModel.loadProduct(productId = id, sku = sku)
-                    } else {
-                        val currentProd = productDetailViewModel.uiState.value.product
-                        val curSku = currentProd.sku.takeIf { it.isNotBlank() && it != "—" }
-                        val curId = currentProd.id.toIntOrNull()
-                        if (curSku == null && curId == null) {
-                            productDetailViewModel.loadProduct(sku = "DAI-001")
+                    val validId = id?.takeIf { it > 0 }
+                    val validSku = sku?.trim()?.takeIf { it.isNotBlank() }
+                    if (validId != null || validSku != null) {
+                        productDetailViewModel.loadProduct(productId = validId, sku = validSku)
+                        navController.navigate("product_detail") {
+                            launchSingleTop = true
                         }
-                    }
-                    navController.navigate("product_detail") {
-                        launchSingleTop = true
+                    } else {
+                        reorderViewModel.clearSelection()
+                        navController.navigate("reorder_recommendation") {
+                            launchSingleTop = true
+                        }
                     }
                 },
                 onSalesAnalyticsClick = {
@@ -441,9 +448,25 @@ fun StockSenseAppNavigation(
                         launchSingleTop = true
                     }
                 },
-                onReorderRecommendationClick = {
+                onReorderRecommendationClick = { productId, sku ->
+                    reorderViewModel.selectReorderProduct(productId = productId, sku = sku)
                     navController.navigate("reorder_recommendation") {
                         launchSingleTop = true
+                    }
+                },
+                onReorderPriorityClick = { productId, sku ->
+                    val validId = productId?.takeIf { it > 0 }
+                    val validSku = sku?.trim()?.takeIf { it.isNotBlank() }
+                    if (validId != null || validSku != null) {
+                        productDetailViewModel.loadProduct(productId = validId, sku = validSku)
+                        navController.navigate("product_detail") {
+                            launchSingleTop = true
+                        }
+                    } else {
+                        reorderViewModel.clearSelection()
+                        navController.navigate("reorder_recommendation") {
+                            launchSingleTop = true
+                        }
                     }
                 },
                 onRecommendationPairsClick = {
@@ -452,6 +475,12 @@ fun StockSenseAppNavigation(
                     }
                 },
                 onSlowMovingRecommendationClick = {
+                    navController.navigate("slow_moving_recommendation") {
+                        launchSingleTop = true
+                    }
+                },
+                onClearancePriorityClick = { productId, sku ->
+                    insightsViewModel.selectSlowMovingProduct(productId = productId, sku = sku)
                     navController.navigate("slow_moving_recommendation") {
                         launchSingleTop = true
                     }
@@ -474,6 +503,8 @@ fun StockSenseAppNavigation(
                 },
                 onSignOutClick = {
                     AiChatStore.clear()
+                    mainViewModel.clearUserData()
+                    mainViewModel.selectTab(0)
                     authViewModel.logout {
                         navController.navigate("signout") {
                             popUpTo(0) { inclusive = true }
@@ -492,7 +523,8 @@ fun StockSenseAppNavigation(
                     }
                 },
                 insightsViewModel = insightsViewModel,
-                inventoryViewModel = inventoryViewModel
+                inventoryViewModel = inventoryViewModel,
+                viewModel = mainViewModel
             )
         }
         composable("delete_account") {
@@ -505,6 +537,8 @@ fun StockSenseAppNavigation(
                 },
                 onAccountDeleted = {
                     AiChatStore.clear()
+                    mainViewModel.clearUserData()
+                    mainViewModel.selectTab(0)
                     Toast.makeText(context, "Your account has been deleted.", Toast.LENGTH_LONG).show()
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
@@ -539,6 +573,8 @@ fun StockSenseAppNavigation(
             SignOutScreen(
                 onBackToLoginClick = {
                     AiChatStore.clear()
+                    mainViewModel.clearUserData()
+                    mainViewModel.selectTab(0)
                     authViewModel.logout {
                         navController.navigate("login") {
                             popUpTo(0) { inclusive = true }
@@ -555,11 +591,14 @@ fun StockSenseAppNavigation(
                 onReorderClick = { prodId ->
                     if (prodId != null && prodId > 0) {
                         productDetailViewModel.loadProduct(productId = prodId)
+                        navController.navigate("product_detail") {
+                            launchSingleTop = true
+                        }
                     } else {
-                        productDetailViewModel.loadProduct(sku = "DAI-001")
-                    }
-                    navController.navigate("product_detail") {
-                        launchSingleTop = true
+                        reorderViewModel.clearSelection()
+                        navController.navigate("reorder_recommendation") {
+                            launchSingleTop = true
+                        }
                     }
                 },
                 onInsightsClick = {
@@ -576,8 +615,8 @@ fun StockSenseAppNavigation(
                     }
                 },
                 onAmulMilkClick = {
-                    productDetailViewModel.loadProduct(sku = "DAI-001")
-                    navController.navigate("product_detail") {
+                    reorderViewModel.clearSelection()
+                    navController.navigate("reorder_recommendation") {
                         launchSingleTop = true
                     }
                 },
@@ -734,6 +773,15 @@ fun StockSenseAppNavigation(
                 viewModel = purchaseOrdersViewModel,
                 onBackClick = {
                     navController.popBackStack()
+                },
+                onViewInventoryClick = {
+                    inventoryViewModel.refresh()
+                    mainViewModel.selectTab(1)
+                    if (!navController.popBackStack("main", inclusive = false)) {
+                        navController.navigate("main") {
+                            launchSingleTop = true
+                        }
+                    }
                 },
                 onSessionExpired = {
                     sessionManager.clearSession()
@@ -915,7 +963,14 @@ fun StockSenseAppNavigation(
                 },
                 onNavigate = { target, productId ->
                     when (target.lowercase()) {
-                        "reorder" -> navController.navigate("reorder_recommendation") { launchSingleTop = true }
+                        "reorder" -> {
+                            if (productId != null && productId > 0) {
+                                reorderViewModel.selectReorderProduct(productId = productId, sku = null)
+                            } else {
+                                reorderViewModel.clearSelection()
+                            }
+                            navController.navigate("reorder_recommendation") { launchSingleTop = true }
+                        }
                         "insights", "slow_moving" -> navController.navigate("slow_moving_recommendation") { launchSingleTop = true }
                         "inventory" -> navController.popBackStack("main", inclusive = false)
                         "sales", "sales_analytics" -> navController.navigate("sales_analytics") { launchSingleTop = true }

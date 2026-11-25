@@ -44,6 +44,7 @@ import com.simats.stocksense.feature.reorder.viewmodel.PurchaseOrdersViewModel
 @Composable
 fun OrderDetailScreen(
     onBackClick: () -> Unit = {},
+    onViewInventoryClick: () -> Unit = {},
     onSessionExpired: () -> Unit = {},
     viewModel: PurchaseOrdersViewModel = viewModel()
 ) {
@@ -170,8 +171,46 @@ fun OrderDetailScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // 2. Status Banner
-                when (status) {
-                    "placed" -> {
+                when {
+                    uiState.isSelectedOrderDeleted -> {
+                        BoldCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = SoftPink,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp,
+                            contentPadding = PaddingValues(18.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = "ORDER DELETED",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = StatusDangerRed,
+                                    fontSize = 11.sp,
+                                    letterSpacing = 0.8.sp
+                                )
+                                Text(
+                                    text = "Order deleted",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = InkDark,
+                                    fontSize = 18.sp
+                                )
+                                Text(
+                                    text = "This purchase order has been permanently deleted.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MutedInk,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+
+                    status == "placed" -> {
                         val firstItem = order.items?.firstOrNull()
                         val bannerDetail = if (order.items?.size == 1 && firstItem != null && firstItem.currentStock != null) {
                             val nextStock = (firstItem.currentStock ?: 0) + (firstItem.quantity ?: 0)
@@ -218,7 +257,7 @@ fun OrderDetailScreen(
                         }
                     }
 
-                    "received" -> {
+                    status == "received" -> {
                         BoldCard(
                             modifier = Modifier.fillMaxWidth(),
                             backgroundColor = SoftLavender,
@@ -387,7 +426,43 @@ fun OrderDetailScreen(
                     }
                 }
 
-                // 5. Actions (Enforce delete & cancel rules)
+                // 5. Post-action View Inventory & Actions (Enforce delete & cancel rules)
+                val completedMessage = uiState.completedActionMessage
+                val isTaskDone = completedMessage != null
+
+                if (completedMessage != null) {
+                    BoldCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        backgroundColor = SoftLavender,
+                        borderColor = InkDark,
+                        borderWidth = 2.dp,
+                        shadowOffset = 3.dp,
+                        contentPadding = PaddingValues(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = completedMessage,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark,
+                                fontSize = 15.sp,
+                                textAlign = TextAlign.Center
+                            )
+
+                            BoldButton(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = "View Inventory",
+                                onClick = onViewInventoryClick,
+                                isPrimary = true
+                            )
+                        }
+                    }
+                }
+
                 when {
                     isPlaced -> {
                         Column(
@@ -397,7 +472,7 @@ fun OrderDetailScreen(
                             BoldButton(
                                 text = "Receive order",
                                 onClick = { showReceiveDialog = true },
-                                enabled = !uiState.isActionRunning,
+                                enabled = !uiState.isActionRunning && !isTaskDone,
                                 isPrimary = true,
                                 isLoading = uiState.isActionRunning
                             )
@@ -410,7 +485,7 @@ fun OrderDetailScreen(
                                     modifier = Modifier.weight(1f),
                                     text = "Cancel order",
                                     onClick = { showCancelDialog = true },
-                                    enabled = !uiState.isActionRunning,
+                                    enabled = !uiState.isActionRunning && !isTaskDone,
                                     isPrimary = false,
                                     containerColor = SoftPink,
                                     contentColor = StatusDangerRed
@@ -420,7 +495,7 @@ fun OrderDetailScreen(
                                     modifier = Modifier.weight(1f),
                                     text = "Delete order",
                                     onClick = { showDeleteDialog = true },
-                                    enabled = !uiState.isActionRunning,
+                                    enabled = !uiState.isActionRunning && !isTaskDone,
                                     isPrimary = false,
                                     containerColor = CardWhite,
                                     contentColor = StatusDangerRed
@@ -451,7 +526,7 @@ fun OrderDetailScreen(
                                     modifier = Modifier.weight(1f),
                                     text = "Cancel order",
                                     onClick = { showCancelDialog = true },
-                                    enabled = !uiState.isActionRunning,
+                                    enabled = !uiState.isActionRunning && !isTaskDone,
                                     isPrimary = false,
                                     containerColor = SoftPink,
                                     contentColor = StatusDangerRed
@@ -461,7 +536,7 @@ fun OrderDetailScreen(
                                     modifier = Modifier.weight(1f),
                                     text = "Delete order",
                                     onClick = { showDeleteRefusedDialog = true },
-                                    enabled = !uiState.isActionRunning,
+                                    enabled = !uiState.isActionRunning && !isTaskDone,
                                     isPrimary = false,
                                     containerColor = SoftPink.copy(alpha = 0.5f),
                                     contentColor = MutedInk
@@ -488,7 +563,7 @@ fun OrderDetailScreen(
                                 BoldButton(
                                     text = "Delete order",
                                     onClick = { showDeleteDialog = true },
-                                    enabled = !uiState.isActionRunning,
+                                    enabled = !uiState.isActionRunning && !isTaskDone,
                                     isPrimary = false,
                                     containerColor = CardWhite,
                                     contentColor = StatusDangerRed
@@ -596,7 +671,7 @@ fun OrderDetailScreen(
                         text = "Delete",
                         onClick = {
                             showDeleteDialog = false
-                            viewModel.deleteOrder(order, onSuccess = { onBackClick() })
+                            viewModel.deleteOrder(order)
                         },
                         enabled = !uiState.isActionRunning,
                         isPrimary = false,
