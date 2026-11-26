@@ -1,11 +1,13 @@
 package com.simats.stocksense.core.network
 
 import com.simats.stocksense.data.model.*
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
+import retrofit2.http.Streaming
 
 /**
  * Retrofit service for Inventory operations according to API_DOCUMENT.md Module 3.
@@ -41,5 +43,9 @@ interface InventoryApiService {
     suspend fun deleteProduct(
         @Body request: DeleteProductRequest
     ): Response<InventoryActionResponse>
+
+    @Streaming
+    @GET("inventory/export_products.php")
+    suspend fun exportProductsCsv(): Response<ResponseBody>
 }
 

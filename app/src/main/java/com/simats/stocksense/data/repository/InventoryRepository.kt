@@ -4,8 +4,16 @@ import com.google.gson.Gson
 import com.simats.stocksense.core.network.InventoryApiService
 import com.simats.stocksense.core.network.NetworkClient
 import com.simats.stocksense.data.model.*
+import com.simats.stocksense.feature.inventory.util.ExportCsvException
+import com.simats.stocksense.feature.inventory.util.ExportErrorResult
+import com.simats.stocksense.feature.inventory.util.ProductCsvExportHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+
+data class ExportedCsvData(
+    val fileName: String,
+    val bytes: ByteArray
+)
 
 /**
  * Repository for inventory operations, mapping backend responses and extracting server error messages.
@@ -123,6 +131,50 @@ class InventoryRepository(
             }
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Downloads the shop's full product list as CSV bytes.
+     */
+    suspend fun exportProductsCsv(): Result<ExportedCsvData> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.exportProductsCsv()
+            if (response.isSuccessful) {
+                val body = response.body()
+                val contentType = body?.contentType()?.toString().orEmpty()
+                val bytes = body?.bytes() ?: ByteArray(0)
+                if (contentType.contains("application/json", ignoreCase = true)) {
+                    val mapped = ProductCsvExportHelper.mapExportError(
+                        httpCode = response.code(),
+                        errorBody = bytes.toString(Charsets.UTF_8)
+                    )
+                    return@withContext Result.failure(ExportCsvException(mapped))
+                }
+                if (bytes.isEmpty()) {
+                    return@withContext Result.failure(
+                        ExportCsvException(ExportErrorResult("No products to export. Add products to your inventory first."))
+                    )
+                }
+                val fileName = ProductCsvExportHelper.buildExportFileName(
+                    contentDisposition = response.headers()["Content-Disposition"]
+                )
+                Result.success(ExportedCsvData(fileName = fileName, bytes = bytes))
+            } else {
+                val errorText = response.errorBody()?.string()
+                if (response.code() == 401) {
+                    return@withContext Result.failure(
+                        UnauthorizedException(ProductCsvExportHelper.mapExportError(httpCode = 401, errorBody = errorText).message)
+                    )
+                }
+                val mapped = ProductCsvExportHelper.mapExportError(
+                    httpCode = response.code(),
+                    errorBody = errorText
+                )
+                Result.failure(ExportCsvException(mapped))
+            }
+        } catch (e: Exception) {
+            Result.failure(ExportCsvException(ProductCsvExportHelper.mapExportError(throwable = e)))
         }
     }
 

@@ -533,6 +533,51 @@ fun SettingsScreen(
                             }
                         }
 
+                        // Data & Backup Section
+                        Text(
+                            text = "Data & backup",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = InkDark,
+                            fontSize = 14.sp
+                        )
+
+                        BoldCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = CardWhite,
+                            borderColor = InkDark,
+                            borderWidth = 2.dp,
+                            shadowOffset = 3.dp,
+                            contentPadding = PaddingValues(18.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = "Product catalog (CSV)",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = InkDark,
+                                    fontSize = 14.sp
+                                )
+                                Text(
+                                    text = "Export all products in your store as a CSV file you can open in Excel or re-import later.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MutedInk,
+                                    fontSize = 12.sp,
+                                    lineHeight = 16.sp
+                                )
+                                ExportProductsCsvButton(
+                                    isExporting = uiState.isExportingCsv,
+                                    onClick = { viewModel.exportProductsCsv(context) }
+                                )
+                                if (!uiState.exportErrorMessage.isNullOrBlank()) {
+                                    ExportCsvErrorBanner(message = uiState.exportErrorMessage ?: "")
+                                }
+                            }
+                        }
+
                         // 6. About Section
                         Text(
                             text = "ABOUT",

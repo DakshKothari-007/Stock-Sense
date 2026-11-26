@@ -49,6 +49,7 @@ fun DeleteAccountScreen(
     onSessionExpired: () -> Unit = {},
     viewModel: AuthViewModel = viewModel()
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val uiState by viewModel.deleteAccountState.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -67,6 +68,7 @@ fun DeleteAccountScreen(
         onBackClick = onBackClick,
         onPasswordChange = { viewModel.updateDeletePassword(it) },
         onConfirmTextChange = { viewModel.updateDeleteConfirmText(it) },
+        onExportCsvClick = { viewModel.exportProductsCsv(context) },
         onDeleteClick = {
             viewModel.deleteAccount(
                 onSuccess = { onAccountDeleted() },
@@ -84,6 +86,7 @@ fun DeleteAccountScreenContent(
     onBackClick: () -> Unit,
     onPasswordChange: (String) -> Unit,
     onConfirmTextChange: (String) -> Unit,
+    onExportCsvClick: () -> Unit = {},
     onDeleteClick: () -> Unit
 ) {
     val primaryColor = MainYellow
@@ -270,48 +273,64 @@ fun DeleteAccountScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 5. Informational Tip Card
-            Surface(
+            // 5. Informational Tip & CSV Export Card
+            BoldCard(
                 modifier = Modifier.fillMaxWidth(),
+                backgroundColor = CardWhite,
+                borderColor = InkDark,
+                borderWidth = 2.dp,
+                shadowOffset = 3.dp,
                 shape = RoundedCornerShape(14.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                contentPadding = PaddingValues(14.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Canvas(modifier = Modifier.size(18.dp)) {
-                        drawCircle(
-                            color = primaryColor,
-                            radius = size.width / 2f,
-                            style = Stroke(width = 1.5.dp.toPx())
-                        )
-                        drawLine(
-                            color = primaryColor,
-                            start = Offset(size.width * 0.5f, size.height * 0.42f),
-                            end = Offset(size.width * 0.5f, size.height * 0.75f),
-                            strokeWidth = 1.8.dp.toPx(),
-                            cap = StrokeCap.Round
-                        )
-                        drawCircle(
-                            color = primaryColor,
-                            radius = 1.2.dp.toPx(),
-                            center = Offset(size.width * 0.5f, size.height * 0.28f)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Canvas(modifier = Modifier.size(18.dp)) {
+                            drawCircle(
+                                color = MainBlue,
+                                radius = size.width / 2f,
+                                style = Stroke(width = 1.5.dp.toPx())
+                            )
+                            drawLine(
+                                color = MainBlue,
+                                start = Offset(size.width * 0.5f, size.height * 0.42f),
+                                end = Offset(size.width * 0.5f, size.height * 0.75f),
+                                strokeWidth = 1.8.dp.toPx(),
+                                cap = StrokeCap.Round
+                            )
+                            drawCircle(
+                                color = MainBlue,
+                                radius = 1.2.dp.toPx(),
+                                center = Offset(size.width * 0.5f, size.height * 0.28f)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Text(
+                            text = "Want a copy first? Export your product list as a CSV file before you delete.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MutedInk,
+                            fontSize = 12.sp,
+                            lineHeight = 16.sp
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Text(
-                        text = "Want a copy first? Your product list can be exported before you delete.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp,
-                        lineHeight = 16.sp
+                    ExportProductsCsvButton(
+                        isExporting = uiState.isExportingCsv,
+                        enabled = !uiState.isLoading,
+                        onClick = onExportCsvClick
                     )
+
+                    if (!uiState.exportErrorMessage.isNullOrBlank()) {
+                        ExportCsvErrorBanner(message = uiState.exportErrorMessage ?: "")
+                    }
                 }
             }
 

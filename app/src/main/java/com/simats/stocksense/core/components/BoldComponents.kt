@@ -634,3 +634,77 @@ fun BoldInfoRow(
     }
 }
 
+/**
+ * Shared Bold Outline button for exporting product inventory as CSV.
+ */
+@Composable
+fun ExportProductsCsvButton(
+    isExporting: Boolean,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    BoldButton(
+        onClick = onClick,
+        enabled = enabled && !isExporting,
+        isPrimary = false,
+        borderWidth = 2.dp,
+        shadowOffset = 2.dp,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        if (isExporting) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    color = InkDark,
+                    strokeWidth = 2.dp
+                )
+                Text(
+                    text = "Exporting CSV...",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = InkDark,
+                    fontSize = 14.sp
+                )
+            }
+        } else {
+            Text(
+                text = "Export products (CSV)",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = InkDark,
+                fontSize = 14.sp
+            )
+        }
+    }
+}
+
+/**
+ * Shared inline error banner for CSV export errors.
+ */
+@Composable
+fun ExportCsvErrorBanner(
+    message: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(10.dp),
+        color = SoftPink,
+        border = BorderStroke(1.5.dp, InkDark)
+    ) {
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodySmall,
+            color = StatusDangerRed,
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+        )
+    }
+}
+

@@ -1,5 +1,6 @@
 package com.simats.stocksense.feature.dashboard.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simats.stocksense.core.avatar.AvatarCode
@@ -8,7 +9,11 @@ import com.simats.stocksense.core.theme.ThemeMode
 import com.simats.stocksense.core.theme.ThemeState
 import com.simats.stocksense.data.model.SettingsData
 import com.simats.stocksense.data.model.SettingsNotificationsData
+import com.simats.stocksense.data.repository.InventoryRepository
 import com.simats.stocksense.data.repository.SettingsRepository
+import com.simats.stocksense.data.repository.UnauthorizedException
+import com.simats.stocksense.feature.inventory.util.ExportCsvException
+import com.simats.stocksense.feature.inventory.util.ProductCsvExportHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +27,9 @@ data class SettingsUiState(
     val errorMessage: String? = null,
     val settingsData: SettingsData? = null,
     val avatarCode: AvatarCode? = null,
-    val isSessionExpired: Boolean = false
+    val isSessionExpired: Boolean = false,
+    val isExportingCsv: Boolean = false,
+    val exportErrorMessage: String? = null
 )
 
 /**
@@ -30,7 +37,8 @@ data class SettingsUiState(
  * Supports optimistic updates with automatic rollback on error.
  */
 class SettingsViewModel(
-    private val repository: SettingsRepository = SettingsRepository()
+    private val repository: SettingsRepository = SettingsRepository(),
+    private val inventoryRepository: InventoryRepository = InventoryRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -211,6 +219,34 @@ class SettingsViewModel(
 
     fun clearErrorMessage() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+
+    fun exportProductsCsv(context: Context) {
+        if (_uiState.value.isExportingCsv) return
+
+        _uiState.update { it.copy(isExportingCsv = true, exportErrorMessage = null) }
+        val appContext = context.applicationContext
+
+        viewModelScope.launch {
+            val result = ProductCsvExportHelper.downloadAndShare(appContext, inventoryRepository)
+            result.fold(
+                onSuccess = {
+                    _uiState.update { it.copy(isExportingCsv = false, exportErrorMessage = null) }
+                },
+                onFailure = { err ->
+                    val expired = err is UnauthorizedException ||
+                        (err as? ExportCsvException)?.error?.isSessionExpired == true
+                    val mapped = ProductCsvExportHelper.mapExportError(throwable = err)
+                    _uiState.update {
+                        it.copy(
+                            isExportingCsv = false,
+                            isSessionExpired = it.isSessionExpired || expired,
+                            exportErrorMessage = if (expired) null else mapped.message
+                        )
+                    }
+                }
+            )
+        }
     }
 }
 

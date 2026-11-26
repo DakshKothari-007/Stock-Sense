@@ -1,9 +1,14 @@
 package com.simats.stocksense.feature.auth.viewmodel
 
+import android.content.Context
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simats.stocksense.data.repository.AuthRepository
+import com.simats.stocksense.data.repository.InventoryRepository
+import com.simats.stocksense.data.repository.UnauthorizedException
+import com.simats.stocksense.feature.inventory.util.ExportCsvException
+import com.simats.stocksense.feature.inventory.util.ProductCsvExportHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -60,11 +65,14 @@ data class DeleteAccountUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isSessionExpired: Boolean = false,
-    val isSuccess: Boolean = false
+    val isSuccess: Boolean = false,
+    val isExportingCsv: Boolean = false,
+    val exportErrorMessage: String? = null
 )
 
 class AuthViewModel(
-    private val authRepository: AuthRepository = AuthRepository()
+    private val authRepository: AuthRepository = AuthRepository(),
+    private val inventoryRepository: InventoryRepository = InventoryRepository()
 ) : ViewModel() {
 
     private val _authUiState = MutableStateFlow(AuthUiState())
@@ -432,6 +440,34 @@ class AuthViewModel(
 
     fun clearDeleteAccountState() {
         _deleteAccountState.value = DeleteAccountUiState()
+    }
+
+    fun exportProductsCsv(context: Context) {
+        if (_deleteAccountState.value.isExportingCsv) return
+
+        _deleteAccountState.update { it.copy(isExportingCsv = true, exportErrorMessage = null) }
+        val appContext = context.applicationContext
+
+        viewModelScope.launch {
+            val result = ProductCsvExportHelper.downloadAndShare(appContext, inventoryRepository)
+            result.fold(
+                onSuccess = {
+                    _deleteAccountState.update { it.copy(isExportingCsv = false, exportErrorMessage = null) }
+                },
+                onFailure = { err ->
+                    val expired = err is UnauthorizedException ||
+                        (err as? ExportCsvException)?.error?.isSessionExpired == true
+                    val mapped = ProductCsvExportHelper.mapExportError(throwable = err)
+                    _deleteAccountState.update {
+                        it.copy(
+                            isExportingCsv = false,
+                            isSessionExpired = it.isSessionExpired || expired,
+                            exportErrorMessage = if (expired) null else mapped.message
+                        )
+                    }
+                }
+            )
+        }
     }
 
     fun deleteAccount(
