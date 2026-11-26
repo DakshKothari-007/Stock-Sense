@@ -14,7 +14,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.ImeAction
+import com.simats.stocksense.feature.inventory.util.ProductCsvExportHelper
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -631,6 +636,183 @@ fun BoldInfoRow(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
         )
+    }
+}
+
+/**
+ * Shared CSV export button + "Name your file" Bold Outline dialog + inline error banner.
+ * Uses rememberSaveable so open dialog state and edited text survive rotation.
+ */
+@Composable
+fun ExportProductsCsvAction(
+    isExporting: Boolean,
+    exportErrorMessage: String?,
+    enabled: Boolean = true,
+    onConfirmExport: (chosenBaseName: String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var showNameDialog by rememberSaveable { mutableStateOf(false) }
+    var fileNameDraft by rememberSaveable { mutableStateOf("") }
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        ExportProductsCsvButton(
+            isExporting = isExporting,
+            enabled = enabled,
+            onClick = {
+                fileNameDraft = ProductCsvExportHelper.defaultExportBaseName()
+                showNameDialog = true
+            }
+        )
+
+        if (!exportErrorMessage.isNullOrBlank()) {
+            ExportCsvErrorBanner(message = exportErrorMessage)
+        }
+    }
+
+    if (showNameDialog) {
+        ExportFileNameDialog(
+            fileNameDraft = fileNameDraft,
+            onFileNameChange = { fileNameDraft = it },
+            onDismiss = { showNameDialog = false },
+            onConfirmExport = { chosenBaseName ->
+                showNameDialog = false
+                onConfirmExport(chosenBaseName)
+            }
+        )
+    }
+}
+
+/**
+ * Bold Outline dialog prompting the user to edit the exported CSV filename before downloading.
+ */
+@Composable
+fun ExportFileNameDialog(
+    fileNameDraft: String,
+    onFileNameChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onConfirmExport: (chosenBaseName: String) -> Unit
+) {
+    val defaultBaseName = remember { ProductCsvExportHelper.defaultExportBaseName() }
+    val sanitizedPreview = remember(fileNameDraft, defaultBaseName) {
+        ProductCsvExportHelper.sanitizeExportFileName(fileNameDraft)
+    }
+
+    BoldDialog(
+        onDismissRequest = onDismiss
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Text(
+                text = "Name your file",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Black,
+                    fontSize = 20.sp
+                ),
+                color = InkDark
+            )
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = fileNameDraft,
+                        onValueChange = onFileNameChange,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        placeholder = {
+                            Text(
+                                text = defaultBaseName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MutedInk.copy(alpha = 0.7f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(
+                            onDone = { onConfirmExport(sanitizedPreview.baseName) }
+                        ),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = RaisedSurface,
+                            unfocusedContainerColor = RaisedSurface,
+                            focusedBorderColor = InkDark,
+                            unfocusedBorderColor = InkDark,
+                            focusedTextColor = InkDark,
+                            unfocusedTextColor = InkDark,
+                            cursorColor = InkDark
+                        )
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = PaleBlue,
+                        border = BorderStroke(2.dp, InkDark)
+                    ) {
+                        Text(
+                            text = ".csv",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Black,
+                            color = InkDark,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp)
+                        )
+                    }
+                }
+
+                when {
+                    sanitizedPreview.charactersReplaced -> {
+                        Text(
+                            text = "Some characters were replaced.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MutedInk,
+                            fontSize = 11.sp
+                        )
+                    }
+                    sanitizedPreview.usedDefault && fileNameDraft.isNotEmpty() -> {
+                        Text(
+                            text = "Default file name will be used.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MutedInk,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                BoldButton(
+                    text = "Cancel",
+                    onClick = onDismiss,
+                    isPrimary = false,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp,
+                    modifier = Modifier.weight(1f)
+                )
+                BoldButton(
+                    text = "Export",
+                    onClick = { onConfirmExport(sanitizedPreview.baseName) },
+                    isPrimary = true,
+                    borderWidth = 2.dp,
+                    shadowOffset = 3.dp,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
     }
 }
 

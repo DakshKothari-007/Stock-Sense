@@ -568,13 +568,11 @@ fun SettingsScreen(
                                     fontSize = 12.sp,
                                     lineHeight = 16.sp
                                 )
-                                ExportProductsCsvButton(
+                                ExportProductsCsvAction(
                                     isExporting = uiState.isExportingCsv,
-                                    onClick = { viewModel.exportProductsCsv(context) }
+                                    exportErrorMessage = uiState.exportErrorMessage,
+                                    onConfirmExport = { chosenName -> viewModel.exportProductsCsv(context, chosenName) }
                                 )
-                                if (!uiState.exportErrorMessage.isNullOrBlank()) {
-                                    ExportCsvErrorBanner(message = uiState.exportErrorMessage ?: "")
-                                }
                             }
                         }
 

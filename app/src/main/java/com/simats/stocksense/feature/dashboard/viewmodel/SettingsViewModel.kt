@@ -221,14 +221,18 @@ class SettingsViewModel(
         _uiState.update { it.copy(errorMessage = null) }
     }
 
-    fun exportProductsCsv(context: Context) {
+    fun exportProductsCsv(context: Context, fileName: String? = null) {
         if (_uiState.value.isExportingCsv) return
 
         _uiState.update { it.copy(isExportingCsv = true, exportErrorMessage = null) }
         val appContext = context.applicationContext
 
         viewModelScope.launch {
-            val result = ProductCsvExportHelper.downloadAndShare(appContext, inventoryRepository)
+            val result = ProductCsvExportHelper.downloadAndShare(
+                context = appContext,
+                inventoryRepository = inventoryRepository,
+                chosenFileName = fileName
+            )
             result.fold(
                 onSuccess = {
                     _uiState.update { it.copy(isExportingCsv = false, exportErrorMessage = null) }

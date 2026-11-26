@@ -68,7 +68,7 @@ fun DeleteAccountScreen(
         onBackClick = onBackClick,
         onPasswordChange = { viewModel.updateDeletePassword(it) },
         onConfirmTextChange = { viewModel.updateDeleteConfirmText(it) },
-        onExportCsvClick = { viewModel.exportProductsCsv(context) },
+        onExportCsvClick = { chosenName -> viewModel.exportProductsCsv(context, chosenName) },
         onDeleteClick = {
             viewModel.deleteAccount(
                 onSuccess = { onAccountDeleted() },
@@ -86,7 +86,7 @@ fun DeleteAccountScreenContent(
     onBackClick: () -> Unit,
     onPasswordChange: (String) -> Unit,
     onConfirmTextChange: (String) -> Unit,
-    onExportCsvClick: () -> Unit = {},
+    onExportCsvClick: (String) -> Unit = {},
     onDeleteClick: () -> Unit
 ) {
     val primaryColor = MainYellow
@@ -322,15 +322,12 @@ fun DeleteAccountScreenContent(
                         )
                     }
 
-                    ExportProductsCsvButton(
+                    ExportProductsCsvAction(
                         isExporting = uiState.isExportingCsv,
+                        exportErrorMessage = uiState.exportErrorMessage,
                         enabled = !uiState.isLoading,
-                        onClick = onExportCsvClick
+                        onConfirmExport = onExportCsvClick
                     )
-
-                    if (!uiState.exportErrorMessage.isNullOrBlank()) {
-                        ExportCsvErrorBanner(message = uiState.exportErrorMessage ?: "")
-                    }
                 }
             }
 

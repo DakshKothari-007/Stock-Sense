@@ -442,14 +442,18 @@ class AuthViewModel(
         _deleteAccountState.value = DeleteAccountUiState()
     }
 
-    fun exportProductsCsv(context: Context) {
+    fun exportProductsCsv(context: Context, fileName: String? = null) {
         if (_deleteAccountState.value.isExportingCsv) return
 
         _deleteAccountState.update { it.copy(isExportingCsv = true, exportErrorMessage = null) }
         val appContext = context.applicationContext
 
         viewModelScope.launch {
-            val result = ProductCsvExportHelper.downloadAndShare(appContext, inventoryRepository)
+            val result = ProductCsvExportHelper.downloadAndShare(
+                context = appContext,
+                inventoryRepository = inventoryRepository,
+                chosenFileName = fileName
+            )
             result.fold(
                 onSuccess = {
                     _deleteAccountState.update { it.copy(isExportingCsv = false, exportErrorMessage = null) }

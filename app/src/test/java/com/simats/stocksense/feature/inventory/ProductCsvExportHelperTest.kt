@@ -120,4 +120,98 @@ class ProductCsvExportHelperTest {
         )
         assertEquals("Could not export products (error 502). Please try again.", htmlErr.message)
     }
+
+    @Test
+    fun sanitizeExportFileName_emptyAndSpacesUseDefaultName() {
+        val ist = TimeZone.getTimeZone("Asia/Kolkata")
+        val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            set(2026, Calendar.NOVEMBER, 25, 18, 45, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val fixedDate = cal.time
+
+        val emptyRes = ProductCsvExportHelper.sanitizeExportFileName("", fixedDate, ist)
+        assertEquals("stocksense-products-20261126", emptyRes.baseName)
+        assertEquals("stocksense-products-20261126.csv", emptyRes.fileName)
+        assertTrue(emptyRes.usedDefault)
+        assertFalse(emptyRes.charactersReplaced)
+
+        val spacesRes = ProductCsvExportHelper.sanitizeExportFileName("     ", fixedDate, ist)
+        assertEquals("stocksense-products-20261126", spacesRes.baseName)
+        assertEquals("stocksense-products-20261126.csv", spacesRes.fileName)
+        assertTrue(spacesRes.usedDefault)
+        assertFalse(spacesRes.charactersReplaced)
+    }
+
+    @Test
+    fun sanitizeExportFileName_replacesDisallowedCharsAndFlagsReplacement() {
+        val res = ProductCsvExportHelper.sanitizeExportFileName("sales/2026:march*report?")
+        assertEquals("sales_2026_march_report_", res.baseName)
+        assertEquals("sales_2026_march_report_.csv", res.fileName)
+        assertTrue(res.charactersReplaced)
+        assertFalse(res.usedDefault)
+    }
+
+    @Test
+    fun sanitizeExportFileName_stripsTrailingCsvWithoutDoublingOrReplacementHint() {
+        val resLower = ProductCsvExportHelper.sanitizeExportFileName("my_shop_items.csv")
+        assertEquals("my_shop_items", resLower.baseName)
+        assertEquals("my_shop_items.csv", resLower.fileName)
+        assertFalse(resLower.charactersReplaced)
+
+        val resUpper = ProductCsvExportHelper.sanitizeExportFileName("  My Stock.CSV ")
+        assertEquals("My Stock", resUpper.baseName)
+        assertEquals("My Stock.csv", resUpper.fileName)
+        assertFalse(resUpper.charactersReplaced)
+    }
+
+    @Test
+    fun sanitizeExportFileName_truncatesVeryLongNameTo60Chars() {
+        val longInput = "a".repeat(85)
+        val res = ProductCsvExportHelper.sanitizeExportFileName(longInput)
+        assertEquals(ProductCsvExportHelper.MAX_EXPORT_NAME_LENGTH, res.baseName.length)
+        assertEquals("a".repeat(60) + ".csv", res.fileName)
+        assertFalse(res.usedDefault)
+    }
+
+    @Test
+    fun sanitizeExportFileName_preservesTamilAndHindiUnicodeNames() {
+        val tamilRes = ProductCsvExportHelper.sanitizeExportFileName("அரிசி பருப்பு-2026")
+        assertEquals("அரிசி பருப்பு-2026", tamilRes.baseName)
+        assertEquals("அரிசி பருப்பு-2026.csv", tamilRes.fileName)
+        assertFalse(tamilRes.charactersReplaced)
+
+        val hindiRes = ProductCsvExportHelper.sanitizeExportFileName("राशन सूची_नवंबर 2026")
+        assertEquals("राशन सूची_नवंबर 2026", hindiRes.baseName)
+        assertEquals("राशन सूची_नवंबर 2026.csv", hindiRes.fileName)
+        assertFalse(hindiRes.charactersReplaced)
+    }
+
+    @Test
+    fun sanitizeExportFileName_blocksDotAndDotDotWithDefaultFallback() {
+        val ist = TimeZone.getTimeZone("Asia/Kolkata")
+        val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            set(2026, Calendar.NOVEMBER, 25, 18, 45, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val fixedDate = cal.time
+
+        val dotDotRes = ProductCsvExportHelper.sanitizeExportFileName("..", fixedDate, ist)
+        assertEquals("stocksense-products-20261126", dotDotRes.baseName)
+        assertEquals("stocksense-products-20261126.csv", dotDotRes.fileName)
+        assertTrue(dotDotRes.usedDefault)
+
+        val singleDotRes = ProductCsvExportHelper.sanitizeExportFileName(".", fixedDate, ist)
+        assertEquals("stocksense-products-20261126.csv", singleDotRes.fileName)
+        assertTrue(singleDotRes.usedDefault)
+    }
+
+    @Test
+    fun sanitizeExportFileName_keepsNormalNameUntouched() {
+        val res = ProductCsvExportHelper.sanitizeExportFileName("  Kirana Store Inventory-2026_11  ")
+        assertEquals("Kirana Store Inventory-2026_11", res.baseName)
+        assertEquals("Kirana Store Inventory-2026_11.csv", res.fileName)
+        assertFalse(res.charactersReplaced)
+        assertFalse(res.usedDefault)
+    }
 }

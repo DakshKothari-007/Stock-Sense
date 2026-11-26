@@ -22,15 +22,112 @@ data class ExportErrorResult(
     val isSessionExpired: Boolean = false
 )
 
+data class SanitizedExportFileName(
+    val baseName: String,
+    val fileName: String,
+    val charactersReplaced: Boolean,
+    val usedDefault: Boolean
+)
+
 class ExportCsvException(val error: ExportErrorResult) : Exception(error.message)
 
 /**
- * Helper for CSV export file naming, error translation, cache storage, and FileProvider sharing.
+ * Helper for CSV export file naming, sanitization, error translation, cache storage, and FileProvider sharing.
  */
 object ProductCsvExportHelper {
 
+    const val MAX_EXPORT_NAME_LENGTH = 60
+
     private val gson = Gson()
     private val quotedFilenameRegex = Regex("""filename\*?=\s*(?:UTF-8'')?\"?([^\";\r\n]+)\"?""", RegexOption.IGNORE_CASE)
+
+    /**
+     * Returns the default editable export base name (without .csv), using local timezone date.
+     */
+    fun defaultExportBaseName(
+        date: Date = Date(),
+        timeZone: TimeZone = TimeZone.getDefault()
+    ): String {
+        val dateFormat = SimpleDateFormat("yyyyMMdd", Locale.ENGLISH).apply {
+            this.timeZone = timeZone
+        }
+        return "stocksense-products-${dateFormat.format(date)}"
+    }
+
+    /**
+     * Sanitizes a user-chosen CSV file name according to filename safety rules:
+     * - Trims spaces; blank, ".", "..", or dot-only names fall back to default name.
+     * - Strips a trailing ".csv" (case-insensitive) so it is not doubled.
+     * - Allows Unicode letters (plus Hindi/Tamil combining marks), digits, space, '-', '_';
+     *   replaces other characters with '_'.
+     * - Caps base name length at 60 characters (not counting ".csv").
+     */
+    fun sanitizeExportFileName(
+        rawInput: String?,
+        date: Date = Date(),
+        timeZone: TimeZone = TimeZone.getDefault()
+    ): SanitizedExportFileName {
+        val defaultBase = defaultExportBaseName(date = date, timeZone = timeZone)
+        var working = rawInput?.trim().orEmpty()
+
+        if (isBlockedOrEmptyName(working)) {
+            return SanitizedExportFileName(
+                baseName = defaultBase,
+                fileName = "$defaultBase.csv",
+                charactersReplaced = false,
+                usedDefault = true
+            )
+        }
+
+        if (working.lowercase(Locale.ENGLISH).endsWith(".csv")) {
+            working = working.dropLast(4).trimEnd()
+        }
+
+        if (isBlockedOrEmptyName(working)) {
+            return SanitizedExportFileName(
+                baseName = defaultBase,
+                fileName = "$defaultBase.csv",
+                charactersReplaced = false,
+                usedDefault = true
+            )
+        }
+
+        var replaced = false
+        val sb = StringBuilder(working.length)
+        var i = 0
+        while (i < working.length) {
+            val cp = working.codePointAt(i)
+            val charCount = Character.charCount(cp)
+            if (isAllowedExportCodePoint(cp)) {
+                sb.appendCodePoint(cp)
+            } else {
+                sb.append('_')
+                replaced = true
+            }
+            i += charCount
+        }
+
+        var sanitized = sb.toString().trim()
+        if (sanitized.length > MAX_EXPORT_NAME_LENGTH) {
+            sanitized = truncateSafe(sanitized, MAX_EXPORT_NAME_LENGTH).trimEnd()
+        }
+
+        if (isBlockedOrEmptyName(sanitized)) {
+            return SanitizedExportFileName(
+                baseName = defaultBase,
+                fileName = "$defaultBase.csv",
+                charactersReplaced = replaced,
+                usedDefault = true
+            )
+        }
+
+        return SanitizedExportFileName(
+            baseName = sanitized,
+            fileName = "$sanitized.csv",
+            charactersReplaced = replaced,
+            usedDefault = false
+        )
+    }
 
     /**
      * Resolves a safe export filename from Content-Disposition or defaults to stocksense_products_YYYYMMDD.csv.
@@ -123,14 +220,14 @@ object ProductCsvExportHelper {
     }
 
     /**
-     * Writes CSV bytes to the app cache/exports folder and returns the written File.
+     * Writes CSV bytes to the app cache/exports folder, overwriting any existing file with the same name.
      */
     fun writeCsvToCache(context: Context, fileName: String, csvBytes: ByteArray): File {
         val exportsDir = File(context.cacheDir, "exports")
         if (!exportsDir.exists()) {
             exportsDir.mkdirs()
         }
-        val safeName = buildExportFileName(contentDisposition = "filename=\"$fileName\"")
+        val safeName = sanitizeExportFileName(fileName).fileName
         val targetFile = File(exportsDir, safeName)
         targetFile.writeBytes(csvBytes)
         return targetFile
@@ -170,21 +267,45 @@ object ProductCsvExportHelper {
     }
 
     /**
-     * Downloads the product catalog CSV from the backend and shares it via FileProvider.
+     * Downloads the product catalog CSV from the backend and shares it with the chosen file name.
      */
     suspend fun downloadAndShare(
         context: Context,
-        inventoryRepository: InventoryRepository
+        inventoryRepository: InventoryRepository,
+        chosenFileName: String? = null
     ): Result<Unit> {
+        val resolvedName = sanitizeExportFileName(chosenFileName).fileName
         val downloadResult = inventoryRepository.exportProductsCsv()
         val exported = downloadResult.getOrElse { err ->
             return Result.failure(err)
         }
         return saveAndShareCsv(
             context = context,
-            fileName = exported.fileName,
+            fileName = if (chosenFileName != null) resolvedName else exported.fileName,
             csvBytes = exported.bytes
         ).map { }
+    }
+
+    private fun isBlockedOrEmptyName(value: String): Boolean {
+        return value.isEmpty() || value == "." || value == ".." || value.all { it == '.' }
+    }
+
+    private fun isAllowedExportCodePoint(cp: Int): Boolean {
+        if (cp == ' '.code || cp == '-'.code || cp == '_'.code) return true
+        if (Character.isISOControl(cp)) return false
+        val type = Character.getType(cp)
+        return Character.isLetterOrDigit(cp) ||
+            type == Character.NON_SPACING_MARK.toInt() ||
+            type == Character.COMBINING_SPACING_MARK.toInt()
+    }
+
+    private fun truncateSafe(value: String, maxChars: Int): String {
+        if (value.length <= maxChars) return value
+        var end = maxChars
+        if (end > 0 && Character.isHighSurrogate(value[end - 1])) {
+            end--
+        }
+        return value.substring(0, end)
     }
 
     private fun extractServerMessage(errorBody: String?): String? {
