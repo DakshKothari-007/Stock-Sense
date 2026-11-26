@@ -34,6 +34,7 @@ import com.simats.stocksense.R
 import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
+import com.simats.stocksense.core.util.SecureScreenInReleaseEffect
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.feature.auth.viewmodel.AuthViewModel
 
@@ -47,6 +48,7 @@ fun LoginScreen(
     onSignUpClick: () -> Unit = {},
     viewModel: AuthViewModel = viewModel()
 ) {
+    SecureScreenInReleaseEffect()
     val loginState by viewModel.loginState.collectAsState()
     val primaryColor = MainYellow
     val iconStrokeColor = InkDark

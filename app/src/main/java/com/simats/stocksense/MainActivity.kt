@@ -23,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.simats.stocksense.core.fcm.NotificationIntentValidator
 import com.simats.stocksense.core.fcm.StockSenseMessagingService
 import com.simats.stocksense.core.network.NetworkClient
 import com.simats.stocksense.core.network.SessionManager
@@ -116,26 +117,15 @@ class MainActivity : ComponentActivity() {
     private fun handlePushIntent(intent: Intent?) {
         if (intent == null) return
 
-        // Read from extras (supports foreground service, background notification, and cold start)
-        val pushType = intent.getStringExtra(StockSenseMessagingService.EXTRA_PUSH_TYPE)
-            ?: intent.getStringExtra("type")
-        val productIdStr = intent.getStringExtra(StockSenseMessagingService.EXTRA_PRODUCT_ID)
-            ?: intent.getStringExtra("product_id")
-        val productId = productIdStr?.toIntOrNull()
-            ?: intent.getIntExtra("product_id", -1).takeIf { it > 0 }
+        val payload = NotificationIntentValidator.fromIntent(intent)
+        _pendingPushPayload.value = payload
 
-        if (!pushType.isNullOrBlank()) {
-            _pendingPushPayload.value = PushNotificationPayload(
-                type = pushType,
-                productId = productId
-            )
-
-            // Clear the extras from the launch intent so rotation or activity resume does not repeat navigation
-            intent.removeExtra(StockSenseMessagingService.EXTRA_PUSH_TYPE)
-            intent.removeExtra("type")
-            intent.removeExtra(StockSenseMessagingService.EXTRA_PRODUCT_ID)
-            intent.removeExtra("product_id")
-        }
+        // Clear the extras from the launch intent so invalid extras are ignored and
+        // rotation or activity resume does not repeat navigation
+        intent.removeExtra(StockSenseMessagingService.EXTRA_PUSH_TYPE)
+        intent.removeExtra("type")
+        intent.removeExtra(StockSenseMessagingService.EXTRA_PRODUCT_ID)
+        intent.removeExtra("product_id")
     }
 }
 

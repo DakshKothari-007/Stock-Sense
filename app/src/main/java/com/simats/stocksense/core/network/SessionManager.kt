@@ -1,7 +1,12 @@
+@file:Suppress("DEPRECATION")
+
 package com.simats.stocksense.core.network
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.simats.stocksense.core.avatar.AvatarCatalog
 import com.simats.stocksense.core.avatar.AvatarCode
 import com.simats.stocksense.data.model.AuthUser
@@ -13,15 +18,205 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+enum class TokenMigrationOutcome {
+    NOTHING_TO_MIGRATE,
+    MIGRATED,
+    ALREADY_MIGRATED_CLEANED_PLAIN,
+    ENCRYPTION_UNAVAILABLE,
+    MIGRATION_FAILED
+}
+
 /**
- * Central session manager persisting authentication tokens, login state,
- * and store owner profile details (including anonymous avatar code) using SharedPreferences.
+ * Stores authentication token state strictly inside Keystore-backed SharedPreferences,
+ * performs one-time migration from legacy plaintext SharedPreferences, and degrades safely
+ * to logged-out state if encryption fails.
+ */
+internal class SessionTokenStorage(
+    private val plainPrefs: SharedPreferences,
+    securePrefsProvider: () -> SharedPreferences?
+) {
+    private val securePrefs: SharedPreferences? = try {
+        securePrefsProvider()
+    } catch (_: Throwable) {
+        null
+    }
+
+    val migrationOutcome: TokenMigrationOutcome = migrateLegacyPlainToken()
+
+    private fun migrateLegacyPlainToken(): TokenMigrationOutcome {
+        val plainToken = try {
+            plainPrefs.getString(SessionManager.KEY_TOKEN, null)
+        } catch (_: Throwable) {
+            null
+        }
+        val plainExpiresAt = try {
+            plainPrefs.getString(SessionManager.KEY_EXPIRES_AT, null)
+        } catch (_: Throwable) {
+            null
+        }
+        val hasPlainKeys = try {
+            plainPrefs.contains(SessionManager.KEY_TOKEN) ||
+                plainPrefs.contains(SessionManager.KEY_EXPIRES_AT) ||
+                plainPrefs.contains(SessionManager.KEY_IS_LOGGED_IN)
+        } catch (_: Throwable) {
+            false
+        }
+
+        val sp = securePrefs
+        if (sp == null) {
+            if (hasPlainKeys) {
+                removePlainAuthKeys()
+            }
+            return TokenMigrationOutcome.ENCRYPTION_UNAVAILABLE
+        }
+
+        if (plainToken.isNullOrBlank()) {
+            if (hasPlainKeys) {
+                removePlainAuthKeys()
+            }
+            return TokenMigrationOutcome.NOTHING_TO_MIGRATE
+        }
+
+        return try {
+            val existingSecureToken = sp.getString(SessionManager.KEY_TOKEN, null)
+            if (!existingSecureToken.isNullOrBlank()) {
+                removePlainAuthKeys()
+                TokenMigrationOutcome.ALREADY_MIGRATED_CLEANED_PLAIN
+            } else {
+                val committed = sp.edit()
+                    .putBoolean(SessionManager.KEY_IS_LOGGED_IN, true)
+                    .putString(SessionManager.KEY_TOKEN, plainToken)
+                    .apply {
+                        if (plainExpiresAt != null) {
+                            putString(SessionManager.KEY_EXPIRES_AT, plainExpiresAt)
+                        } else {
+                            remove(SessionManager.KEY_EXPIRES_AT)
+                        }
+                    }
+                    .commit()
+
+                removePlainAuthKeys()
+                if (committed) TokenMigrationOutcome.MIGRATED else TokenMigrationOutcome.MIGRATION_FAILED
+            }
+        } catch (_: Throwable) {
+            removePlainAuthKeys()
+            TokenMigrationOutcome.MIGRATION_FAILED
+        }
+    }
+
+    fun saveToken(token: String, expiresAt: String?): Boolean {
+        val sp = securePrefs ?: run {
+            removePlainAuthKeys()
+            return false
+        }
+        val committed = try {
+            sp.edit()
+                .putBoolean(SessionManager.KEY_IS_LOGGED_IN, true)
+                .putString(SessionManager.KEY_TOKEN, token)
+                .apply {
+                    if (expiresAt != null) {
+                        putString(SessionManager.KEY_EXPIRES_AT, expiresAt)
+                    } else {
+                        remove(SessionManager.KEY_EXPIRES_AT)
+                    }
+                }
+                .commit()
+        } catch (_: Throwable) {
+            false
+        }
+        removePlainAuthKeys()
+        return committed
+    }
+
+    fun getToken(onExpired: () -> Unit): String? {
+        val token = readSecureString(SessionManager.KEY_TOKEN) ?: return null
+        if (token.isBlank()) return null
+
+        if (isExpired()) {
+            onExpired()
+            return null
+        }
+        return token
+    }
+
+    fun getExpiresAt(): String? = readSecureString(SessionManager.KEY_EXPIRES_AT)
+
+    fun isLoggedIn(onExpired: () -> Unit): Boolean {
+        val isLoggedInFlag = readSecureBoolean(SessionManager.KEY_IS_LOGGED_IN)
+        val token = readSecureString(SessionManager.KEY_TOKEN)
+        if (!isLoggedInFlag || token.isNullOrBlank()) {
+            return false
+        }
+        if (isExpired()) {
+            onExpired()
+            return false
+        }
+        return true
+    }
+
+    fun clear() {
+        try {
+            securePrefs?.edit()?.clear()?.commit()
+        } catch (_: Throwable) { }
+        removePlainAuthKeys()
+    }
+
+    private fun readSecureString(key: String): String? {
+        val sp = securePrefs ?: return null
+        return try {
+            sp.getString(key, null)
+        } catch (_: Throwable) {
+            removePlainAuthKeys()
+            null
+        }
+    }
+
+    private fun readSecureBoolean(key: String): Boolean {
+        val sp = securePrefs ?: return false
+        return try {
+            sp.getBoolean(key, false)
+        } catch (_: Throwable) {
+            removePlainAuthKeys()
+            false
+        }
+    }
+
+    private fun isExpired(): Boolean {
+        val expiresAt = readSecureString(SessionManager.KEY_EXPIRES_AT) ?: return false
+        return try {
+            val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            val expiryDate = format.parse(expiresAt)
+            expiryDate != null && expiryDate.before(Date())
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun removePlainAuthKeys() {
+        try {
+            plainPrefs.edit()
+                .remove(SessionManager.KEY_TOKEN)
+                .remove(SessionManager.KEY_EXPIRES_AT)
+                .remove(SessionManager.KEY_IS_LOGGED_IN)
+                .commit()
+        } catch (_: Throwable) { }
+    }
+}
+
+/**
+ * Central session manager persisting store profile details and Keystore-backed encrypted
+ * authentication tokens via EncryptedSharedPreferences.
  */
 class SessionManager private constructor(context: Context) {
 
     private val prefs: SharedPreferences = context.applicationContext.getSharedPreferences(
         PREFS_NAME,
         Context.MODE_PRIVATE
+    )
+
+    private val tokenStorage = SessionTokenStorage(
+        plainPrefs = prefs,
+        securePrefsProvider = { createDefaultSecurePrefs(context.applicationContext) }
     )
 
     private val _avatarState = MutableStateFlow<AvatarCode?>(readAvatarFromPrefs())
@@ -32,12 +227,15 @@ class SessionManager private constructor(context: Context) {
 
     /**
      * Saves complete session upon successful login or registration.
+     * Authentication token and session validity stay strictly in EncryptedSharedPreferences.
      */
     fun saveSession(token: String, expiresAt: String? = null, user: AuthUser? = null) {
+        tokenStorage.saveToken(token, expiresAt)
+
         val editor = prefs.edit()
-            .putBoolean(KEY_IS_LOGGED_IN, true)
-            .putString(KEY_TOKEN, token)
-            .putString(KEY_EXPIRES_AT, expiresAt)
+            .remove(KEY_IS_LOGGED_IN)
+            .remove(KEY_TOKEN)
+            .remove(KEY_EXPIRES_AT)
 
         var parsedAvatar: AvatarCode? = null
         if (user != null) {
@@ -117,9 +315,6 @@ class SessionManager private constructor(context: Context) {
 
     fun getAvatar(): AvatarCode? = readAvatarFromPrefs()
 
-    /**
-     * Updates user owner full name and email in SharedPreferences.
-     */
     fun updateProfileUser(fullName: String, email: String) {
         prefs.edit()
             .putString(KEY_FULL_NAME, fullName)
@@ -127,18 +322,12 @@ class SessionManager private constructor(context: Context) {
             .commit()
     }
 
-    /**
-     * Updates shop name in SharedPreferences.
-     */
     fun updateShopName(shopName: String) {
         prefs.edit()
             .putString(KEY_SHOP_NAME, shopName)
             .commit()
     }
 
-    /**
-     * Reads StoreProfile from SharedPreferences. Returns empty strings if not yet cached.
-     */
     fun getStoreProfile(): StoreProfile {
         val shopName = prefs.getString(KEY_SHOP_NAME, "") ?: ""
         val ownerName = prefs.getString(KEY_FULL_NAME, "") ?: ""
@@ -179,68 +368,31 @@ class SessionManager private constructor(context: Context) {
 
     fun getShopName(): String? = prefs.getString(KEY_SHOP_NAME, null)
 
-    /**
-     * Returns Bearer token if session is valid and not expired; otherwise clears and returns null.
-     */
-    fun getToken(): String? {
-        val token = prefs.getString(KEY_TOKEN, null)
-        if (token.isNullOrBlank()) return null
+    fun getToken(): String? = tokenStorage.getToken(onExpired = { clearSession() })
 
-        if (isExpired()) {
-            clearSession()
-            return null
-        }
-        return token
-    }
+    fun getExpiresAt(): String? = tokenStorage.getExpiresAt()
 
-    fun getExpiresAt(): String? = prefs.getString(KEY_EXPIRES_AT, null)
-
-    /**
-     * Returns true if user has logged in and has an active, non-expired token.
-     */
-    fun isLoggedIn(): Boolean {
-        val isLoggedInFlag = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
-        val token = prefs.getString(KEY_TOKEN, null)
-        if (!isLoggedInFlag || token.isNullOrBlank()) {
-            return false
-        }
-        if (isExpired()) {
-            clearSession()
-            return false
-        }
-        return true
-    }
+    fun isLoggedIn(): Boolean = tokenStorage.isLoggedIn(onExpired = { clearSession() })
 
     fun hasValidToken(): Boolean = isLoggedIn()
 
-    /**
-     * Wipes session data completely from SharedPreferences upon logout or session invalidation,
-     * and clears any in-memory AI assistant chat history.
-     */
     fun clearSession() {
-        prefs.edit().clear().commit()
+        tokenStorage.clear()
+        try {
+            prefs.edit().clear().commit()
+        } catch (_: Throwable) { }
         _avatarState.value = null
         try {
             com.simats.stocksense.feature.ai.AiChatStore.clear()
         } catch (_: Throwable) { }
     }
 
-    private fun isExpired(): Boolean {
-        val expiresAt = prefs.getString(KEY_EXPIRES_AT, null) ?: return false
-        return try {
-            val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-            val expiryDate = format.parse(expiresAt)
-            expiryDate != null && expiryDate.before(Date())
-        } catch (_: Exception) {
-            false
-        }
-    }
-
     companion object {
-        private const val PREFS_NAME = "stocksense_auth_prefs"
-        private const val KEY_IS_LOGGED_IN = "is_logged_in"
-        private const val KEY_TOKEN = "auth_token"
-        private const val KEY_EXPIRES_AT = "auth_token_expires_at"
+        internal const val PREFS_NAME = "stocksense_auth_prefs"
+        internal const val SECURE_PREFS_NAME = "stocksense_secure_auth_prefs"
+        internal const val KEY_IS_LOGGED_IN = "is_logged_in"
+        internal const val KEY_TOKEN = "auth_token"
+        internal const val KEY_EXPIRES_AT = "auth_token_expires_at"
         private const val KEY_USER_ID = "user_id"
         private const val KEY_FULL_NAME = "full_name"
         private const val KEY_SHOP_NAME = "shop_name"
@@ -262,6 +414,37 @@ class SessionManager private constructor(context: Context) {
             return instance ?: synchronized(this) {
                 instance ?: SessionManager(context.applicationContext).also { instance = it }
             }
+        }
+
+        private fun createDefaultSecurePrefs(appContext: Context): SharedPreferences? {
+            return try {
+                buildEncryptedPrefs(appContext)
+            } catch (_: Throwable) {
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        appContext.deleteSharedPreferences(SECURE_PREFS_NAME)
+                    } else {
+                        appContext.getSharedPreferences(SECURE_PREFS_NAME, Context.MODE_PRIVATE)
+                            .edit().clear().commit()
+                    }
+                    buildEncryptedPrefs(appContext)
+                } catch (_: Throwable) {
+                    null
+                }
+            }
+        }
+
+        private fun buildEncryptedPrefs(appContext: Context): SharedPreferences {
+            val masterKey = MasterKey.Builder(appContext)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+            return EncryptedSharedPreferences.create(
+                appContext,
+                SECURE_PREFS_NAME,
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
         }
     }
 }

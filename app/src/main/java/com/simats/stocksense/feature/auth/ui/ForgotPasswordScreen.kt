@@ -35,6 +35,7 @@ import com.simats.stocksense.R
 import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
+import com.simats.stocksense.core.util.SecureScreenInReleaseEffect
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import kotlinx.coroutines.launch
 
@@ -56,6 +57,7 @@ fun resetPassword(
 fun ForgotPasswordScreen(
     onBackToLoginClick: () -> Unit = {}
 ) {
+    SecureScreenInReleaseEffect()
     var email by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }

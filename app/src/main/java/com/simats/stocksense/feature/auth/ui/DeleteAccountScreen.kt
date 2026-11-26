@@ -37,6 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.simats.stocksense.core.components.*
 import com.simats.stocksense.core.theme.*
 import com.simats.stocksense.core.util.ResponsiveContainer
+import com.simats.stocksense.core.util.SecureScreenInReleaseEffect
 import com.simats.stocksense.core.util.rememberWindowSizeInfo
 import com.simats.stocksense.feature.auth.viewmodel.AuthViewModel
 import com.simats.stocksense.feature.auth.viewmodel.DeleteAccountUiState
@@ -49,6 +50,7 @@ fun DeleteAccountScreen(
     onSessionExpired: () -> Unit = {},
     viewModel: AuthViewModel = viewModel()
 ) {
+    SecureScreenInReleaseEffect()
     val context = androidx.compose.ui.platform.LocalContext.current
     val uiState by viewModel.deleteAccountState.collectAsState()
 
