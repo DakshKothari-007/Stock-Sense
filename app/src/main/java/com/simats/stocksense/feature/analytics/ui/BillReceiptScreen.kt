@@ -301,6 +301,27 @@ fun BillReceiptScreen(
                                 )
                             }
 
+                            if (bill.bundleDiscount > 0.0) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Bundle offer",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MainBlue
+                                    )
+                                    Text(
+                                        text = "-${ReceiptFormatter.formatAmount(bill.bundleDiscount)}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MainBlue
+                                    )
+                                }
+                            }
+
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,

@@ -9,6 +9,7 @@ data class BillReceiptData(
     val dateFormatted: String,
     val items: List<BillReceiptItem>,
     val totalAmount: Double,
+    val bundleDiscount: Double = 0.0,
     val totalQuantity: Int,
     val totalItems: Int = items.size,
     val thankYouMessage: String = "Thank you for shopping with us! Please visit again.",

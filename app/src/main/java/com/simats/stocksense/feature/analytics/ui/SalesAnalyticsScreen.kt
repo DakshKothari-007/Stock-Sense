@@ -79,6 +79,7 @@ fun SalesAnalyticsScreen(
             dateFormatted = b.saleDate ?: "—",
             items = receiptItems,
             totalAmount = b.totalAmount ?: 0.0,
+            bundleDiscount = b.bundleDiscount ?: 0.0,
             totalQuantity = b.totalQuantity ?: receiptItems.sumOf { it.quantity },
             totalItems = b.itemCount ?: receiptItems.size,
             gstin = gstin

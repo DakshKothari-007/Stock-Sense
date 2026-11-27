@@ -3,10 +3,12 @@ package com.simats.stocksense.feature.analytics.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simats.stocksense.core.network.NetworkClient
+import com.simats.stocksense.data.model.AppliedBundleOfferDto
 import com.simats.stocksense.data.model.CreateSaleData
 import com.simats.stocksense.data.model.CreateSaleItemRequest
 import com.simats.stocksense.data.model.CreateSaleRequest
 import com.simats.stocksense.data.model.NetworkInventoryProduct
+import com.simats.stocksense.data.model.PreviewOffersRequest
 import com.simats.stocksense.data.model.SaleBillItemDto
 import com.simats.stocksense.data.repository.InventoryRepository
 import com.simats.stocksense.data.repository.SalesRepository
@@ -43,6 +45,10 @@ data class RecordSaleUiState(
     val stockNoticeMessage: String? = null,
     val savedSaleData: CreateSaleData? = null,
     val isSessionExpired: Boolean = false,
+    val removedOfferIds: Set<Int> = emptySet(),
+    val appliedOffers: List<AppliedBundleOfferDto> = emptyList(),
+    val bundleDiscount: Double = 0.0,
+    val netTotalAmount: Double? = null,
 
     // Add Product Screen state
     val searchQuery: String = "",
@@ -55,6 +61,7 @@ data class RecordSaleUiState(
     val totalItemsCount: Int get() = items.size
     val totalUnitsCount: Int get() = items.sumOf { it.quantity }
     val totalAmount: Double get() = items.sumOf { it.lineTotal }
+    val displayTotalAmount: Double get() = netTotalAmount ?: totalAmount
 }
 
 @OptIn(FlowPreview::class)
@@ -67,6 +74,7 @@ class RecordSaleViewModel(
     val uiState: StateFlow<RecordSaleUiState> = _uiState.asStateFlow()
 
     private val _searchFlow = MutableStateFlow("")
+    private var previewJob: kotlinx.coroutines.Job? = null
 
     init {
         val cachedStoreName = NetworkClient.getSessionManager()?.getStoreProfile()?.name?.takeIf { it.isNotBlank() } ?: ""
@@ -191,6 +199,7 @@ class RecordSaleViewModel(
                             searchErrorMessage = null
                         )
                     }
+                    refreshOfferPreview(updatedBillItems, _uiState.value.removedOfferIds)
                     onComplete()
                 },
                 onFailure = { err ->
@@ -242,6 +251,7 @@ class RecordSaleViewModel(
         }
 
         _uiState.update { it.copy(items = currentItems, errorMessage = null) }
+        refreshOfferPreview(currentItems, _uiState.value.removedOfferIds)
     }
 
     fun incrementQuantity(productId: Int) {
@@ -252,6 +262,7 @@ class RecordSaleViewModel(
             if (item.quantity < item.availableStock) {
                 currentItems[index] = item.copy(quantity = item.quantity + 1)
                 _uiState.update { it.copy(items = currentItems, errorMessage = null) }
+                refreshOfferPreview(currentItems, _uiState.value.removedOfferIds)
             }
         }
     }
@@ -268,21 +279,83 @@ class RecordSaleViewModel(
                 currentItems.removeAt(index)
             }
             _uiState.update { it.copy(items = currentItems, errorMessage = null) }
+            refreshOfferPreview(currentItems, _uiState.value.removedOfferIds)
         }
     }
 
     fun removeItem(productId: Int) {
         val currentItems = _uiState.value.items.filterNot { it.productId == productId }
         _uiState.update { it.copy(items = currentItems, errorMessage = null) }
+        refreshOfferPreview(currentItems, _uiState.value.removedOfferIds)
+    }
+
+    fun removeOfferForBill(offerId: Int) {
+        val updatedRemoved = _uiState.value.removedOfferIds + offerId
+        _uiState.update { it.copy(removedOfferIds = updatedRemoved) }
+        refreshOfferPreview(_uiState.value.items, updatedRemoved)
+    }
+
+    private fun refreshOfferPreview(items: List<BillItem>, removedIds: Set<Int>) {
+        previewJob?.cancel()
+        if (items.isEmpty()) {
+            _uiState.update {
+                it.copy(
+                    appliedOffers = emptyList(),
+                    bundleDiscount = 0.0,
+                    netTotalAmount = null
+                )
+            }
+            return
+        }
+
+        val itemsSnapshot = items.map {
+            CreateSaleItemRequest(productId = it.productId, quantity = it.quantity)
+        }
+        val removedSnapshot = removedIds.toList().takeIf { it.isNotEmpty() }
+
+        previewJob = viewModelScope.launch {
+            val result = salesRepository.previewOffers(
+                PreviewOffersRequest(
+                    items = itemsSnapshot,
+                    removedOfferIds = removedSnapshot
+                )
+            )
+            result.fold(
+                onSuccess = { data ->
+                    _uiState.update {
+                        it.copy(
+                            appliedOffers = data.appliedOffers.orEmpty(),
+                            bundleDiscount = data.bundleDiscount ?: 0.0,
+                            netTotalAmount = data.totalAmount
+                        )
+                    }
+                },
+                onFailure = {
+                    // Offline or preview failure: bill normally with no discount, never crash
+                    _uiState.update {
+                        it.copy(
+                            appliedOffers = emptyList(),
+                            bundleDiscount = 0.0,
+                            netTotalAmount = null
+                        )
+                    }
+                }
+            )
+        }
     }
 
     fun clearBill(generateNewBillNo: Boolean = true) {
+        previewJob?.cancel()
         _uiState.update {
             it.copy(
                 items = emptyList(),
                 billNo = if (generateNewBillNo) generateBillNumber() else it.billNo,
                 errorMessage = null,
-                stockNoticeMessage = null
+                stockNoticeMessage = null,
+                removedOfferIds = emptySet(),
+                appliedOffers = emptyList(),
+                bundleDiscount = 0.0,
+                netTotalAmount = null
             )
         }
     }
@@ -304,7 +377,8 @@ class RecordSaleViewModel(
                         quantity = it.quantity,
                         unitPrice = it.unitPrice
                     )
-                }
+                },
+                removedOfferIds = currentState.removedOfferIds.toList().takeIf { it.isNotEmpty() }
             )
 
             val result = salesRepository.createSale(request)
@@ -330,7 +404,11 @@ class RecordSaleViewModel(
                             isSaving = false,
                             savedSaleData = finalData,
                             items = emptyList(),
-                            errorMessage = null
+                            errorMessage = null,
+                            removedOfferIds = emptySet(),
+                            appliedOffers = emptyList(),
+                            bundleDiscount = 0.0,
+                            netTotalAmount = null
                         )
                     }
                     // Requirement 2: After successful sale, reload products list so stock is updated for the next bill

@@ -78,6 +78,25 @@ class SalesRepository(
         }
     }
 
+    suspend fun previewOffers(request: PreviewOffersRequest): Result<PreviewOffersData> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.previewOffers(request)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.status == true && body.data != null) {
+                    Result.success(body.data)
+                } else {
+                    Result.failure(Exception(body?.message ?: "Failed to preview bundle offers."))
+                }
+            } else {
+                val errorMsg = extractErrorMessage(response.errorBody()?.string(), response.code())
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     /**
      * Records a new sale bill with atomic stock deduction.
      */

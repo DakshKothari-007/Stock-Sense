@@ -19,6 +19,11 @@ interface SalesApiService {
         @Body request: CreateSaleRequest
     ): Response<CreateSaleResponse>
 
+    @POST("sales/preview_offers.php")
+    suspend fun previewOffers(
+        @Body request: PreviewOffersRequest
+    ): Response<PreviewOffersResponse>
+
     /**
      * Module 6.2 Get Sales List
      * Returns paginated list of bills with embedded line items.

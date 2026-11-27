@@ -124,6 +124,9 @@ object ReceiptFormatter {
             sb.appendLine("   ${item.quantity} × ${formatAmount(item.unitPrice)} = ${formatAmount(item.lineTotal)}")
         }
         sb.appendLine("────────────────────────────")
+        if (bill.bundleDiscount > 0.0) {
+            sb.appendLine("Bundle offer: -${formatAmount(bill.bundleDiscount)}")
+        }
         sb.appendLine("*TOTAL: ${formatAmount(bill.totalAmount)}*")
         sb.appendLine("Items: ${bill.items.size} | Units: ${bill.totalQuantity}")
         sb.appendLine("────────────────────────────")

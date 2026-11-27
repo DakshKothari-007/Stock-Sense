@@ -182,7 +182,10 @@ object ReceiptPdfGenerator {
         }
         headerHeight += 3f /* spacer */ + 11f /* bill no */ + 12f /* date */ + 11f /* divider */ + 6f /* table header */ + 12f /* solid divider */
 
-        val footerHeight = 4f + 12f /* divider */ + 13f /* counts */ + 16f /* grand total */ + 14f /* solid divider */ + thankYouHeight + 18f /* bottom margin */
+        var footerHeight = 4f + 12f /* divider */ + 13f /* counts */ + 16f /* grand total */ + 14f /* solid divider */ + thankYouHeight + 18f /* bottom margin */
+        if (bill.bundleDiscount > 0.0) {
+            footerHeight += 13f
+        }
 
         val calculatedHeight = (headerHeight + itemsHeight + footerHeight).toInt()
         val pageHeight = max(180, calculatedHeight)
@@ -270,6 +273,12 @@ object ReceiptPdfGenerator {
         // 8. Items / Quantity count
         canvas.drawText("Total Items: ${bill.items.size}   Units: ${bill.totalQuantity}", leftMargin, currentY, metaPaint)
         currentY += 13f
+
+        if (bill.bundleDiscount > 0.0) {
+            canvas.drawText("Bundle offer", leftMargin, currentY, metaBoldPaint)
+            canvas.drawText("-${ReceiptFormatter.formatAmount(bill.bundleDiscount)}", colTotalX, currentY, bodyRight)
+            currentY += 13f
+        }
 
         // 9. Grand Total
         canvas.drawText("GRAND TOTAL", leftMargin, currentY, totalLabelPaint)

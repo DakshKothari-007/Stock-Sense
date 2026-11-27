@@ -93,6 +93,7 @@ data class SaleBillDto(
     @SerializedName("bill_no") val billNo: String? = null,
     @SerializedName("sale_date") val saleDate: String? = null,
     @SerializedName("total_amount") val totalAmount: Double? = 0.0,
+    @SerializedName("bundle_discount") val bundleDiscount: Double? = 0.0,
     @SerializedName("notes") val notes: String? = null,
     @SerializedName("item_count") val itemCount: Int? = 0,
     @SerializedName("total_quantity") val totalQuantity: Int? = 0,
@@ -121,13 +122,43 @@ data class CreateSaleRequest(
     @SerializedName("customer_phone") val customerPhone: String? = null,
     @SerializedName("payment_method") val paymentMethod: String? = "CASH",
     @SerializedName("notes") val notes: String? = null,
-    @SerializedName("items") val items: List<CreateSaleItemRequest>
+    @SerializedName("items") val items: List<CreateSaleItemRequest>,
+    @SerializedName("removed_offer_ids") val removedOfferIds: List<Int>? = null
 )
 
 data class CreateSaleItemRequest(
     @SerializedName("product_id") val productId: Int,
     @SerializedName("quantity") val quantity: Int,
     @SerializedName("unit_price") val unitPrice: Double? = null
+)
+
+data class AppliedBundleOfferDto(
+    @SerializedName("offer_id") val offerId: Int = 0,
+    @SerializedName("product_id_1") val productId1: Int = 0,
+    @SerializedName("product_id_2") val productId2: Int = 0,
+    @SerializedName("product_1_name") val product1Name: String = "",
+    @SerializedName("product_2_name") val product2Name: String = "",
+    @SerializedName("applications") val applications: Int = 1,
+    @SerializedName("discount_per_bundle") val discountPerBundle: Double = 0.0,
+    @SerializedName("discount_amount") val discountAmount: Double = 0.0
+)
+
+data class PreviewOffersRequest(
+    @SerializedName("items") val items: List<CreateSaleItemRequest>,
+    @SerializedName("removed_offer_ids") val removedOfferIds: List<Int>? = null
+)
+
+data class PreviewOffersData(
+    @SerializedName("subtotal") val subtotal: Double? = 0.0,
+    @SerializedName("bundle_discount") val bundleDiscount: Double? = 0.0,
+    @SerializedName("total_amount") val totalAmount: Double? = 0.0,
+    @SerializedName("applied_offers") val appliedOffers: List<AppliedBundleOfferDto>? = emptyList()
+)
+
+data class PreviewOffersResponse(
+    @SerializedName("status") val status: Boolean? = false,
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("data") val data: PreviewOffersData? = null
 )
 
 data class CreateSaleResponse(
@@ -142,7 +173,10 @@ data class CreateSaleData(
     @SerializedName("sale_date") val saleDate: String? = null,
     @SerializedName("total_items") val totalItems: Int? = 0,
     @SerializedName("total_quantity") val totalQuantity: Int? = 0,
+    @SerializedName("subtotal") val subtotal: Double? = null,
+    @SerializedName("bundle_discount") val bundleDiscount: Double? = 0.0,
     @SerializedName("total_amount") val totalAmount: Double? = 0.0,
+    @SerializedName("applied_offers") val appliedOffers: List<AppliedBundleOfferDto>? = emptyList(),
     @SerializedName("notes") val notes: String? = null,
     @SerializedName("items") val items: List<SaleBillItemDto>? = emptyList()
 )

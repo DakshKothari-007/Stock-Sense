@@ -335,6 +335,66 @@ fun RecordSaleScreen(
                             .padding(vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        uiState.appliedOffers.forEach { offer ->
+                            BoldCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                backgroundColor = SoftLavender,
+                                borderColor = InkDark,
+                                borderWidth = 2.dp,
+                                shadowOffset = 2.dp,
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Bundle offer applied: ${offer.product1Name} + ${offer.product2Name}. You save ${NumberFormatUtil.formatIndianRupees(offer.discountAmount)}.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = OnPastelInk,
+                                        fontSize = 12.sp,
+                                        modifier = Modifier.weight(1f).padding(end = 8.dp)
+                                    )
+                                    TextButton(
+                                        onClick = { viewModel.removeOfferForBill(offer.offerId) },
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                                    ) {
+                                        Text(
+                                            text = "Remove",
+                                            color = OnPastelInk,
+                                            fontWeight = FontWeight.Black,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        if (uiState.bundleDiscount > 0.0) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Bundle offer",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MainBlue,
+                                    fontSize = 13.sp
+                                )
+                                Text(
+                                    text = "-${NumberFormatUtil.formatIndianRupees(uiState.bundleDiscount)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MainBlue,
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
+
                         // Total Row
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -357,7 +417,7 @@ fun RecordSaleScreen(
                             }
 
                             Text(
-                                text = NumberFormatUtil.formatIndianRupees(uiState.totalAmount),
+                                text = NumberFormatUtil.formatIndianRupees(uiState.displayTotalAmount),
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = InkDark,
@@ -416,6 +476,7 @@ fun RecordSaleScreen(
                     dateFormatted = formattedDate,
                     items = receiptItems,
                     totalAmount = savedData.totalAmount ?: 0.0,
+                    bundleDiscount = savedData.bundleDiscount ?: 0.0,
                     totalQuantity = savedData.totalQuantity ?: receiptItems.sumOf { it.quantity },
                     totalItems = savedData.totalItems ?: receiptItems.size,
                     gstin = gstin
