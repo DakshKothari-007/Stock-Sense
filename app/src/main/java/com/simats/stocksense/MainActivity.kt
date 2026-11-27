@@ -517,6 +517,11 @@ fun StockSenseAppNavigation(
                         launchSingleTop = true
                     }
                 },
+                onOffersClick = {
+                    navController.navigate("offers") {
+                        launchSingleTop = true
+                    }
+                },
                 insightsViewModel = insightsViewModel,
                 inventoryViewModel = inventoryViewModel,
                 viewModel = mainViewModel
@@ -715,7 +720,7 @@ fun StockSenseAppNavigation(
                     navController.popBackStack()
                 },
                 onAcceptClick = {
-                    navController.navigate("accepted_overlay")
+                    navController.navigate("accepted_overlay?isBundle=true")
                 },
                 onDismissClick = {
                     navController.navigate("dismissed_overlay")
@@ -724,7 +729,7 @@ fun StockSenseAppNavigation(
             )
         }
         composable(
-            route = "accepted_overlay?productId={productId}&suggestedPrice={suggestedPrice}",
+            route = "accepted_overlay?productId={productId}&suggestedPrice={suggestedPrice}&isBundle={isBundle}",
             arguments = listOf(
                 androidx.navigation.navArgument("productId") {
                     type = androidx.navigation.NavType.IntType
@@ -733,11 +738,16 @@ fun StockSenseAppNavigation(
                 androidx.navigation.navArgument("suggestedPrice") {
                     type = androidx.navigation.NavType.StringType
                     defaultValue = ""
+                },
+                androidx.navigation.navArgument("isBundle") {
+                    type = androidx.navigation.NavType.BoolType
+                    defaultValue = false
                 }
             )
         ) { backStackEntry ->
             val pid = backStackEntry.arguments?.getInt("productId")?.takeIf { it > 0 }
             val suggestedPrice = backStackEntry.arguments?.getString("suggestedPrice")?.toDoubleOrNull()?.takeIf { it > 0.0 }
+            val isBundleOffer = backStackEntry.arguments?.getBoolean("isBundle") == true
             AcceptedOverlayScreen(
                 suggestedPrice = suggestedPrice,
                 onApplySuggestedPriceClick = if (pid != null && suggestedPrice != null) {
@@ -752,8 +762,23 @@ fun StockSenseAppNavigation(
                         }
                     }
                 } else null,
+                isBundleOffer = isBundleOffer,
+                onViewOffersClick = if (isBundleOffer) {
+                    {
+                        navController.navigate("offers") {
+                            launchSingleTop = true
+                        }
+                    }
+                } else null,
                 onDoneClick = {
                     navController.popBackStack("main", inclusive = false)
+                }
+            )
+        }
+        composable("offers") {
+            com.simats.stocksense.feature.offers.ui.OffersScreen(
+                onBackClick = {
+                    navController.popBackStack()
                 }
             )
         }

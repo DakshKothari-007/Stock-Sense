@@ -50,6 +50,7 @@ fun MainScreen(
     onSignOutClick: () -> Unit = {},
     onDeleteAccountClick: () -> Unit = {},
     onAiChatClick: () -> Unit = {},
+    onOffersClick: () -> Unit = {},
     insightsViewModel: InsightsViewModel = viewModel(),
     dashboardViewModel: DashboardViewModel = viewModel(),
     inventoryViewModel: InventoryViewModel = viewModel(),
@@ -135,6 +136,7 @@ fun MainScreen(
                                     onReorderClick = onReorderRecommendationClick,
                                     onMoveBiscuitsClick = onSlowMovingRecommendationClick,
                                     onTeaPairClick = onRecommendationPairsClick,
+                                    onOffersClick = onOffersClick,
                                     viewModel = insightsViewModel
                                 )
                                 3 -> ProfileContent(

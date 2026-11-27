@@ -111,6 +111,7 @@ fun InsightsContent(
     onReorderClick: (productId: Int?, sku: String?) -> Unit = { _, _ -> },
     onMoveBiscuitsClick: () -> Unit = {},
     onTeaPairClick: () -> Unit = {},
+    onOffersClick: () -> Unit = {},
     viewModel: InsightsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -135,6 +136,7 @@ fun InsightsContent(
         onReorderClick = onReorderClick,
         onMoveBiscuitsClick = onMoveBiscuitsClick,
         onTeaPairClick = onTeaPairClick,
+        onOffersClick = onOffersClick,
         onSlowMovingIndexSelected = { viewModel.selectSlowMovingIndex(it) },
         onPairIndexSelected = { viewModel.selectPairIndex(it) }
     )
@@ -148,6 +150,7 @@ fun InsightsListContent(
     onReorderClick: (productId: Int?, sku: String?) -> Unit = { _, _ -> },
     onMoveBiscuitsClick: () -> Unit = {},
     onTeaPairClick: () -> Unit = {},
+    onOffersClick: () -> Unit = {},
     onSlowMovingIndexSelected: (Int) -> Unit = {},
     onPairIndexSelected: (Int) -> Unit = {}
 ) {
@@ -212,23 +215,43 @@ fun InsightsListContent(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     // Header
-                    Column {
-                        Text(
-                            text = "AI recommendations",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = InkDark,
-                            fontWeight = FontWeight.Black,
-                            fontSize = 24.sp
-                        )
-                        val storeDisplay = storeName?.takeIf { it.isNotBlank() } ?: "Store"
-                        Text(
-                            text = "$storeDisplay · ${NumberFormatUtil.formatCurrentHeaderDate()}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MutedInk,
-                            fontSize = 12.sp,
-                            lineHeight = 16.sp,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                            Text(
+                                text = "AI recommendations",
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = InkDark,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 24.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            val storeDisplay = storeName?.takeIf { it.isNotBlank() } ?: "Store"
+                            Text(
+                                text = "$storeDisplay · ${NumberFormatUtil.formatCurrentHeaderDate()}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MutedInk,
+                                fontSize = 12.sp,
+                                lineHeight = 16.sp,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
+                        BoldButton(
+                            text = "Offers",
+                            onClick = onOffersClick,
+                            isPrimary = false,
+                            borderWidth = 2.dp,
+                            shadowOffset = 2.dp,
+                            modifier = Modifier
+                                .wrapContentWidth()
+                                .heightIn(min = 48.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                         )
                     }
 

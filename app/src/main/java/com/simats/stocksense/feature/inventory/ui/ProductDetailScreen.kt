@@ -296,6 +296,26 @@ fun ProductDetailScreenContent(
                                     Spacer(modifier = Modifier.height(6.dp))
                                     val statusText = uiState.product.status?.takeIf { it.isNotBlank() } ?: "In stock"
                                     BoldStatusChip(status = statusText)
+                                    val offerPartner = uiState.activeBundleOfferPartnerName
+                                    if (!offerPartner.isNullOrBlank()) {
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = PaleBlue,
+                                            border = BorderStroke(1.5.dp, InkDark)
+                                        ) {
+                                            Text(
+                                                text = "In bundle offer with $offerPartner",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = OnPastelInk,
+                                                fontSize = 11.sp,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

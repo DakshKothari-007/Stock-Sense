@@ -7,6 +7,7 @@ import com.simats.stocksense.data.model.InventoryProduct
 import com.simats.stocksense.data.model.PurchaseOrderDto
 import com.simats.stocksense.data.model.UpdateProductRequest
 import com.simats.stocksense.data.repository.InventoryRepository
+import com.simats.stocksense.data.repository.OffersRepository
 import com.simats.stocksense.data.repository.ReorderRepository
 import com.simats.stocksense.data.repository.SalesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,7 +51,8 @@ data class ProductDetailUiState(
     val salesHistory: List<SalesBarPoint> = emptyList(),
     val has7DaySales: Boolean = false,
     val total7DayUnits: Int = 0,
-    val lastUpdatedDateText: String = ""
+    val lastUpdatedDateText: String = "",
+    val activeBundleOfferPartnerName: String? = null
 )
 
 /**
@@ -60,7 +62,8 @@ data class ProductDetailUiState(
 class ProductDetailViewModel(
     private val repository: InventoryRepository = InventoryRepository(),
     private val reorderRepository: ReorderRepository = ReorderRepository(),
-    private val salesRepository: SalesRepository = SalesRepository()
+    private val salesRepository: SalesRepository = SalesRepository(),
+    private val offersRepository: OffersRepository = OffersRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProductDetailUiState())
@@ -243,6 +246,10 @@ class ProductDetailViewModel(
                         description = data.description?.takeIf { it.isNotBlank() } ?: "—"
                     )
 
+                    val activePartner = if (resolvedId > 0) {
+                        offersRepository.findActiveOfferPartnerName(resolvedId)
+                    } else null
+
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -261,7 +268,8 @@ class ProductDetailViewModel(
                             salesHistory = salesPoints,
                             has7DaySales = has7DaySales,
                             total7DayUnits = total7DayUnits,
-                            lastUpdatedDateText = lastUpdatedDateText
+                            lastUpdatedDateText = lastUpdatedDateText,
+                            activeBundleOfferPartnerName = activePartner
                         )
                     }
                 },
