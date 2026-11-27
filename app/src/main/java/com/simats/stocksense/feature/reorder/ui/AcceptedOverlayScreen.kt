@@ -25,6 +25,8 @@ import com.simats.stocksense.core.util.ResponsiveContainer
 
 @Composable
 fun AcceptedOverlayScreen(
+    suggestedPrice: Double? = null,
+    onApplySuggestedPriceClick: (() -> Unit)? = null,
     onDoneClick: () -> Unit = {}
 ) {
     Surface(
@@ -91,11 +93,30 @@ fun AcceptedOverlayScreen(
                     )
                 }
 
-                BoldButton(
-                    text = "Done",
-                    onClick = onDoneClick,
-                    isPrimary = true
-                )
+                val canApplySuggestedPrice = onApplySuggestedPriceClick != null &&
+                    suggestedPrice != null &&
+                    suggestedPrice > 0.0
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (canApplySuggestedPrice) {
+                        BoldButton(
+                            text = "Apply suggested price",
+                            onClick = { onApplySuggestedPriceClick?.invoke() },
+                            modifier = Modifier.fillMaxWidth(),
+                            isPrimary = true
+                        )
+                    }
+
+                    BoldButton(
+                        text = "Done",
+                        onClick = onDoneClick,
+                        modifier = Modifier.fillMaxWidth(),
+                        isPrimary = !canApplySuggestedPrice
+                    )
+                }
             }
         }
     }

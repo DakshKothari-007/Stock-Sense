@@ -471,6 +471,17 @@ fun EditProductScreenContent(
                                 )
                             }
 
+                            if (!uiState.suggestedPriceNote.isNullOrBlank()) {
+                                Text(
+                                    text = uiState.suggestedPriceNote,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MutedInk,
+                                    fontSize = 12.sp,
+                                    modifier = Modifier.padding(top = 2.dp)
+                                )
+                            }
+
                             // Soft Warning when purchase cost is higher than selling price
                             if (uiState.isCostHigherThanPrice) {
                                 Row(
@@ -487,7 +498,11 @@ fun EditProductScreenContent(
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = "Cost is higher than selling price",
+                                        text = if (!uiState.suggestedPriceNote.isNullOrBlank()) {
+                                            "Below cost price"
+                                        } else {
+                                            "Cost is higher than selling price"
+                                        },
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.Bold,
                                         color = StatusLowStock,

@@ -680,8 +680,9 @@ fun StockSenseAppNavigation(
                 onBackClick = {
                     navController.popBackStack()
                 },
-                onAcceptClick = {
-                    navController.navigate("accepted_overlay")
+                onAcceptWithSuggestion = { productId, suggestedPrice ->
+                    val priceArg = suggestedPrice?.takeIf { it > 0.0 }?.toString().orEmpty()
+                    navController.navigate("accepted_overlay?productId=$productId&suggestedPrice=$priceArg")
                 },
                 onDismissClick = {
                     navController.navigate("dismissed_overlay")
@@ -722,8 +723,35 @@ fun StockSenseAppNavigation(
                 viewModel = insightsViewModel
             )
         }
-        composable("accepted_overlay") {
+        composable(
+            route = "accepted_overlay?productId={productId}&suggestedPrice={suggestedPrice}",
+            arguments = listOf(
+                androidx.navigation.navArgument("productId") {
+                    type = androidx.navigation.NavType.IntType
+                    defaultValue = -1
+                },
+                androidx.navigation.navArgument("suggestedPrice") {
+                    type = androidx.navigation.NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val pid = backStackEntry.arguments?.getInt("productId")?.takeIf { it > 0 }
+            val suggestedPrice = backStackEntry.arguments?.getString("suggestedPrice")?.toDoubleOrNull()?.takeIf { it > 0.0 }
             AcceptedOverlayScreen(
+                suggestedPrice = suggestedPrice,
+                onApplySuggestedPriceClick = if (pid != null && suggestedPrice != null) {
+                    {
+                        productFormViewModel.initEditProduct(
+                            productId = pid,
+                            sku = null,
+                            suggestedPrice = suggestedPrice
+                        )
+                        navController.navigate("edit_product?suggestedPrice=$suggestedPrice") {
+                            launchSingleTop = true
+                        }
+                    }
+                } else null,
                 onDoneClick = {
                     navController.popBackStack("main", inclusive = false)
                 }
@@ -941,14 +969,22 @@ fun StockSenseAppNavigation(
                 }
             )
         }
-        composable("edit_product") {
+        composable(
+            route = "edit_product?suggestedPrice={suggestedPrice}",
+            arguments = listOf(
+                androidx.navigation.navArgument("suggestedPrice") {
+                    type = androidx.navigation.NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) {
             EditProductScreen(
                 viewModel = productFormViewModel,
                 onBackClick = {
                     navController.popBackStack()
                 },
                 onSuccess = { returnedSku ->
-                    inventoryViewModel.refresh()
+                    inventoryViewModel.refresh(force = true)
                     if (returnedSku.isNotBlank()) {
                         productDetailViewModel.loadProduct(sku = returnedSku)
                     }

@@ -39,6 +39,7 @@ data class ProductFormUiState(
     val stockError: String? = null,
     val minStockError: String? = null,
     val isCostHigherThanPrice: Boolean = false,
+    val suggestedPriceNote: String? = null,
 
     // Category suggestions from shop
     val categories: List<String> = emptyList(),
@@ -89,7 +90,7 @@ class ProductFormViewModel(
     /**
      * Initializes the state for editing an existing product by loading live details.
      */
-    fun initEditProduct(productId: Int?, sku: String?) {
+    fun initEditProduct(productId: Int?, sku: String?, suggestedPrice: Double? = null) {
         _uiState.value = ProductFormUiState(
             isEditMode = true,
             productId = productId,
@@ -107,7 +108,9 @@ class ProductFormViewModel(
                     val pUnits = data.rawUnits ?: data.units?.toString()?.toIntOrNull() ?: 0
                     val pMin = data.minimumStockThreshold ?: data.minStockThreshold ?: 10
 
-                    val priceStr = if (pPrice % 1.0 == 0.0) pPrice.toInt().toString() else pPrice.toString()
+                    val validSuggested = suggestedPrice?.takeIf { it > 0.0 }
+                    val effectivePrice = validSuggested ?: pPrice
+                    val priceStr = if (effectivePrice % 1.0 == 0.0) effectivePrice.toInt().toString() else effectivePrice.toString()
                     val costStr = if (pCost % 1.0 == 0.0) pCost.toInt().toString() else pCost.toString()
 
                     _uiState.update { current ->
@@ -125,7 +128,10 @@ class ProductFormViewModel(
                             iconKey = data.iconKey,
                             deleteProductName = data.name.orEmpty(),
                             deleteProductUnits = pUnits.toString(),
-                            isCostHigherThanPrice = pCost > pPrice && pPrice > 0.0
+                            isCostHigherThanPrice = pCost > effectivePrice && effectivePrice > 0.0,
+                            suggestedPriceNote = if (validSuggested != null) {
+                                "Suggested by Slow-moving insight. Review and Save."
+                            } else null
                         )
                     }
                 },

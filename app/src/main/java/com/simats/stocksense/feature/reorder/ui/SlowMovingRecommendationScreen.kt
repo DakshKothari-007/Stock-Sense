@@ -50,6 +50,7 @@ import java.util.Locale
 fun SlowMovingRecommendationScreen(
     onBackClick: () -> Unit = {},
     onAcceptClick: () -> Unit = {},
+    onAcceptWithSuggestion: ((productId: Int, suggestedPrice: Double?) -> Unit)? = null,
     onDismissClick: () -> Unit = {},
     viewModel: InsightsViewModel = viewModel()
 ) {
@@ -436,10 +437,17 @@ fun SlowMovingRecommendationScreen(
                             onClick = {
                                 val pid = item.productId
                                 if (pid != null && pid > 0) {
+                                    val capturedSuggestedPrice = item.effectiveSuggestedPrice
                                     viewModel.respondSlowMoving(
                                         productId = pid,
                                         action = "accepted",
-                                        onSuccess = onAcceptClick,
+                                        onSuccess = {
+                                            if (onAcceptWithSuggestion != null) {
+                                                onAcceptWithSuggestion(pid, capturedSuggestedPrice)
+                                            } else {
+                                                onAcceptClick()
+                                            }
+                                        },
                                         onError = { msg ->
                                             android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
                                         }
