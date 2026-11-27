@@ -154,12 +154,14 @@ object FcmTokenManager {
      * 3. Clears local preferences
      * Logout must still succeed if any call fails.
      */
-    suspend fun unregisterAndClearToken(context: Context) {
+    suspend fun unregisterAndClearToken(context: Context, authToken: String? = null) {
         val token = getCurrentToken(context) ?: fetchCurrentToken()
+        clearStoredTokens(context)
         if (!token.isNullOrBlank()) {
             try {
                 val repo = NotificationRepository()
-                repo.unregisterDevice(token)
+                val authHeader = authToken?.takeIf { it.isNotBlank() }?.let { "Bearer $it" }
+                repo.unregisterDevice(token, authHeader)
                 if (BuildConfig.DEBUG) {
                     Log.d(TAG, "Device token unregistered from backend.")
                 }

@@ -9,8 +9,10 @@ import com.simats.stocksense.data.repository.InventoryRepository
 import com.simats.stocksense.data.repository.UnauthorizedException
 import com.simats.stocksense.feature.inventory.util.ExportCsvException
 import com.simats.stocksense.feature.inventory.util.ProductCsvExportHelper
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -72,7 +74,8 @@ data class DeleteAccountUiState(
 
 class AuthViewModel(
     private val authRepository: AuthRepository = AuthRepository(),
-    private val inventoryRepository: InventoryRepository = InventoryRepository()
+    private val inventoryRepository: InventoryRepository = InventoryRepository(),
+    private val backgroundScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) : ViewModel() {
 
     private val _authUiState = MutableStateFlow(AuthUiState())
@@ -406,14 +409,12 @@ class AuthViewModel(
     // -------------------------------------------------------------
 
     fun logout(onComplete: () -> Unit = {}) {
-        viewModelScope.launch {
-            try {
-                com.simats.stocksense.feature.ai.AiChatStore.clear()
-            } catch (_: Throwable) {}
-            authRepository.logout()
-            _authUiState.update { AuthUiState() }
-            _loginState.update { LoginUiState(email = "", password = "") }
-            onComplete()
+        val savedToken = authRepository.clearLocalSession()
+        onComplete()
+        _authUiState.update { AuthUiState() }
+        _loginState.update { LoginUiState(email = "", password = "") }
+        backgroundScope.launch {
+            authRepository.revokeTokenInBackground(savedToken)
         }
     }
 

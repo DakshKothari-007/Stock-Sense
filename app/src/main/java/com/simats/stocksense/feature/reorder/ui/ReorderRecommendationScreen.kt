@@ -295,12 +295,17 @@ fun ReorderRecommendationScreen(
                         }
 
                         // 2. High Priority Badge & Why Button
-                        Row(
+                        @OptIn(ExperimentalLayoutApi::class)
+                        FlowRow(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            itemVerticalAlignment = Alignment.CenterVertically
                         ) {
-                            BoldStatusChip(status = rec.priorityText)
+                            BoldStatusChip(
+                                status = rec.priorityText,
+                                modifier = Modifier.padding(end = 12.dp)
+                            )
 
                             BoldButton(
                                 text = "Why?",
@@ -308,7 +313,9 @@ fun ReorderRecommendationScreen(
                                 isPrimary = false,
                                 borderWidth = 2.dp,
                                 shadowOffset = 2.dp,
-                                modifier = Modifier.wrapContentWidth()
+                                modifier = Modifier
+                                    .wrapContentWidth()
+                                    .heightIn(min = 48.dp)
                             )
                         }
 

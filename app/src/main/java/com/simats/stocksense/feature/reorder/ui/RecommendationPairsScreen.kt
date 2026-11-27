@@ -183,10 +183,12 @@ fun RecommendationPairsScreen(
                 val prod2 = pair.product2
 
                 // 2. Category Tag & Why Button
-                Row(
+                @OptIn(ExperimentalLayoutApi::class)
+                FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    itemVerticalAlignment = Alignment.CenterVertically
                 ) {
                     BoldChip(
                         text = "Frequently bought together",
@@ -194,7 +196,8 @@ fun RecommendationPairsScreen(
                         backgroundColor = SoftLightBlue,
                         textColor = OnPastelInk,
                         borderColor = InkDark,
-                        borderWidth = 1.5.dp
+                        borderWidth = 1.5.dp,
+                        modifier = Modifier.padding(end = 12.dp)
                     )
 
                     BoldButton(
@@ -203,7 +206,9 @@ fun RecommendationPairsScreen(
                         isPrimary = false,
                         borderWidth = 1.5.dp,
                         shadowOffset = 2.dp,
-                        modifier = Modifier.height(34.dp)
+                        modifier = Modifier
+                            .wrapContentWidth()
+                            .heightIn(min = 48.dp)
                     )
                 }
 

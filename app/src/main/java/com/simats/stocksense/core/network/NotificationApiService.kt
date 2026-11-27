@@ -45,7 +45,8 @@ interface NotificationApiService {
 
     @POST("notifications/unregister_device.php")
     suspend fun unregisterDevice(
-        @Body request: UnregisterDeviceRequest
+        @Body request: UnregisterDeviceRequest,
+        @retrofit2.http.Header("Authorization") authHeader: String? = null
     ): Response<UnregisterDeviceResponse>
 }
 

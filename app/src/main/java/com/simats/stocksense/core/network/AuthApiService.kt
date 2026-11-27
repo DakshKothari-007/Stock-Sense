@@ -34,7 +34,9 @@ interface AuthApiService {
     ): Response<SignUpResponse>
 
     @POST("auth/logout.php")
-    suspend fun logout(): Response<BaseResponse>
+    suspend fun logout(
+        @retrofit2.http.Header("Authorization") authHeader: String? = null
+    ): Response<BaseResponse>
 
     @GET("auth/profile.php")
     suspend fun getProfile(

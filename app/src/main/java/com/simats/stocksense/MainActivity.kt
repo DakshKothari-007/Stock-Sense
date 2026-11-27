@@ -498,14 +498,13 @@ fun StockSenseAppNavigation(
                     }
                 },
                 onSignOutClick = {
-                    AiChatStore.clear()
-                    mainViewModel.clearUserData()
-                    mainViewModel.selectTab(0)
                     authViewModel.logout {
                         navController.navigate("signout") {
                             popUpTo(0) { inclusive = true }
                             launchSingleTop = true
                         }
+                        mainViewModel.clearUserData()
+                        mainViewModel.selectTab(0)
                     }
                 },
                 onDeleteAccountClick = {
@@ -532,14 +531,14 @@ fun StockSenseAppNavigation(
                     navController.popBackStack()
                 },
                 onAccountDeleted = {
-                    AiChatStore.clear()
-                    mainViewModel.clearUserData()
-                    mainViewModel.selectTab(0)
                     Toast.makeText(context, "Your account has been deleted.", Toast.LENGTH_LONG).show()
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                         launchSingleTop = true
                     }
+                    AiChatStore.clear()
+                    mainViewModel.clearUserData()
+                    mainViewModel.selectTab(0)
                 },
                 onSessionExpired = {
                     Toast.makeText(context, "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
@@ -583,13 +582,13 @@ fun StockSenseAppNavigation(
         composable("signout") {
             SignOutScreen(
                 onBackToLoginClick = {
-                    AiChatStore.clear()
-                    mainViewModel.clearUserData()
-                    mainViewModel.selectTab(0)
                     authViewModel.logout {
                         navController.navigate("login") {
                             popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
                         }
+                        mainViewModel.clearUserData()
+                        mainViewModel.selectTab(0)
                     }
                 }
             )

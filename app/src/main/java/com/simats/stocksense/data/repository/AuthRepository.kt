@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -209,38 +210,52 @@ class AuthRepository(
     }
 
     /**
-     * Executes logout against auth/logout.php.
-     * Calls unregister_device.php first, deletes local FCM token, and clears the session.
-     * Logout must still work even if network calls fail.
+     * Reads the current auth token, then immediately clears local session, token store,
+     * cached user profile, AI chat cache, and stored FCM tokens.
      */
-    suspend fun logout(): Result<BaseResponse> = withContext(Dispatchers.IO) {
-        // 1. Best-effort unregister FCM token and delete local token
+    fun clearLocalSession(): String? {
+        val savedToken = sessionManager?.getToken()?.takeIf { it.isNotBlank() }
+            ?: tokenStore?.getToken()?.takeIf { it.isNotBlank() }
+        sessionManager?.clearSession()
+        tokenStore?.clearToken()
+        _currentUser.value = UserProfile()
+        try {
+            com.simats.stocksense.feature.ai.AiChatStore.clear()
+        } catch (_: Throwable) {}
         try {
             NetworkClient.getAppContext()?.let { ctx ->
-                com.simats.stocksense.core.fcm.FcmTokenManager.unregisterAndClearToken(ctx)
+                com.simats.stocksense.core.fcm.FcmTokenManager.clearStoredTokens(ctx)
             }
         } catch (_: Throwable) {}
+        return savedToken
+    }
 
-        // 2. Call backend logout and clear local session
-        try {
-            val response = apiService.logout()
-            sessionManager?.clearSession()
-            tokenStore?.clearToken()
-            _currentUser.value = UserProfile()
-            if (response.isSuccessful) {
-                Result.success(
-                    response.body() ?: BaseResponse(status = true, message = "Logged out successfully.")
-                )
-            } else {
-                Result.success(BaseResponse(status = true, message = "Logged out locally."))
+    /**
+     * Best-effort background FCM unregister and auth/logout.php token revoke.
+     * Ignores all failures and timeouts.
+     */
+    suspend fun revokeTokenInBackground(savedToken: String?) = withContext(Dispatchers.IO) {
+        withTimeoutOrNull(10_000L) {
+            try {
+                NetworkClient.getAppContext()?.let { ctx ->
+                    com.simats.stocksense.core.fcm.FcmTokenManager.unregisterAndClearToken(ctx, savedToken)
+                }
+            } catch (_: Throwable) {}
+            if (!savedToken.isNullOrBlank()) {
+                try {
+                    apiService.logout("Bearer $savedToken")
+                } catch (_: Throwable) {}
             }
-        } catch (_: Throwable) {
-            // If the call fails, still clear the session and token locally
-            sessionManager?.clearSession()
-            tokenStore?.clearToken()
-            _currentUser.value = UserProfile()
-            Result.success(BaseResponse(status = true, message = "Logged out locally."))
         }
+    }
+
+    /**
+     * Clears local session immediately and revokes server token best-effort.
+     */
+    suspend fun logout(): Result<BaseResponse> {
+        val savedToken = clearLocalSession()
+        revokeTokenInBackground(savedToken)
+        return Result.success(BaseResponse(status = true, message = "Logged out locally."))
     }
 
     fun hasValidToken(): Boolean = sessionManager?.isLoggedIn() ?: (tokenStore?.hasValidToken() == true)

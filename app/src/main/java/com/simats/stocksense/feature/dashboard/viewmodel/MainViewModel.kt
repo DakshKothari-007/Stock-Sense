@@ -8,6 +8,9 @@ import com.simats.stocksense.core.network.SessionManager
 import com.simats.stocksense.data.model.*
 import com.simats.stocksense.data.repository.ProfileRepository
 import com.simats.stocksense.data.repository.StockRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +33,8 @@ data class MainUiState(
 class MainViewModel(
     private val repository: StockRepository = StockRepository(),
     private val profileRepository: ProfileRepository = ProfileRepository(),
-    customSessionManager: SessionManager? = null
+    customSessionManager: SessionManager? = null,
+    private val backgroundScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) : ViewModel() {
 
     private val _customSessionManager = customSessionManager
@@ -234,14 +238,20 @@ class MainViewModel(
     }
 
     /**
-     * Logs out the user: calls backend to revoke token, clears SharedPreferences session,
-     * and calls onComplete to trigger navigation.
+     * Logs out the user immediately:
+     * 1. Reads the saved token and clears local session synchronously.
+     * 2. Calls onComplete() immediately so navigation happens without waiting or Home-tab flash.
+     * 3. Clears in-memory state after navigation.
+     * 4. Revokes token in backgroundScope so it survives the screen.
      */
     fun logout(onComplete: () -> Unit) {
-        viewModelScope.launch {
-            clearUserData()
-            profileRepository.logout()
-            onComplete()
+        val savedToken = profileRepository.clearLocalSession()
+        sessionManager?.clearSession()
+        onComplete()
+        clearUserData()
+        _uiState.update { it.copy(selectedTab = 0) }
+        backgroundScope.launch {
+            profileRepository.revokeTokenInBackground(savedToken)
         }
     }
 

@@ -45,8 +45,8 @@ object NetworkClient {
         val requestBuilder = originalRequest.newBuilder()
             .header("Accept", "application/json")
 
-        // Attach Authorization: Bearer <token> when a valid token exists
-        if (!token.isNullOrBlank()) {
+        // Attach Authorization: Bearer <token> when a valid token exists and caller didn't supply one
+        if (originalRequest.header("Authorization") == null && !token.isNullOrBlank()) {
             requestBuilder.header("Authorization", "Bearer $token")
         }
 

@@ -14,6 +14,7 @@ import com.simats.stocksense.data.model.UpdateProfileRequest
 import com.simats.stocksense.data.model.UpdateShopRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -339,21 +340,50 @@ class ProfileRepository(
     }
 
     /**
-     * Logs out user, revoking server token and clearing local SharedPreferences session.
+     * Reads the current auth token, then immediately clears local session, token store,
+     * cached AI chat, and stored FCM tokens.
      */
-    suspend fun logout(): Result<BaseResponse> = withContext(Dispatchers.IO) {
+    fun clearLocalSession(): String? {
+        val savedToken = sessionManager?.getToken()?.takeIf { it.isNotBlank() }
+            ?: tokenStore?.getToken()?.takeIf { it.isNotBlank() }
+        sessionManager?.clearSession()
+        tokenStore?.clearToken()
         try {
-            val response = apiService.logout()
-            sessionManager?.clearSession()
-            tokenStore?.clearToken()
-            Result.success(
-                response.body() ?: BaseResponse(status = true, message = "Logged out successfully.")
-            )
-        } catch (_: Throwable) {
-            sessionManager?.clearSession()
-            tokenStore?.clearToken()
-            Result.success(BaseResponse(status = true, message = "Logged out locally."))
+            com.simats.stocksense.feature.ai.AiChatStore.clear()
+        } catch (_: Throwable) {}
+        try {
+            NetworkClient.getAppContext()?.let { ctx ->
+                com.simats.stocksense.core.fcm.FcmTokenManager.clearStoredTokens(ctx)
+            }
+        } catch (_: Throwable) {}
+        return savedToken
+    }
+
+    /**
+     * Best-effort background token revoke & FCM unregister. Ignores all errors and timeouts.
+     */
+    suspend fun revokeTokenInBackground(savedToken: String?) = withContext(Dispatchers.IO) {
+        withTimeoutOrNull(10_000L) {
+            try {
+                NetworkClient.getAppContext()?.let { ctx ->
+                    com.simats.stocksense.core.fcm.FcmTokenManager.unregisterAndClearToken(ctx, savedToken)
+                }
+            } catch (_: Throwable) {}
+            if (!savedToken.isNullOrBlank()) {
+                try {
+                    apiService.logout("Bearer $savedToken")
+                } catch (_: Throwable) {}
+            }
         }
+    }
+
+    /**
+     * Logs out user, clearing local session immediately and revoking server token best-effort.
+     */
+    suspend fun logout(): Result<BaseResponse> {
+        val savedToken = clearLocalSession()
+        revokeTokenInBackground(savedToken)
+        return Result.success(BaseResponse(status = true, message = "Logged out successfully."))
     }
 
     private fun parseHttpError(code: Int, errorBody: String?): String {

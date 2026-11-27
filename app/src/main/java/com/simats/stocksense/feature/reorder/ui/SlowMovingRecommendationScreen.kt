@@ -230,54 +230,33 @@ fun SlowMovingRecommendationScreen(
                             .padding(18.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        val isNarrow = windowInfo.screenWidthDp < 360.dp
-                        if (isNarrow) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = "What your sales tell us",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = InkDark,
-                                    fontSize = 15.sp
-                                )
-                                BoldButton(
-                                    text = "Why?",
-                                    onClick = { showWhyDialog = true },
-                                    isPrimary = false,
-                                    borderWidth = 1.5.dp,
-                                    shadowOffset = 2.dp,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        } else {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "What your sales tell us",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = InkDark,
-                                    fontSize = 15.sp,
-                                    modifier = Modifier.weight(1f),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                BoldButton(
-                                    text = "Why?",
-                                    onClick = { showWhyDialog = true },
-                                    isPrimary = false,
-                                    borderWidth = 1.5.dp,
-                                    shadowOffset = 2.dp,
-                                    modifier = Modifier.wrapContentWidth()
-                                )
-                            }
+                        @OptIn(ExperimentalLayoutApi::class)
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            itemVerticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "What your sales tell us",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = InkDark,
+                                fontSize = 15.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(end = 12.dp)
+                            )
+                            BoldButton(
+                                text = "Why?",
+                                onClick = { showWhyDialog = true },
+                                isPrimary = false,
+                                borderWidth = 1.5.dp,
+                                shadowOffset = 2.dp,
+                                modifier = Modifier
+                                    .wrapContentWidth()
+                                    .heightIn(min = 48.dp)
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(2.dp))

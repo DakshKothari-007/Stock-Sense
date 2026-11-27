@@ -207,16 +207,30 @@ internal class SessionTokenStorage(
  * Central session manager persisting store profile details and Keystore-backed encrypted
  * authentication tokens via EncryptedSharedPreferences.
  */
-class SessionManager private constructor(context: Context) {
+class SessionManager private constructor(
+    private val prefs: SharedPreferences,
+    securePrefsProvider: () -> SharedPreferences?
+) {
 
-    private val prefs: SharedPreferences = context.applicationContext.getSharedPreferences(
-        PREFS_NAME,
-        Context.MODE_PRIVATE
+    private constructor(context: Context) : this(
+        prefs = context.applicationContext.getSharedPreferences(
+            PREFS_NAME,
+            Context.MODE_PRIVATE
+        ),
+        securePrefsProvider = { createDefaultSecurePrefs(context.applicationContext) }
+    )
+
+    internal constructor(
+        plainPrefs: SharedPreferences,
+        securePrefs: SharedPreferences
+    ) : this(
+        prefs = plainPrefs,
+        securePrefsProvider = { securePrefs }
     )
 
     private val tokenStorage = SessionTokenStorage(
         plainPrefs = prefs,
-        securePrefsProvider = { createDefaultSecurePrefs(context.applicationContext) }
+        securePrefsProvider = securePrefsProvider
     )
 
     private val _avatarState = MutableStateFlow<AvatarCode?>(readAvatarFromPrefs())

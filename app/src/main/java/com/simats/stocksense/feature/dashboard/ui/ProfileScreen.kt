@@ -1448,13 +1448,19 @@ fun ProfileContent(
             }
 
             // 7. Sign Out Option Card
+            var isSigningOut by remember { mutableStateOf(false) }
             BoldCard(
                 modifier = Modifier.fillMaxWidth(),
                 backgroundColor = CardWhite,
                 borderColor = InkDark,
                 borderWidth = 2.dp,
                 shadowOffset = 3.dp,
-                onClick = { onSignOutClick() },
+                onClick = if (isSigningOut) null else {
+                    {
+                        isSigningOut = true
+                        onSignOutClick()
+                    }
+                },
                 contentPadding = PaddingValues(16.dp)
             ) {
                 Row(

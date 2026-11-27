@@ -130,9 +130,12 @@ class NotificationRepository(
         }
     }
 
-    suspend fun unregisterDevice(token: String): Result<Boolean> = withContext(Dispatchers.IO) {
+    suspend fun unregisterDevice(token: String, authHeader: String? = null): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
-            val response = apiService.unregisterDevice(UnregisterDeviceRequest(fcmToken = token))
+            val response = apiService.unregisterDevice(
+                request = UnregisterDeviceRequest(fcmToken = token),
+                authHeader = authHeader
+            )
             if (response.isSuccessful && response.body()?.status == true) {
                 Result.success(true)
             } else {
