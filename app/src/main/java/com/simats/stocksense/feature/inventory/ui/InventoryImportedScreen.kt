@@ -131,7 +131,7 @@ fun InventoryImportedScreen(
                     ) {
                         Canvas(modifier = Modifier.size(30.dp)) {
                             drawCircle(
-                                color = InkDark,
+                                color = OnPastelIcon,
                                 radius = size.width / 2f,
                                 style = Stroke(width = 1.8.dp.toPx())
                             )
@@ -142,7 +142,7 @@ fun InventoryImportedScreen(
                             }
                             drawPath(
                                 path = path,
-                                color = InkDark,
+                                color = OnPastelIcon,
                                 style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                             )
                         }
@@ -264,14 +264,14 @@ fun InventoryImportedScreen(
                                     text = if (skippedRowsCount == 1) "1 row was skipped" else "$skippedRowsCount rows were skipped",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = InkDark,
+                                    color = OnPastelInk,
                                     fontSize = 13.sp
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = "$dataRowsImported imported. Skipped invalid rows were not added to inventory.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MutedInk,
+                                    color = OnPastelMuted,
                                     fontSize = 11.sp
                                 )
                             }

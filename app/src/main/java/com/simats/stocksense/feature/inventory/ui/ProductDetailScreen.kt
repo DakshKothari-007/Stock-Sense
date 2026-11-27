@@ -701,7 +701,7 @@ fun ProductDetailScreenContent(
                                         Icon(
                                             imageVector = Icons.Default.Check,
                                             contentDescription = null,
-                                            tint = InkDark,
+                                            tint = OnPastelIcon,
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
@@ -814,7 +814,7 @@ fun ProductDetailScreenContent(
                                         Text(
                                             text = coverDesc,
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = InkDark,
+                                            color = OnPastelInk,
                                             fontSize = 12.sp,
                                             lineHeight = 16.sp
                                         )
@@ -828,7 +828,7 @@ fun ProductDetailScreenContent(
                                         Text(
                                             text = coverDesc,
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = InkDark,
+                                            color = OnPastelInk,
                                             fontSize = 12.sp,
                                             lineHeight = 16.sp
                                         )

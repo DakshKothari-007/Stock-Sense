@@ -193,7 +193,7 @@ fun ImportInventoryUploadScreen(
                             Text(
                                 text = if (isFileChosen) "File selected · Tap to change" else "Tap here to select file",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 11.sp,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)

@@ -99,7 +99,7 @@ fun OnboardingScreen3(
                     Text(
                         text = "MAKE EVERY RUPEE COUNT",
                         style = MaterialTheme.typography.labelSmall,
-                        color = InkDark,
+                        color = OnPastelInk,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.2.sp,
                         fontSize = 10.sp

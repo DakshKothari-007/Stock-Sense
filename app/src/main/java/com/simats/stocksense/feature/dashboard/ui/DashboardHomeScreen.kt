@@ -1243,7 +1243,7 @@ private fun SparkleIcon(primaryColor: Color) {
             }
             drawPath(
                 path = path,
-                color = InkDark,
+                color = OnPastelIcon,
                 style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
             )
         }

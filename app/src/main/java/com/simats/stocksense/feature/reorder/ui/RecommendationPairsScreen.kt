@@ -192,7 +192,7 @@ fun RecommendationPairsScreen(
                         text = "Frequently bought together",
                         isSelected = true,
                         backgroundColor = SoftLightBlue,
-                        textColor = InkDark,
+                        textColor = OnPastelInk,
                         borderColor = InkDark,
                         borderWidth = 1.5.dp
                     )
@@ -406,7 +406,7 @@ fun RecommendationPairsScreen(
                         Text(
                             text = "RECOMMENDED ACTION",
                             style = MaterialTheme.typography.labelSmall,
-                            color = InkDark,
+                            color = OnPastelInk,
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp,
                             letterSpacing = 1.sp
@@ -416,7 +416,7 @@ fun RecommendationPairsScreen(
                             text = "Offer the pair at ${NumberFormatUtil.formatIndianRupees(bundlePrice)}",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = InkDark,
+                            color = OnPastelInk,
                             fontSize = 20.sp
                         )
 
@@ -428,14 +428,14 @@ fun RecommendationPairsScreen(
                             Text(
                                 text = "Usual combined price",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MutedInk,
+                                color = OnPastelMuted,
                                 fontSize = 12.sp
                             )
                             Text(
                                 text = NumberFormatUtil.formatIndianRupees(combinedPrice),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontSize = 13.sp
                             )
                         }
@@ -448,14 +448,14 @@ fun RecommendationPairsScreen(
                             Text(
                                 text = "Customer saves",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MutedInk,
+                                color = OnPastelMuted,
                                 fontSize = 12.sp
                             )
                             Text(
                                 text = NumberFormatUtil.formatIndianRupees(savings),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontSize = 13.sp
                             )
                         }
@@ -465,7 +465,7 @@ fun RecommendationPairsScreen(
                         Text(
                             text = placementText,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MutedInk,
+                            color = OnPastelMuted,
                             fontSize = 11.sp,
                             lineHeight = 15.sp
                         )
@@ -488,7 +488,7 @@ fun RecommendationPairsScreen(
                     ) {
                         Canvas(modifier = Modifier.size(20.dp)) {
                             drawCircle(
-                                color = InkDark,
+                                color = OnPastelIcon,
                                 radius = size.width / 2f,
                                 style = Stroke(width = 1.5.dp.toPx())
                             )
@@ -499,7 +499,7 @@ fun RecommendationPairsScreen(
                             }
                             drawPath(
                                 path = path,
-                                color = InkDark,
+                                color = OnPastelIcon,
                                 style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                             )
                         }
@@ -511,14 +511,14 @@ fun RecommendationPairsScreen(
                                 text = "Decision record only",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontSize = 13.sp
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Accepting does not publish an offer or change prices.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MutedInk,
+                                color = OnPastelMuted,
                                 fontSize = 11.sp
                             )
                         }

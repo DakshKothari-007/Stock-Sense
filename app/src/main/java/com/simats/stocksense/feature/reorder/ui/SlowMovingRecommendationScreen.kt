@@ -323,7 +323,7 @@ fun SlowMovingRecommendationScreen(
                         Text(
                             text = "RECOMMENDED · 7-DAY TRIAL",
                             style = MaterialTheme.typography.labelSmall,
-                            color = InkDark,
+                            color = OnPastelInk,
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp,
                             letterSpacing = 1.sp
@@ -333,7 +333,7 @@ fun SlowMovingRecommendationScreen(
                             text = "$discPct% off · ${NumberFormatUtil.formatIndianRupees(suggPrice)} per pack",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = InkDark,
+                            color = OnPastelInk,
                             fontSize = 20.sp
                         )
 
@@ -349,7 +349,7 @@ fun SlowMovingRecommendationScreen(
                         Text(
                             text = explanationText,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MutedInk,
+                            color = OnPastelMuted,
                             fontSize = 12.sp,
                             lineHeight = 16.sp
                         )
@@ -359,7 +359,7 @@ fun SlowMovingRecommendationScreen(
                         val bundlePct = bundleSugg?.discountPct ?: 15
 
                         Spacer(modifier = Modifier.height(4.dp))
-                        HorizontalDivider(color = InkDark.copy(alpha = 0.2f), thickness = 1.dp)
+                        HorizontalDivider(color = OnPastelDivider, thickness = 1.dp)
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Row(
@@ -370,14 +370,14 @@ fun SlowMovingRecommendationScreen(
                             Text(
                                 text = "Alternative clearance bundle",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MutedInk,
+                                color = OnPastelMuted,
                                 fontSize = 12.sp
                             )
                             Text(
                                 text = NumberFormatUtil.formatIndianRupees(bundlePrice),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontSize = 13.sp
                             )
                         }
@@ -385,7 +385,7 @@ fun SlowMovingRecommendationScreen(
                         Text(
                             text = "$bundlePct% bundle discount: ${NumberFormatUtil.formatIndianRupees(bundlePrice)} per unit. Display together near the counter.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MutedInk,
+                            color = OnPastelMuted,
                             fontSize = 11.sp,
                             lineHeight = 15.sp
                         )
@@ -408,7 +408,7 @@ fun SlowMovingRecommendationScreen(
                     ) {
                         Canvas(modifier = Modifier.size(20.dp)) {
                             drawCircle(
-                                color = InkDark,
+                                color = OnPastelIcon,
                                 radius = size.width / 2f,
                                 style = Stroke(width = 1.5.dp.toPx())
                             )
@@ -419,7 +419,7 @@ fun SlowMovingRecommendationScreen(
                             }
                             drawPath(
                                 path = path,
-                                color = InkDark,
+                                color = OnPastelIcon,
                                 style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                             )
                         }
@@ -431,14 +431,14 @@ fun SlowMovingRecommendationScreen(
                                 text = "A suggestion, not a sales guarantee",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontSize = 13.sp
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Acceptance records your decision. No prices change automatically.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MutedInk,
+                                color = OnPastelMuted,
                                 fontSize = 11.sp
                             )
                         }

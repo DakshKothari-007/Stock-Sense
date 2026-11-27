@@ -67,7 +67,7 @@ fun AcceptedOverlayScreen(
                             }
                             drawPath(
                                 path = path,
-                                color = InkDark,
+                                color = OnPastelIcon,
                                 style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                             )
                         }

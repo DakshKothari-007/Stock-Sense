@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,9 +77,12 @@ fun BoldCard(
                         Modifier.clickable(onClick = onClick)
                     } else Modifier
                 )
-                .padding(contentPadding),
-            content = content
-        )
+                .padding(contentPadding)
+        ) {
+            CompositionLocalProvider(LocalContentColor provides boldContentColorFor(backgroundColor)) {
+                content()
+            }
+        }
     }
 }
 
@@ -123,6 +127,7 @@ fun BoldButton(
                 .background(if (isActionable) shadowColor else shadowColor.copy(alpha = 0.35f), shape)
         )
         // Foreground button
+        val resolvedContentColor = if (contentColor == InkDark) boldContentColorFor(containerColor) else contentColor
         Row(
             modifier = Modifier
                 .offset(x = translationX, y = translationY)
@@ -143,11 +148,13 @@ fun BoldButton(
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
-                    color = contentColor,
+                    color = resolvedContentColor,
                     strokeWidth = 2.5.dp
                 )
             } else {
-                content()
+                CompositionLocalProvider(LocalContentColor provides resolvedContentColor) {
+                    content()
+                }
             }
         }
     }
@@ -173,6 +180,7 @@ fun BoldButton(
     shape: CornerBasedShape = RoundedCornerShape(14.dp),
     contentPadding: PaddingValues = PaddingValues(horizontal = 18.dp, vertical = 12.dp)
 ) {
+    val resolvedTextColor = if (contentColor == InkDark) boldContentColorFor(containerColor) else contentColor
     BoldButton(
         onClick = onClick,
         modifier = modifier,
@@ -180,7 +188,7 @@ fun BoldButton(
         isLoading = isLoading,
         isPrimary = isPrimary,
         containerColor = containerColor,
-        contentColor = contentColor,
+        contentColor = resolvedTextColor,
         borderColor = borderColor,
         borderWidth = borderWidth,
         shadowOffset = shadowOffset,
@@ -194,7 +202,7 @@ fun BoldButton(
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp
             ),
-            color = contentColor,
+            color = resolvedTextColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -222,8 +230,8 @@ fun BoldChip(
 ) {
     val chipSelected = isSelected || selected
     val activeBg = if (chipSelected) selectedColor else backgroundColor
-    val resolvedTextColor = if (chipSelected && (activeBg == MainYellow || selectedColor == MainYellow) && textColor == InkDark) {
-        Color(0xFF0B1230)
+    val resolvedTextColor = if (textColor == InkDark) {
+        boldContentColorFor(activeBg)
     } else {
         textColor
     }
@@ -287,7 +295,7 @@ fun BoldStatusChip(
                 fontSize = 10.sp,
                 letterSpacing = 0.5.sp
             ),
-            color = InkDark,
+            color = boldContentColorFor(bgColor),
             maxLines = 1,
             softWrap = false,
             overflow = TextOverflow.Ellipsis
@@ -525,15 +533,21 @@ fun BoldTopBar(
         }
 
         Column(modifier = Modifier.weight(1f)) {
+            var titleFontSize by remember(title, actions != null) { mutableStateOf(20.sp) }
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Black,
-                    fontSize = 20.sp
+                    fontSize = titleFontSize
                 ),
                 color = InkDark,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                onTextLayout = { result ->
+                    if (result.hasVisualOverflow && titleFontSize > 16.sp) {
+                        titleFontSize = (titleFontSize.value - 1f).sp
+                    }
+                }
             )
             if (!subtitle.isNullOrBlank()) {
                 Text(
@@ -551,6 +565,7 @@ fun BoldTopBar(
         }
 
         if (actions != null) {
+            Spacer(modifier = Modifier.width(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically, content = actions)
         }
     }
@@ -764,7 +779,7 @@ fun ExportFileNameDialog(
                             text = ".csv",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Black,
-                            color = InkDark,
+                            color = OnPastelInk,
                             fontSize = 14.sp,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp)
                         )
@@ -881,7 +896,7 @@ fun ExportCsvErrorBanner(
         Text(
             text = message,
             style = MaterialTheme.typography.bodySmall,
-            color = StatusDangerRed,
+            color = boldContentColorFor(SoftPink),
             fontWeight = FontWeight.Bold,
             fontSize = 12.sp,
             lineHeight = 16.sp,

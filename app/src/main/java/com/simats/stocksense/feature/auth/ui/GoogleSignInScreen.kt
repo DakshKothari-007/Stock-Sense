@@ -120,13 +120,13 @@ fun GoogleSignInScreen(
                     ) {
                         Canvas(modifier = Modifier.size(16.dp)) {
                             drawLine(
-                                color = InkDark,
+                                color = OnPastelIcon,
                                 start = androidx.compose.ui.geometry.Offset(size.width * 0.5f, 0f),
                                 end = androidx.compose.ui.geometry.Offset(size.width * 0.5f, size.height),
                                 strokeWidth = 2.dp.toPx()
                             )
                             drawLine(
-                                color = InkDark,
+                                color = OnPastelIcon,
                                 start = androidx.compose.ui.geometry.Offset(0f, size.height * 0.5f),
                                 end = androidx.compose.ui.geometry.Offset(size.width, size.height * 0.5f),
                                 strokeWidth = 2.dp.toPx()
@@ -207,7 +207,7 @@ private fun AccountItem(
             ) {
                 Text(
                     text = initial,
-                    color = InkDark,
+                    color = OnPastelInk,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )

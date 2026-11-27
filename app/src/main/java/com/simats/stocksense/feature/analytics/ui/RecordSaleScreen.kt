@@ -257,11 +257,11 @@ fun RecordSaleScreen(
                                     text = uiState.stockNoticeMessage ?: "",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = InkDark,
+                                    color = OnPastelInk,
                                     modifier = Modifier.weight(1f)
                                 )
                                 TextButton(onClick = { viewModel.clearStockNoticeMessage() }) {
-                                    Text("Dismiss", color = InkDark, fontWeight = FontWeight.Bold)
+                                    Text("Dismiss", color = OnPastelInk, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }

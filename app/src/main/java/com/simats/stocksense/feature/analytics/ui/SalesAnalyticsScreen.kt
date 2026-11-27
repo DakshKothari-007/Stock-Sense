@@ -227,8 +227,12 @@ fun SalesAnalyticsScreen(
                                     BoldButton(
                                         onClick = onRecordSaleClick,
                                         isPrimary = true,
-                                        modifier = Modifier.wrapContentWidth(),
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                                        borderWidth = 2.dp,
+                                        shadowOffset = 3.dp,
+                                        modifier = Modifier
+                                            .wrapContentWidth()
+                                            .heightIn(min = 48.dp),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Add,
@@ -244,6 +248,7 @@ fun SalesAnalyticsScreen(
                                             color = Color(0xFF0B1230),
                                             fontSize = 13.sp,
                                             maxLines = 1,
+                                            softWrap = false,
                                             overflow = TextOverflow.Ellipsis
                                         )
                                     }
@@ -290,7 +295,7 @@ fun SalesAnalyticsScreen(
                                         Text(
                                             text = "Today's sales",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = if (isTodaySelected) InkDark else MutedInk,
+                                            color = if (isTodaySelected) OnPastelInk else MutedInk,
                                             fontWeight = if (isTodaySelected) FontWeight.Bold else FontWeight.Normal,
                                             fontSize = 12.sp
                                         )
@@ -298,7 +303,7 @@ fun SalesAnalyticsScreen(
                                         Text(
                                             text = uiState.todaySalesTotal,
                                             style = MaterialTheme.typography.titleLarge,
-                                            color = InkDark,
+                                            color = if (isTodaySelected) OnPastelInk else InkDark,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 20.sp
                                         )
@@ -306,7 +311,7 @@ fun SalesAnalyticsScreen(
                                         Text(
                                             text = uiState.todayBillsText,
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MutedInk,
+                                            color = if (isTodaySelected) OnPastelMuted else MutedInk,
                                             fontSize = 11.sp
                                         )
                                     }
@@ -328,7 +333,7 @@ fun SalesAnalyticsScreen(
                                         Text(
                                             text = "Sales · 7 days",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = if (is7DaysSelected) InkDark else MutedInk,
+                                            color = if (is7DaysSelected) OnPastelInk else MutedInk,
                                             fontWeight = if (is7DaysSelected) FontWeight.Bold else FontWeight.Normal,
                                             fontSize = 12.sp
                                         )
@@ -336,7 +341,7 @@ fun SalesAnalyticsScreen(
                                         Text(
                                             text = uiState.sales7DaysTotal,
                                             style = MaterialTheme.typography.titleLarge,
-                                            color = InkDark,
+                                            color = if (is7DaysSelected) OnPastelInk else InkDark,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 20.sp
                                         )
@@ -344,7 +349,7 @@ fun SalesAnalyticsScreen(
                                         Text(
                                             text = "7-day total",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MutedInk,
+                                            color = if (is7DaysSelected) OnPastelMuted else MutedInk,
                                             fontSize = 11.sp
                                         )
                                     }
@@ -372,7 +377,7 @@ fun SalesAnalyticsScreen(
                                         Text(
                                             text = "Sales · 30 days (Full overview)",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = if (is30DaysSelected) MainBlue else MutedInk,
+                                            color = if (is30DaysSelected) (if (ThemeState.isDark) OnPastelInk else MainBlue) else MutedInk,
                                             fontWeight = if (is30DaysSelected) FontWeight.Bold else FontWeight.Normal,
                                             fontSize = 12.sp
                                         )
@@ -380,7 +385,7 @@ fun SalesAnalyticsScreen(
                                         Text(
                                             text = uiState.sales30DaysTotal,
                                             style = MaterialTheme.typography.titleLarge,
-                                            color = InkDark,
+                                            color = if (is30DaysSelected) OnPastelInk else InkDark,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 20.sp
                                         )
@@ -388,7 +393,7 @@ fun SalesAnalyticsScreen(
                                     Text(
                                         text = uiState.sales30DaysBillsText,
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MutedInk,
+                                        color = if (is30DaysSelected) OnPastelMuted else MutedInk,
                                         fontSize = 11.sp
                                     )
                                 }

@@ -265,7 +265,10 @@ fun ReorderRecommendationScreen(
                                         isPrimary = false,
                                         borderWidth = 2.dp,
                                         shadowOffset = 2.dp,
-                                        modifier = Modifier.wrapContentWidth()
+                                        modifier = Modifier
+                                            .wrapContentWidth()
+                                            .heightIn(min = 48.dp),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
                                     )
                                 }
                             )
@@ -285,7 +288,7 @@ fun ReorderRecommendationScreen(
                                     text = uiState.selectionNotice ?: "",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Medium,
-                                    color = InkDark,
+                                    color = OnPastelInk,
                                     fontSize = 12.sp
                                 )
                             }
@@ -361,7 +364,7 @@ fun ReorderRecommendationScreen(
                                 Text(
                                     text = "RECOMMENDED ACTION",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MainBlue,
+                                    color = if (ThemeState.isDark) OnPastelInk else MainBlue,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 11.sp,
                                     letterSpacing = 1.sp
@@ -370,7 +373,7 @@ fun ReorderRecommendationScreen(
                                 Text(
                                     text = "Reorder ${rec.recommendedUnits} units",
                                     style = MaterialTheme.typography.headlineMedium,
-                                    color = InkDark,
+                                    color = OnPastelInk,
                                     fontWeight = FontWeight.Black,
                                     fontSize = 26.sp
                                 )
@@ -378,7 +381,7 @@ fun ReorderRecommendationScreen(
                                 Text(
                                     text = rec.estimatedPurchaseText,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MutedInk,
+                                    color = OnPastelMuted,
                                     fontSize = 13.sp
                                 )
                             }
@@ -467,14 +470,14 @@ fun ReorderRecommendationScreen(
                                         text = "Order is placed directly",
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = InkDark,
+                                        color = OnPastelInk,
                                         fontSize = 13.sp
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
                                         text = "A purchase order will be created and saved to your store.",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MutedInk,
+                                        color = OnPastelMuted,
                                         fontSize = 11.sp
                                     )
                                 }

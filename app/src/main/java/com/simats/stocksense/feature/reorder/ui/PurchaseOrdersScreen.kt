@@ -312,9 +312,9 @@ private fun PurchaseOrderCard(
 
     // Colors for status chip (Bold Outline tokens)
     val (statusBg, statusFg) = when (status) {
-        "received" -> SoftLavender to InkDark
-        "cancelled" -> SoftPink to InkDark
-        else -> SoftLightBlue to InkDark // placed
+        "received" -> SoftLavender to OnPastelInk
+        "cancelled" -> SoftPink to boldContentColorFor(SoftPink)
+        else -> SoftLightBlue to OnPastelInk // placed
     }
 
     val firstItem = order.firstItem

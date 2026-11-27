@@ -3,6 +3,7 @@ package com.simats.stocksense.core.theme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 
 /**
  * StockSense "Bold Outline" Design System Tokens
@@ -136,7 +137,27 @@ val RaisedSurface: Color
 
 val OnPastelInk: Color = Color(0xFF0B1230)
 
-val OnPastelMuted: Color = Color(0xFF4A5275)
+val OnPastelMuted: Color = Color(0xFF283156)
+
+val OnPastelIcon: Color = Color(0xFF0B1230)
+
+val OnPastelDivider: Color = Color(0xFF0B1230).copy(alpha = 0.18f)
+
+val OnPastelBorder: Color = Color(0xFF0B1230)
+
+val onPastelText: Color
+    get() = OnPastelInk
+
+fun Color.isLightBackground(threshold: Float = 0.20f): Boolean = luminance() > threshold
+
+fun boldContentColorFor(background: Color): Color =
+    if (background.isLightBackground()) OnPastelInk else ThemeState.currentBoldColors.inkText
+
+fun boldMutedContentColorFor(background: Color): Color =
+    if (background.isLightBackground()) OnPastelMuted else ThemeState.currentBoldColors.mutedText
+
+fun boldBorderColorFor(background: Color): Color =
+    if (background.isLightBackground()) OnPastelBorder else ThemeState.currentBoldColors.border
 
 val SoftLightBlue: Color
     get() = ThemeState.currentBoldColors.softLightBlue

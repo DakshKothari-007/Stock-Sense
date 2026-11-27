@@ -346,7 +346,7 @@ private fun AddProductRowCard(
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Medium,
-                                color = MutedInk,
+                                color = OnPastelMuted,
                                 fontSize = 11.sp,
                                 maxLines = 1,
                                 softWrap = false
@@ -369,7 +369,7 @@ private fun AddProductRowCard(
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontSize = 12.sp,
                                 maxLines = 1,
                                 softWrap = false

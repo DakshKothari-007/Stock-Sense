@@ -235,7 +235,7 @@ fun OrderDetailScreen(
                                     text = "AWAITING DELIVERY",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = MainBlue,
+                                    color = if (ThemeState.isDark) OnPastelInk else MainBlue,
                                     fontSize = 11.sp,
                                     letterSpacing = 0.8.sp
                                 )
@@ -243,13 +243,13 @@ fun OrderDetailScreen(
                                     text = "$totalUnits units on the way",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = InkDark,
+                                    color = OnPastelInk,
                                     fontSize = 19.sp
                                 )
                                 Text(
                                     text = bannerDetail,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MutedInk,
+                                    color = OnPastelMuted,
                                     fontSize = 12.sp,
                                     lineHeight = 16.sp
                                 )
@@ -274,7 +274,7 @@ fun OrderDetailScreen(
                                     text = "DELIVERY RECEIVED",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = InkDark,
+                                    color = OnPastelInk,
                                     fontSize = 11.sp,
                                     letterSpacing = 0.8.sp
                                 )
@@ -282,13 +282,13 @@ fun OrderDetailScreen(
                                     text = "$totalUnits units added to stock",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = InkDark,
+                                    color = OnPastelInk,
                                     fontSize = 18.sp
                                 )
                                 Text(
                                     text = "This purchase order was received. All items have been updated in your inventory.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MutedInk,
+                                    color = OnPastelMuted,
                                     fontSize = 12.sp
                                 )
                             }
@@ -448,7 +448,7 @@ fun OrderDetailScreen(
                                 text = completedMessage,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontSize = 15.sp,
                                 textAlign = TextAlign.Center
                             )

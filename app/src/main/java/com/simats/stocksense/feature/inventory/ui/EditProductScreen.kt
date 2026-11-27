@@ -549,7 +549,7 @@ fun EditProductScreenContent(
                                 Icon(
                                     imageVector = Icons.Outlined.Info,
                                     contentDescription = null,
-                                    tint = MainBlue,
+                                    tint = if (ThemeState.isDark) OnPastelIcon else MainBlue,
                                     modifier = Modifier.size(22.dp)
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
@@ -557,7 +557,7 @@ fun EditProductScreenContent(
                                     text = "Changing \"Stock in shop\" sets the count you have on the shelf. Sales and received orders change it by themselves.",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Medium,
-                                    color = InkDark,
+                                    color = OnPastelInk,
                                     fontSize = 12.sp,
                                     lineHeight = 17.sp
                                 )

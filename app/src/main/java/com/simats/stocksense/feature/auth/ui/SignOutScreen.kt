@@ -90,7 +90,7 @@ fun SignOutScreen(
                     ) {
                         Canvas(modifier = Modifier.size(26.dp)) {
                             drawCircle(
-                                color = InkDark,
+                                color = OnPastelIcon,
                                 radius = size.width / 2f,
                                 style = Stroke(width = 1.8.dp.toPx())
                             )
@@ -101,7 +101,7 @@ fun SignOutScreen(
                             }
                             drawPath(
                                 path = path,
-                                color = InkDark,
+                                color = OnPastelIcon,
                                 style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                             )
                         }

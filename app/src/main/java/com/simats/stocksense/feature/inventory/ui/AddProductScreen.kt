@@ -517,7 +517,7 @@ fun AddProductScreenContent(
                             Icon(
                                 imageVector = Icons.Outlined.Info,
                                 contentDescription = null,
-                                tint = MainBlue,
+                                tint = if (ThemeState.isDark) OnPastelIcon else MainBlue,
                                 modifier = Modifier.size(22.dp)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
@@ -525,7 +525,7 @@ fun AddProductScreenContent(
                                 text = "You are alerted when stock falls to the minimum. Many products at once? Use Import instead.",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Medium,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontSize = 12.sp,
                                 lineHeight = 17.sp
                             )

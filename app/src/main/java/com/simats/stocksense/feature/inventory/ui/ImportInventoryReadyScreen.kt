@@ -135,8 +135,9 @@ fun ImportInventoryReadyScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Canvas(modifier = Modifier.size(20.dp)) {
+                            val iconColor = if (ThemeState.isDark) OnPastelIcon else MainBlue
                             drawCircle(
-                                color = MainBlue,
+                                color = iconColor,
                                 radius = size.width / 2f,
                                 style = Stroke(width = 1.5.dp.toPx())
                             )
@@ -147,7 +148,7 @@ fun ImportInventoryReadyScreen(
                             }
                             drawPath(
                                 path = path,
-                                color = MainBlue,
+                                color = iconColor,
                                 style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                             )
                         }
@@ -159,14 +160,14 @@ fun ImportInventoryReadyScreen(
                                 text = if (uiState.appliedCorrectionSummary != null) "Correction applied · Zero errors" else "All rows validated · Zero errors",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontSize = 13.sp
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = uiState.appliedCorrectionSummary ?: "All $readyRowsCount rows are valid and ready to import.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MutedInk,
+                                color = OnPastelMuted,
                                 fontSize = 11.sp
                             )
                         }

@@ -1102,7 +1102,7 @@ fun ProfileContent(
                                             lineTo(size.width * 0.15f, size.height * 0.85f)
                                             close()
                                         }
-                                        drawPath(path = path, color = InkDark, style = Stroke(width = 1.8.dp.toPx()))
+                                        drawPath(path = path, color = OnPastelIcon, style = Stroke(width = 1.8.dp.toPx()))
                                     }
                                 }
 
@@ -1172,7 +1172,7 @@ fun ProfileContent(
                                             lineTo(size.width * 0.15f, size.height * 0.85f)
                                             close()
                                         }
-                                        drawPath(path = path, color = InkDark, style = Stroke(width = 1.8.dp.toPx()))
+                                        drawPath(path = path, color = OnPastelIcon, style = Stroke(width = 1.8.dp.toPx()))
                                     }
                                 }
 
@@ -1295,14 +1295,14 @@ fun ProfileContent(
                                 text = storeProfile.plan,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontSize = 15.sp
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Sample plan · Up to 500 products",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MutedInk,
+                                color = OnPastelMuted,
                                 fontSize = 11.sp
                             )
                             Spacer(modifier = Modifier.height(4.dp))
@@ -1310,7 +1310,7 @@ fun ProfileContent(
                                 text = "AI recommendations & sales intelligence included",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MainBlue,
+                                color = if (ThemeState.isDark) OnPastelInk else MainBlue,
                                 fontSize = 11.sp
                             )
                         }
@@ -1344,7 +1344,7 @@ fun ProfileContent(
                         ) {
                             Canvas(modifier = Modifier.size(18.dp)) {
                                 drawArc(
-                                    color = InkDark,
+                                    color = OnPastelIcon,
                                     startAngle = 180f,
                                     sweepAngle = 180f,
                                     useCenter = false,
@@ -1353,14 +1353,14 @@ fun ProfileContent(
                                     style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round)
                                 )
                                 drawRoundRect(
-                                    color = InkDark,
+                                    color = OnPastelIcon,
                                     topLeft = Offset(size.width * 0.18f, size.height * 0.42f),
                                     size = Size(size.width * 0.64f, size.height * 0.48f),
                                     cornerRadius = CornerRadius(3.dp.toPx(), 3.dp.toPx()),
                                     style = Stroke(width = 1.8.dp.toPx())
                                 )
                                 drawCircle(
-                                    color = InkDark,
+                                    color = OnPastelIcon,
                                     radius = size.width * 0.08f,
                                     center = Offset(size.width * 0.5f, size.height * 0.64f)
                                 )
@@ -1422,7 +1422,7 @@ fun ProfileContent(
                             Icon(
                                 imageVector = Icons.Outlined.Settings,
                                 contentDescription = "Settings",
-                                tint = InkDark,
+                                tint = OnPastelIcon,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -1474,7 +1474,7 @@ fun ProfileContent(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Outlined.Logout,
                                 contentDescription = "Sign Out",
-                                tint = InkDark,
+                                tint = OnPastelIcon,
                                 modifier = Modifier.size(20.dp)
                             )
                         }

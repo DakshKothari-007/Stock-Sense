@@ -835,7 +835,7 @@ private fun AssistantMessageRow(
                                 text = suggestion.label,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                             )
                         }
@@ -909,7 +909,7 @@ private fun ProductCardsContainer(cards: List<AiProductCard>) {
                     ) {
                         Text(
                             text = if (isLow) "Low" else "Stock",
-                            color = InkDark,
+                            color = OnPastelInk,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         )

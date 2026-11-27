@@ -536,7 +536,7 @@ private fun ColumnMappingDropdownRow(
                     Text(
                         text = "Mapped",
                         style = MaterialTheme.typography.labelSmall,
-                        color = InkDark,
+                        color = OnPastelInk,
                         fontWeight = FontWeight.Bold,
                         fontSize = 10.sp,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)

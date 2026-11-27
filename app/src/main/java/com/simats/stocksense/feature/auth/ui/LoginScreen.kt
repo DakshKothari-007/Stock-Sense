@@ -409,13 +409,13 @@ fun LoginScreen(
                                 lineTo(size.width * 0.75f, size.height * 0.3f)
                             }
                             drawCircle(
-                                color = InkDark,
+                                color = OnPastelIcon,
                                 radius = size.width / 2f,
                                 style = Stroke(width = 1.5.dp.toPx())
                             )
                             drawPath(
                                 path = path,
-                                color = InkDark,
+                                color = OnPastelIcon,
                                 style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                             )
                         }
@@ -425,14 +425,14 @@ fun LoginScreen(
                                 text = "Explore the Green Basket demo",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontSize = 13.sp
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Sample credentials are filled in. No real account or data is used.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = InkDark.copy(alpha = 0.8f),
+                                color = OnPastelMuted,
                                 fontSize = 12.sp,
                                 lineHeight = 16.sp
                             )

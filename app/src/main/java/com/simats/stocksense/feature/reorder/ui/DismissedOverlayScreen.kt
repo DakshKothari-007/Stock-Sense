@@ -58,15 +58,16 @@ fun DismissedOverlayScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Canvas(modifier = Modifier.size(36.dp)) {
+                            val iconColor = boldContentColorFor(SoftPink)
                             drawLine(
-                                color = InkDark,
+                                color = iconColor,
                                 start = Offset(size.width * 0.25f, size.height * 0.25f),
                                 end = Offset(size.width * 0.75f, size.height * 0.75f),
                                 strokeWidth = 3.dp.toPx(),
                                 cap = StrokeCap.Round
                             )
                             drawLine(
-                                color = InkDark,
+                                color = iconColor,
                                 start = Offset(size.width * 0.75f, size.height * 0.25f),
                                 end = Offset(size.width * 0.25f, size.height * 0.75f),
                                 strokeWidth = 3.dp.toPx(),

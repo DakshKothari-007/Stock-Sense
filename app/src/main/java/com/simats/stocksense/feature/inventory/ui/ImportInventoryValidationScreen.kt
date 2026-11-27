@@ -403,7 +403,7 @@ fun ImportInventoryValidationScreen(
                                 text = "Suggested correction",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = InkDark,
+                                color = OnPastelInk,
                                 fontSize = 14.sp
                             )
 
@@ -411,7 +411,7 @@ fun ImportInventoryValidationScreen(
                                 Text(
                                     text = "${fixableError.productName} is an existing product with 0 quantity in the file. StockSense will never invent stock. Choose how to handle this product:",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = InkDark,
+                                    color = OnPastelInk,
                                     fontSize = 12.sp,
                                     lineHeight = 16.sp
                                 )

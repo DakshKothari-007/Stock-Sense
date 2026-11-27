@@ -223,7 +223,7 @@ fun ProductIconPickerDialog(
                                 Icon(
                                     imageVector = Icons.Default.AutoAwesome,
                                     contentDescription = null,
-                                    tint = InkDark,
+                                    tint = OnPastelIcon,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -235,7 +235,7 @@ fun ProductIconPickerDialog(
                                     text = "Auto (Smart Match)",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp,
-                                    color = InkDark
+                                    color = if (currentIconKey == null) OnPastelInk else InkDark
                                 )
                                 val autoMatched = remember(productName, productCategory) {
                                     ProductIconMatcher.match(productName, productCategory)?.iconKey
@@ -248,7 +248,7 @@ fun ProductIconPickerDialog(
                                 Text(
                                     text = autoHint,
                                     fontSize = 11.sp,
-                                    color = MutedInk
+                                    color = if (currentIconKey == null) OnPastelMuted else MutedInk
                                 )
                             }
 
@@ -334,7 +334,7 @@ fun ProductIconPickerDialog(
                                             style = MaterialTheme.typography.labelSmall,
                                             fontSize = 10.sp,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                            color = InkDark,
+                                            color = if (isSelected) OnPastelInk else InkDark,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
                                             textAlign = TextAlign.Center

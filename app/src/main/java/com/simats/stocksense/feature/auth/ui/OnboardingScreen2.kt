@@ -103,7 +103,7 @@ fun OnboardingScreen2(
                     Text(
                         text = "YOUR AI STOCK PARTNER",
                         style = MaterialTheme.typography.labelSmall,
-                        color = InkDark,
+                        color = OnPastelInk,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.2.sp,
                         fontSize = 10.sp

@@ -104,7 +104,7 @@ fun OnboardingScreen1(
                     Text(
                         text = "ONE CLEAR VIEW",
                         style = MaterialTheme.typography.labelSmall,
-                        color = InkDark,
+                        color = OnPastelInk,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.2.sp,
                         fontSize = 10.sp
