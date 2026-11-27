@@ -160,11 +160,11 @@ fun DashboardHomeScreen(
         }
     }
 
-    // Auto-refresh when screen resumes
+    // Auto-refresh when screen resumes (uses cache TTL to avoid refetching on every tab switch)
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.refresh()
+                viewModel.refresh(force = false)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -178,7 +178,7 @@ fun DashboardHomeScreen(
         avatarCode = avatarCode,
         ownerName = ownerName,
         onAvatarClick = onAvatarClick,
-        onRefresh = { viewModel.refresh() },
+        onRefresh = { viewModel.refresh(force = true) },
         onNotificationsClick = onNotificationsClick,
         onLowStockClick = onLowStockClick,
         onSlowMovingClick = onSlowMovingClick,

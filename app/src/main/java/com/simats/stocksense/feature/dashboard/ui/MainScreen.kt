@@ -58,10 +58,6 @@ fun MainScreen(
     val uiState by viewModel.uiState.collectAsState()
     val saveableStateHolder = rememberSaveableStateHolder()
 
-    LaunchedEffect(Unit) {
-        viewModel.refreshProfile()
-    }
-
     // System back button on a non-Home tab returns to Home with slide animation to the left
     BackHandler(enabled = uiState.selectedTab != 0) {
         viewModel.selectTab(0)

@@ -119,7 +119,7 @@ fun InsightsContent(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.refresh()
+                viewModel.refresh(force = false)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -131,7 +131,7 @@ fun InsightsContent(
     InsightsListContent(
         storeName = storeName,
         uiState = uiState,
-        onRefresh = { viewModel.refresh() },
+        onRefresh = { viewModel.refresh(force = true) },
         onReorderClick = onReorderClick,
         onMoveBiscuitsClick = onMoveBiscuitsClick,
         onTeaPairClick = onTeaPairClick,

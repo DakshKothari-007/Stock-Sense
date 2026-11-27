@@ -31,6 +31,21 @@ android {
             }
             buildConfigField("String", "BASE_URL", "\"https://api.stocksense.com/StockSense_backend/\"")
         }
+        create("staging") {
+            initWith(getByName("release"))
+            isDebuggable = false
+            signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            optimization {
+                enable = true
+            }
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            buildConfigField("String", "BASE_URL", "\"https://gossip-renderer-void.ngrok-free.dev/StockSense_backend/\"")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

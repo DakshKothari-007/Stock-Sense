@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -109,9 +110,11 @@ fun UserAvatarBadge(
             }
 
             if (imageUrl != null && !isInspection) {
-                val request = remember(imageUrl) {
+                val sizePx = with(LocalDensity.current) { size.roundToPx() }.coerceAtLeast(1)
+                val request = remember(imageUrl, sizePx) {
                     ImageRequest.Builder(context)
                         .data(imageUrl)
+                        .size(sizePx, sizePx)
                         .decoderFactory(SvgDecoder.Factory())
                         .diskCachePolicy(CachePolicy.ENABLED)
                         .memoryCachePolicy(CachePolicy.ENABLED)

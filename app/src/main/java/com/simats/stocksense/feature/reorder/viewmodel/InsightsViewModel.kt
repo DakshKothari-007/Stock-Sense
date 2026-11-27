@@ -97,11 +97,22 @@ class InsightsViewModel(
         _uiState.update { it.copy(selectedPairIndex = index) }
     }
 
+    private var lastLoadedAtMs: Long = 0L
+    private var isLoadInFlight: Boolean = false
+    private val cacheTtlMs: Long = 30_000L
+
     /**
      * Refreshes slow-moving recommendations, product pairs, and reorders in parallel.
      */
-    fun refresh() {
+    fun refresh(force: Boolean = false) {
+        val hasCachedData = _uiState.value.slowMovingData != null || _uiState.value.productPairsData != null
+        val isFresh = System.currentTimeMillis() - lastLoadedAtMs < cacheTtlMs
+        if (!force && (isLoadInFlight || (hasCachedData && isFresh))) {
+            return
+        }
         viewModelScope.launch {
+            isLoadInFlight = true
+            try {
             val isInitial = _uiState.value.slowMovingData == null && _uiState.value.productPairsData == null
             if (isInitial) {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
@@ -178,6 +189,10 @@ class InsightsViewModel(
                 pendingSlowMovingSku = null
             }
 
+            if (newErrorMessage == null) {
+                lastLoadedAtMs = System.currentTimeMillis()
+            }
+
             _uiState.update {
                 it.copy(
                     isLoading = false,
@@ -194,6 +209,9 @@ class InsightsViewModel(
                     reorderItems = newReorderItems,
                     selectedSlowMovingIndex = if (resolvedPendingIdx >= 0) resolvedPendingIdx else it.selectedSlowMovingIndex
                 )
+            }
+            } finally {
+                isLoadInFlight = false
             }
         }
     }

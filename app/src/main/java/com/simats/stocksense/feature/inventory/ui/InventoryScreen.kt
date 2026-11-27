@@ -6,10 +6,11 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -61,11 +62,11 @@ fun InventoryScreen(
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Auto-refresh inventory list on screen resume
+    // Auto-refresh inventory list on screen resume (uses cache TTL to avoid refetching on tab switches)
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.refresh()
+                viewModel.refresh(force = false)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -78,7 +79,7 @@ fun InventoryScreen(
         uiState = uiState,
         onSearchQueryChange = { viewModel.updateSearchQuery(it) },
         onFilterSelected = { viewModel.selectFilter(it) },
-        onRetryClick = { viewModel.refresh() },
+        onRetryClick = { viewModel.refresh(force = true) },
         onLoadMore = { viewModel.loadMore() },
         onImportDataClick = onImportDataClick,
         onAddProductClick = onAddProductClick,
@@ -213,11 +214,19 @@ fun InventoryContent(
     onAddProductClick: () -> Unit = {},
     onProductClick: (InventoryProduct) -> Unit = {}
 ) {
-    val scrollState = rememberScrollState()
+    val listState = rememberLazyListState()
+    val shouldLoadMore by remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val lastVisible = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            val total = layoutInfo.totalItemsCount
+            total > 0 && lastVisible >= total - 4
+        }
+    }
 
     // Pagination: Trigger loadMore when scrolling near bottom
-    LaunchedEffect(scrollState.value, scrollState.maxValue) {
-        if (scrollState.maxValue > 0 && scrollState.value >= scrollState.maxValue - 200) {
+    LaunchedEffect(shouldLoadMore) {
+        if (shouldLoadMore) {
             onLoadMore()
         }
     }
@@ -372,88 +381,94 @@ fun InventoryContent(
                     .weight(1f)
                     .fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scrollState),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(
+                        bottom = if (showBottomImportButton) 156.dp else 96.dp
+                    )
                 ) {
                     // Empty State for New Stores
                     if (isShopEmpty) {
-                        BoldCard(
-                            modifier = Modifier.fillMaxWidth(),
-                            backgroundColor = SoftLightBlue,
-                            borderColor = InkDark,
-                            borderWidth = 2.dp,
-                            shadowOffset = 3.dp,
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(20.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                        item(key = "empty_shop") {
+                            BoldCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                backgroundColor = SoftLightBlue,
+                                borderColor = InkDark,
+                                borderWidth = 2.dp,
+                                shadowOffset = 3.dp,
+                                shape = RoundedCornerShape(16.dp)
                             ) {
-                                Text(
-                                    text = "No products in inventory",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = OnPastelInk
-                                )
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = "Your store has no inventory yet. Import your stock spreadsheet to start tracking products, stock levels, and sales.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = OnPastelInk,
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 13.sp
-                                )
-                                Spacer(modifier = Modifier.height(14.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                Column(
+                                    modifier = Modifier.padding(20.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    BoldButton(
-                                        text = "Import Stock",
-                                        onClick = onImportDataClick,
-                                        modifier = Modifier.weight(1f),
-                                        isPrimary = false
+                                    Text(
+                                        text = "No products in inventory",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = OnPastelInk
                                     )
-                                    BoldButton(
-                                        text = "Add product",
-                                        onClick = onAddProductClick,
-                                        modifier = Modifier.weight(1f),
-                                        isPrimary = true
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = "Your store has no inventory yet. Import your stock spreadsheet to start tracking products, stock levels, and sales.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = OnPastelInk,
+                                        textAlign = TextAlign.Center,
+                                        fontSize = 13.sp
                                     )
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        BoldButton(
+                                            text = "Import Stock",
+                                            onClick = onImportDataClick,
+                                            modifier = Modifier.weight(1f),
+                                            isPrimary = false
+                                        )
+                                        BoldButton(
+                                            text = "Add product",
+                                            onClick = onAddProductClick,
+                                            modifier = Modifier.weight(1f),
+                                            isPrimary = true
+                                        )
+                                    }
                                 }
                             }
                         }
                     } else if (isNoSearchResults) {
                         // Empty State for Filter/Search with 0 matches
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 36.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "No products found",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = InkDark,
-                                    fontSize = 16.sp
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Try searching for a different item or clear filters",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MutedInk,
-                                    fontSize = 13.sp
-                                )
+                        item(key = "no_results") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 36.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "No products found",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = InkDark,
+                                        fontSize = 16.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Try searching for a different item or clear filters",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MutedInk,
+                                        fontSize = 13.sp
+                                    )
+                                }
                             }
                         }
                     } else {
                         // 4. Your Products List
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        item(key = "products_header") {
                             Text(
                                 text = "Your products",
                                 style = MaterialTheme.typography.titleMedium,
@@ -461,9 +476,13 @@ fun InventoryContent(
                                 color = InkDark,
                                 fontSize = 16.sp
                             )
+                        }
 
-                            products.forEach { item ->
-                                BoldCard(
+                        items(
+                            items = products,
+                            key = { it.id }
+                        ) { item ->
+                            BoldCard(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .defaultMinSize(minHeight = 76.dp),
@@ -572,27 +591,21 @@ fun InventoryContent(
 
                             // Loading More Indicator
                             if (isLoadingMore) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 12.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp),
-                                        color = MainBlue,
-                                        strokeWidth = 2.dp
-                                    )
+                                item(key = "loading_more") {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 12.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = MainBlue,
+                                            strokeWidth = 2.dp
+                                        )
+                                    }
                                 }
                             }
-                        }
-                    }
-
-                    // Bottom padding so the last product is not hidden behind the button or the FAB
-                    if (showBottomImportButton) {
-                        Spacer(modifier = Modifier.height(156.dp))
-                    } else {
-                        Spacer(modifier = Modifier.height(96.dp))
                     }
                 }
 

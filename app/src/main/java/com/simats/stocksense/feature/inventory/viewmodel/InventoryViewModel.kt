@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -50,11 +51,15 @@ class InventoryViewModel(
     val uiState: StateFlow<InventoryUiState> = _uiState.asStateFlow()
 
     private val searchQueryFlow = MutableStateFlow("")
+    private var lastLoadedAtMs: Long = 0L
+    private var isLoadInFlight: Boolean = false
+    private val cacheTtlMs: Long = 30_000L
 
     init {
-        // Debounce search typing by 400ms
+        // Debounce search typing by 400ms (drop initial empty emission to avoid duplicate cold-start fetch)
         viewModelScope.launch {
             searchQueryFlow
+                .drop(1)
                 .debounce(400)
                 .distinctUntilChanged()
                 .collectLatest { debouncedQuery ->
@@ -106,9 +111,14 @@ class InventoryViewModel(
     }
 
     /**
-     * Screen resume or pull-to-refresh.
+     * Screen resume or pull-to-refresh. Skips refetch when [force] = false and cached data is fresh.
      */
-    fun refresh() {
+    fun refresh(force: Boolean = false) {
+        val hasCachedData = _uiState.value.allProducts.isNotEmpty()
+        val isFresh = System.currentTimeMillis() - lastLoadedAtMs < cacheTtlMs
+        if (!force && (isLoadInFlight || (hasCachedData && isFresh))) {
+            return
+        }
         loadProducts(
             search = _uiState.value.searchQuery,
             filterIndex = _uiState.value.selectedFilter,
@@ -127,56 +137,62 @@ class InventoryViewModel(
         isInitial: Boolean = false
     ) {
         viewModelScope.launch {
-            if (isInitial && _uiState.value.allProducts.isEmpty()) {
-                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            } else {
-                _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
-            }
-
-            val filterParam = when (filterIndex) {
-                1 -> "low_stock"
-                2 -> "slow_moving"
-                else -> "0"
-            }
-
-            val categoryParam = if (category.equals("All", ignoreCase = true)) null else category
-
-            val result = repository.fetchProducts(
-                search = search,
-                filter = filterParam,
-                category = categoryParam,
-                page = 1,
-                limit = 50
-            )
-
-            result.fold(
-                onSuccess = { data ->
-                    val domainProducts = (data.products ?: emptyList()).map { mapNetworkToDomain(it) }
-                    val total = if ((data.totalProducts ?: 0) > 0) (data.totalProducts ?: 0) else (data.totalCount ?: 0)
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isRefreshing = false,
-                            errorMessage = null,
-                            allProducts = domainProducts,
-                            filteredProducts = domainProducts,
-                            shopName = data.shopName ?: "",
-                            totalCount = if (total > 0) total else domainProducts.size,
-                            currentPage = 1,
-                            hasMorePages = domainProducts.size < total
-                        )
-                    }
-                },
-                onFailure = { err ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isRefreshing = false,
-                            errorMessage = err.message ?: "Failed to load inventory. Please check your connection and retry."
-                        )
-                    }
+            isLoadInFlight = true
+            try {
+                if (isInitial && _uiState.value.allProducts.isEmpty()) {
+                    _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                } else {
+                    _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
                 }
-            )
+
+                val filterParam = when (filterIndex) {
+                    1 -> "low_stock"
+                    2 -> "slow_moving"
+                    else -> "0"
+                }
+
+                val categoryParam = if (category.equals("All", ignoreCase = true)) null else category
+
+                val result = repository.fetchProducts(
+                    search = search,
+                    filter = filterParam,
+                    category = categoryParam,
+                    page = 1,
+                    limit = 50
+                )
+
+                result.fold(
+                    onSuccess = { data ->
+                        lastLoadedAtMs = System.currentTimeMillis()
+                        val domainProducts = (data.products ?: emptyList()).map { mapNetworkToDomain(it) }
+                        val total = if ((data.totalProducts ?: 0) > 0) (data.totalProducts ?: 0) else (data.totalCount ?: 0)
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                isRefreshing = false,
+                                errorMessage = null,
+                                allProducts = domainProducts,
+                                filteredProducts = domainProducts,
+                                shopName = data.shopName ?: "",
+                                totalCount = if (total > 0) total else domainProducts.size,
+                                currentPage = 1,
+                                hasMorePages = domainProducts.size < total
+                            )
+                        }
+                    },
+                    onFailure = { err ->
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                isRefreshing = false,
+                                errorMessage = err.message ?: "Failed to load inventory. Please check your connection and retry."
+                            )
+                        }
+                    }
+                )
+            } finally {
+                isLoadInFlight = false
+            }
         }
     }
 

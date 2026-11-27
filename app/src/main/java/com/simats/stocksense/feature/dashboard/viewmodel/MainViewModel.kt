@@ -64,32 +64,47 @@ class MainViewModel(
         refreshProfile()
     }
 
+    private var lastProfileLoadedAtMs: Long = 0L
+    private var isProfileLoadInFlight: Boolean = false
+    private val profileCacheTtlMs: Long = 30_000L
+
     /**
      * Synchronizes profile from database via GET auth/profile.php.
      */
-    fun refreshProfile() {
+    fun refreshProfile(force: Boolean = false) {
+        val hasProfile = _uiState.value.storeProfile.name.isNotBlank()
+        val isFresh = System.currentTimeMillis() - lastProfileLoadedAtMs < profileCacheTtlMs
+        if (!force && (isProfileLoadInFlight || (hasProfile && isFresh))) {
+            return
+        }
         viewModelScope.launch {
-            _uiState.update { it.copy(isProfileLoading = true, profileErrorMessage = null) }
-            val result = profileRepository.fetchProfile()
-            result.fold(
-                onSuccess = { profile ->
-                    _uiState.update {
-                        it.copy(
-                            storeProfile = profile,
-                            isProfileLoading = false,
-                            profileErrorMessage = null
-                        )
+            isProfileLoadInFlight = true
+            try {
+                _uiState.update { it.copy(isProfileLoading = true, profileErrorMessage = null) }
+                val result = profileRepository.fetchProfile()
+                result.fold(
+                    onSuccess = { profile ->
+                        lastProfileLoadedAtMs = System.currentTimeMillis()
+                        _uiState.update {
+                            it.copy(
+                                storeProfile = profile,
+                                isProfileLoading = false,
+                                profileErrorMessage = null
+                            )
+                        }
+                    },
+                    onFailure = { err ->
+                        _uiState.update {
+                            it.copy(
+                                isProfileLoading = false,
+                                profileErrorMessage = err.message ?: "Failed to load profile. Please try again."
+                            )
+                        }
                     }
-                },
-                onFailure = { err ->
-                    _uiState.update {
-                        it.copy(
-                            isProfileLoading = false,
-                            profileErrorMessage = err.message ?: "Failed to load profile. Please try again."
-                        )
-                    }
-                }
-            )
+                )
+            } finally {
+                isProfileLoadInFlight = false
+            }
         }
     }
 
