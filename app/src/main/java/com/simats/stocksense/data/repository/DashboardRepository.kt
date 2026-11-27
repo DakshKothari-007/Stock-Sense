@@ -13,6 +13,21 @@ class DashboardRepository(
     private val apiService: DashboardApiService = NetworkClient.createService()
 ) {
 
+    companion object {
+        @Volatile
+        private var isCacheStale: Boolean = false
+
+        fun markStale() {
+            isCacheStale = true
+        }
+
+        fun consumeStaleFlag(): Boolean {
+            val wasStale = isCacheStale
+            isCacheStale = false
+            return wasStale
+        }
+    }
+
     /**
      * Fetches real-time dashboard summary from GET /dashboard/summary.php.
      */

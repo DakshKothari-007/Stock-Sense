@@ -239,7 +239,8 @@ class InsightsViewModel(
             result.fold(
                 onSuccess = {
                     _uiState.update { it.copy(isResponding = false) }
-                    refresh()
+                    com.simats.stocksense.data.repository.DashboardRepository.markStale()
+                    refresh(force = true)
                     onSuccess()
                 },
                 onFailure = { err ->
@@ -275,7 +276,8 @@ class InsightsViewModel(
             result.fold(
                 onSuccess = {
                     _uiState.update { it.copy(isResponding = false) }
-                    refresh()
+                    com.simats.stocksense.data.repository.DashboardRepository.markStale()
+                    refresh(force = true)
                     onSuccess()
                 },
                 onFailure = { err ->

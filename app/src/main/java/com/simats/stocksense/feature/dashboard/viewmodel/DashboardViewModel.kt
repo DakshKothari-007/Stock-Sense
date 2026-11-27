@@ -105,9 +105,10 @@ class DashboardViewModel(
      * so cached data within TTL is reused without redundant network calls.
      */
     fun refresh(force: Boolean = false) {
+        val invalidated = DashboardRepository.consumeStaleFlag()
         val hasCachedData = _uiState.value.dashboardData != null
         val isFresh = System.currentTimeMillis() - lastLoadedAtMs < cacheTtlMs
-        if (!force && (isLoadInFlight || (hasCachedData && isFresh))) {
+        if (!force && !invalidated && (isLoadInFlight || (hasCachedData && isFresh))) {
             return
         }
         loadDashboard(isInitialLoad = false)
